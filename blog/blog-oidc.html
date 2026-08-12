@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Implementing OIDC federation for UczSięWNecie — Blog — Tobiasz Lubowski</title>
+  <meta name="description" content="How I replaced static secrets with OpenID Connect federation between GitHub Actions and Azure for the UczSięWNecie project." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%238b5cf6'/><stop offset='1' stop-color='%236ee7ff'/></linearGradient></defs><rect width='64' height='64' rx='14' fill='url(%23g)'/><circle cx='32' cy='34' r='14' fill='%23fde68a'/><path d='M18 28c3-6 10-10 14-10s10 4 14 10c-6-4-13-5-28 0z' fill='%23facc15'/><circle cx='27' cy='35' r='2.2' fill='%23000' opacity='0.9'/><circle cx='37' cy='35' r='2.2' fill='%23000' opacity='0.9'/><path d='M25 41c2.5 2 11.5 2 14 0' stroke='%23000' stroke-width='2' stroke-linecap='round' fill='none'/></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="nav" aria-label="Main">
+    <div class="row">
+      <div class="brand">Tobiasz Lubowski <small style="color:#9aa3af;font-weight:500" data-i18n="brand.subtitle">DevOps in progress</small></div>
+      <div class="spacer"></div>
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu" aria-expanded="false" data-i18n-attr="aria-label:nav.menuToggle">☰</button>
+      <div class="menu">
+        <a href="../index.html" data-i18n="nav.home">Home</a>
+        <a href="blog.html" class="active" data-i18n="nav.blog">Blog</a>
+        <a href="../index.html#contact" class="btn" data-i18n="nav.contact">Contact & CV</a>
+        <button type="button" class="lang-toggle" id="languageToggle" aria-pressed="false" data-i18n="nav.langButton">Polski</button>
+      </div>
+    </div>
+  </nav>
+
+  <article class="blog-post">
+    <header>
+      <h1 data-i18n="article.title">Implementing OIDC federation for UczSięWNecie</h1>
+      <div class="blog-post-meta">
+        <span><time datetime="2025-11-02" data-i18n="article.meta.date">2 listopada 2025</time></span>
+        <span data-i18n="article.meta.tags">Azure • Bezpieczeństwo • CI/CD</span>
+      </div>
+    </header>
+
+    <div class="blog-post-hero">
+      <img src="assets/vlogs/OIDC_main.png" alt="Schemat federacji OIDC między GitHub Actions i Azure" data-i18n-attr="alt:article.hero.alt" />
+    </div>
+
+    <section class="blog-post-content">
+      <h2 data-i18n="article.need.heading">1. Potrzeba wdrożenia</h2>
+      <p data-i18n="article.intro.p1">Projekt „UczSięWNecie” miał dostarczyć nowoczesną infrastrukturę CI/CD w Azure, opartą na Terraformie i GitHub Actions.</p>
+      <p data-i18n="article.intro.p2">Kluczowym wymaganiem było zwiększenie bezpieczeństwa i wyeliminowanie statycznych sekretów, takich jak ARM_CLIENT_SECRET czy hasło Service Principala.</p>
+      <p data-i18n="article.intro.p3">Zamiast przekazywać hasła w GitHub Secrets, postanowiłem wdrożyć federację OIDC – GitHub Actions uwierzytelnia się tokenem JWT wystawionym przez GitHub i zweryfikowanym przez Entra ID.</p>
+
+      <h2 data-i18n="article.terraform.heading">2. Pierwsze podejście — automatyzacja z Terraformem</h2>
+      <p data-i18n="article.terraform.lead">Pierwszy pomysł zakładał pełną automatyzację w module Terraform <code>github_oidc</code>. Miał on:</p>
+      <ul>
+        <li data-i18n="article.terraform.plan1">utworzyć rejestrację aplikacji w Azure AD,</li>
+        <li data-i18n="article.terraform.plan2">dodać Federated Identity Credential pomiędzy GitHub i Azure,</li>
+        <li data-i18n="article.terraform.plan3">przypisać role Contributor oraz Storage Blob Data Contributor.</li>
+      </ul>
+      <p data-i18n="article.terraform.planNote">Wystarczyć miał pojedynczy <code>terraform apply</code>, aby całość zadziałała end-to-end.</p>
+      <p data-i18n="article.terraform.issuesIntro">Na przeszkodzie stanęły jednak trzy błędy:</p>
+      <ol>
+        <li data-i18n="article.terraform.issue1">Authorization_RequestDenied (403) – konto wykonujące Terraform nie miało ról Application Administrator / Global Administrator w Entra ID.</li>
+        <li data-i18n="article.terraform.issue2">Niezgodność atrybutów (application_id vs application_object_id) między wersjami providera azuread – API zwracało samo <code>{id}</code>, a moduł oczekiwał ścieżki <code>/applications/{id}</code>.</li>
+        <li data-i18n="article.terraform.issue3">Błędny subject w konfiguracji federacji – dopiero dokładny ciąg <code>repo:Tobisof/uczsiewnecie:ref:refs/heads/main</code> pozwala GitHub Actions na autoryzację.</li>
+      </ol>
+      <p data-i18n="article.terraform.outcome">Logicznie moduł był poprawny, ale bez dodatkowych uprawnień i właściwych claimów automatyzacja nie doszła do skutku.</p>
+
+      <h2 data-i18n="article.gui.heading">3. Drugie podejście — nauka i konfiguracja przez GUI</h2>
+      <p data-i18n="article.gui.lead">Po analizie błędów przeszedłem do portalu Azure, żeby zrozumieć każdy element federacji i zbudować go ręcznie:</p>
+      <ol>
+        <li data-i18n="article.gui.step1">App Registration w Entra ID – utworzenie aplikacji <code>gha-uczsiewnecie</code> i zapisanie identyfikatorów klienta oraz dzierżawy.</li>
+        <li data-i18n="article.gui.step2">Dodanie Federated Credential w zakładce Certificates &amp; secrets → Federated credentials z issuerem <code>https://token.actions.githubusercontent.com</code>, subjectem <code>repo:Tobisof/uczsiewnecie:ref:refs/heads/main</code> i audience <code>api://AzureADTokenExchange</code>.</li>
+        <li data-i18n="article.gui.step3">Nadanie ról w Azure: Contributor na poziomie subskrypcji oraz Storage Blob Data Contributor dla grupy zasobów z backendem Terraform.</li>
+        <li data-i18n="article.gui.step4">(Opcjonalnie) Udzielenie zgody administratora w Enterprise Applications, jeśli tenant tego wymagał.</li>
+      </ol>
+
+      <h2 data-i18n="article.pipeline.heading">4. Działanie po konfiguracji</h2>
+      <ul>
+        <li data-i18n="article.pipeline.item1">Każdy pipeline GitHub Actions otrzymuje token OIDC z <code>token.actions.githubusercontent.com</code>.</li>
+        <li data-i18n="article.pipeline.item2"><code>azure/login@v2</code> wymienia token na tymczasowy access token w Entra ID.</li>
+        <li data-i18n="article.pipeline.item3">Terraform loguje się z parametrem <code>use_oidc=true</code>, więc plan/apply/destroy działają bez sekretów.</li>
+        <li data-i18n="article.pipeline.item4">Operacje – w tym zapis tfstate – wykonują się automatycznie i bez błędów.</li>
+      </ul>
+
+      <h2 data-i18n="article.lessons.heading">Wnioski praktyczne</h2>
+      <ul>
+        <li data-i18n="article.lessons.item1">Konfiguracja w GUI pomaga zrozumieć strukturę OIDC, którą później odzwierciedla Terraform.</li>
+        <li data-i18n="article.lessons.item2">Skoro federacja już istnieje, Terraform może ją tylko odczytywać zamiast tworzyć ponownie.</li>
+        <li data-i18n="article.lessons.item3">W module warto dodać logikę warunkową: jeśli aplikacja istnieje – wykorzystaj ją, nie twórz kolejnej.</li>
+      </ul>
+
+      <h2 data-i18n="article.summary.heading">Podsumowanie</h2>
+      <p data-i18n="article.summary.p1">Projekt przeszedł pełną ścieżkę nauki i wdrożenia OIDC:</p>
+      <ol>
+        <li data-i18n="article.summary.step1">od próby pełnej automatyzacji Terraformem,</li>
+        <li data-i18n="article.summary.step2">przez błędy autoryzacji i ograniczenia Entra ID,</li>
+        <li data-i18n="article.summary.step3">po ręczną konfigurację federacji w portalu.</li>
+      </ol>
+      <p data-i18n="article.summary.p2">Dziś pipeline GitHub Actions loguje się do Azure bez sekretów – bezpiecznie, automatycznie i zgodnie z zasadą „zero secrets in CI/CD”.</p>
+    </section>
+  </article>
+
+  <div class="sep"></div>
+  <footer aria-label="Footer">
+    <section class="site-footer">
+      <p data-i18n="footer.note">Yes — this site was also created by <b>Tobiasz Lubowski</b>.</p>
+    </section>
+  </footer>
+
+  <script>
+    const translations = {
+      en: {
+        'page.title': 'Implementing OIDC federation for UczSięWNecie — Blog — Tobiasz Lubowski',
+        'page.description': 'How I replaced static secrets with OpenID Connect federation between GitHub Actions and Azure for the UczSięWNecie project.',
+        'brand.subtitle': 'DevOps in progress',
+        'nav.home': 'Home',
+        'nav.blog': 'Blog',
+        'nav.contact': 'Contact & CV',
+        'nav.langButton': 'Polski',
+        'nav.langAria': 'Switch language to Polish',
+        'nav.menuToggle': 'Toggle menu',
+        'article.title': 'Implementing OIDC federation for UczSięWNecie',
+        'article.meta.date': '2 November 2025',
+        'article.meta.tags': 'Azure • Security • CI/CD',
+        'article.hero.alt': 'Diagram showing GitHub Actions exchanging an OIDC token with Azure',
+        'article.need.heading': '1. The implementation need',
+        'article.intro.p1': 'The UczSięWNecie project set out to build a modern CI/CD infrastructure in Azure powered by Terraform and GitHub Actions.',
+        'article.intro.p2': 'The key requirement was to raise security by eliminating static secrets such as ARM_CLIENT_SECRET and the Service Principal password.',
+        'article.intro.p3': 'Instead of storing passwords in GitHub Secrets, I chose OpenID Connect federation so GitHub Actions can present a JWT issued by GitHub and validated by Entra ID.',
+        'article.terraform.heading': '2. First attempt — Terraform automation',
+        'article.terraform.lead': 'The initial plan involved a dedicated Terraform module (<code>github_oidc</code>) that would:',
+        'article.terraform.plan1': 'Create the Azure AD app registration,',
+        'article.terraform.plan2': 'Add a Federated Identity Credential between GitHub and Azure,',
+        'article.terraform.plan3': 'Assign the Contributor and Storage Blob Data Contributor roles.',
+        'article.terraform.planNote': 'One terraform apply was supposed to deliver the entire end-to-end setup.',
+        'article.terraform.issuesIntro': 'Three blockers appeared:',
+        'article.terraform.issue1': 'Authorization_RequestDenied (403) — the Terraform identity lacked Application Administrator or Global Administrator rights in Entra ID.',
+        'article.terraform.issue2': 'Attribute mismatches (application_id vs application_object_id) across azuread provider versions — the API returned only <code>{id}</code> while the module expected <code>/applications/{id}</code>.',
+        'article.terraform.issue3': 'An incorrect subject claim; only the exact <code>repo:Tobisof/uczsiewnecie:ref:refs/heads/main</code> string let GitHub Actions authenticate.',
+        'article.terraform.outcome': 'Even though the configuration was logically sound, the automation stalled without the right permissions and claims.',
+        'article.gui.heading': '3. Second attempt — learning via the Azure portal',
+        'article.gui.lead': 'To understand every component, I rebuilt the federation manually in the Azure portal:',
+        'article.gui.step1': 'Created the <code>gha-uczsiewnecie</code> app registration and saved the Application (client) ID and Directory (tenant) ID.',
+        'article.gui.step2': 'Added a federated credential (Certificates &amp; secrets → Federated credentials) with issuer <code>https://token.actions.githubusercontent.com</code>, subject <code>repo:Tobisof/uczsiewnecie:ref:refs/heads/main</code>, audience <code>api://AzureADTokenExchange</code>.',
+        'article.gui.step3': 'Assigned Azure roles: Contributor at the subscription scope and Storage Blob Data Contributor for the Terraform backend resource group.',
+        'article.gui.step4': '(Optional) Granted admin consent in Enterprise Applications when the tenant required approval.',
+        'article.pipeline.heading': '4. Pipeline behaviour after configuration',
+        'article.pipeline.item1': 'Every GitHub Actions run receives an OIDC token from <code>token.actions.githubusercontent.com</code>.',
+        'article.pipeline.item2': '<code>azure/login@v2</code> validates the token and exchanges it for a temporary Entra ID access token.',
+        'article.pipeline.item3': 'Terraform authenticates with <code>use_oidc=true</code>, so plan/apply/destroy run secret-free.',
+        'article.pipeline.item4': 'All operations, including tfstate writes, execute automatically and without errors.',
+        'article.lessons.heading': 'Practical takeaways',
+        'article.lessons.item1': 'Portal configuration clarified how Terraform should mirror the OIDC structure.',
+        'article.lessons.item2': 'With the federation in place, Terraform can read and reuse it instead of creating a duplicate.',
+        'article.lessons.item3': 'Add conditional logic to the module so existing apps are reused rather than recreated.',
+        'article.summary.heading': 'Summary',
+        'article.summary.p1': 'The project moved through a complete OIDC learning path:',
+        'article.summary.step1': 'starting with an ambitious Terraform-only plan,',
+        'article.summary.step2': 'running into authorization limits and Entra ID constraints,',
+        'article.summary.step3': 'and finishing with portal-driven federation that stabilised the workflow.',
+        'article.summary.p2': 'Today the GitHub Actions pipeline signs in to Azure securely, automatically, and with zero long-lived secrets.',
+        'footer.note': 'Yes — this site was also created by <b>Tobiasz Lubowski</b>.'
+      },
+
+      pl: {
+        'page.title': 'Implementacja federacji OIDC dla UczSięWNecie — Blog — Tobiasz Lubowski',
+        'page.description': 'Jak zastąpiłem statyczne sekrety federacją OpenID Connect pomiędzy GitHub Actions i Azure w projekcie UczSięWNecie.',
+        'brand.subtitle': 'DevOps w drodze',
+        'nav.home': 'Strona główna',
+        'nav.blog': 'Blog',
+        'nav.contact': 'Kontakt i CV',
+        'nav.langButton': 'English',
+        'nav.langAria': 'Zmień język na angielski',
+        'nav.menuToggle': 'Przełącz menu',
+        'article.title': 'Implementacja federacji OIDC dla UczSięWNecie',
+        'article.meta.date': '2 listopada 2025',
+        'article.meta.tags': 'Azure • Bezpieczeństwo • CI/CD',
+        'article.hero.alt': 'Diagram pokazujący, jak GitHub Actions wymienia token OIDC z Azure',
+        'article.intro.p1': 'UczSięWNecie to moja platforma edukacyjna, na której Terraform i GitHub Actions zarządzają zasobami Azure do labów i prezentacji.',
+        'article.intro.p2': 'Aby utrzymać wysoki poziom bezpieczeństwa, chciałem wyeliminować długowieczne sekrety Service Principala, takie jak ARM_CLIENT_SECRET, z CI/CD.',
+        'article.intro.p3': 'Ten case study opisuje dwie próby wdrożenia oraz finalną federację OpenID Connect, która dziś zasila pipeline.',
+        'article.meta.tags': 'Azure • Bezpieczeństwo • CI/CD',
+        'article.hero.alt': 'Schemat federacji OIDC między GitHub Actions i Azure',
+        'article.need.heading': '1. Potrzeba wdrożenia',
+        'article.intro.p1': 'Projekt „UczSięWNecie” miał dostarczyć nowoczesną infrastrukturę CI/CD w Azure, opartą na Terraformie i GitHub Actions.',
+        'article.intro.p2': 'Kluczowym wymaganiem było zwiększenie bezpieczeństwa i wyeliminowanie statycznych sekretów, takich jak ARM_CLIENT_SECRET czy hasło Service Principala.',
+        'article.intro.p3': 'Zamiast przekazywać hasła w GitHub Secrets, wdrożyłem federację OIDC – GitHub Actions uwierzytelnia się tokenem JWT wystawionym przez GitHub i zweryfikowanym przez Entra ID.',
+        'article.terraform.heading': '2. Pierwsze podejście — automatyzacja z Terraformem',
+        'article.terraform.lead': 'Pierwszy pomysł zakładał pełną automatyzację w module Terraform <code>github_oidc</code>. Miał on:',
+        'article.terraform.plan1': 'utworzyć rejestrację aplikacji w Azure AD,',
+        'article.terraform.plan2': 'dodać Federated Identity Credential pomiędzy GitHub i Azure,',
+        'article.terraform.plan3': 'przypisać role Contributor oraz Storage Blob Data Contributor.',
+        'article.terraform.planNote': 'Wystarczyć miał pojedynczy <code>terraform apply</code>, aby całość zadziałała end-to-end.',
+        'article.terraform.issuesIntro': 'Na przeszkodzie stanęły jednak trzy błędy:',
+        'article.terraform.issue1': 'Authorization_RequestDenied (403) – konto wykonujące Terraform nie miało ról Application Administrator / Global Administrator w Entra ID.',
+        'article.terraform.issue2': 'Niezgodność atrybutów (application_id vs application_object_id) między wersjami providera azuread – API zwracało samo <code>{id}</code>, a moduł oczekiwał ścieżki <code>/applications/{id}</code>.',
+        'article.terraform.issue3': 'Błędny subject w konfiguracji federacji – dopiero dokładny ciąg <code>repo:Tobisof/uczsiewnecie:ref:refs/heads/main</code> pozwala GitHub Actions na autoryzację.',
+        'article.terraform.outcome': 'Logicznie moduł był poprawny, ale bez dodatkowych uprawnień i właściwych claimów automatyzacja nie doszła do skutku.',
+        'article.gui.heading': '3. Drugie podejście — nauka i konfiguracja przez GUI',
+        'article.gui.lead': 'Po analizie błędów przeszedłem do portalu Azure, żeby zrozumieć każdy element federacji i zbudować go ręcznie:',
+        'article.gui.step1': 'App Registration w Entra ID – utworzenie aplikacji <code>gha-uczsiewnecie</code> i zapisanie identyfikatorów klienta oraz dzierżawy.',
+        'article.gui.step2': 'Dodanie Federated Credential w zakładce Certificates &amp; secrets → Federated credentials z issuerem <code>https://token.actions.githubusercontent.com</code>, subjectem <code>repo:Tobisof/uczsiewnecie:ref:refs/heads/main</code> i audience <code>api://AzureADTokenExchange</code>.',
+        'article.gui.step3': 'Nadanie ról w Azure: Contributor na poziomie subskrypcji oraz Storage Blob Data Contributor dla grupy zasobów z backendem Terraform.',
+        'article.gui.step4': '(Opcjonalnie) Udzielenie zgody administratora w Enterprise Applications, jeśli tenant tego wymagał.',
+        'article.pipeline.heading': '4. Działanie po konfiguracji',
+        'article.pipeline.item1': 'Każdy pipeline GitHub Actions otrzymuje token OIDC z <code>token.actions.githubusercontent.com</code>.',
+        'article.pipeline.item2': '<code>azure/login@v2</code> wymienia token na tymczasowy access token w Entra ID.',
+        'article.pipeline.item3': 'Terraform loguje się z parametrem <code>use_oidc=true</code>, więc plan/apply/destroy działają bez sekretów.',
+        'article.pipeline.item4': 'Operacje – w tym zapis tfstate – wykonują się automatycznie i bez błędów.',
+        'article.lessons.heading': 'Wnioski praktyczne',
+        'article.lessons.item1': 'Konfiguracja w GUI pomaga zrozumieć strukturę OIDC, którą później odzwierciedla Terraform.',
+        'article.lessons.item2': 'Skoro federacja już istnieje, Terraform może ją tylko odczytywać zamiast tworzyć ponownie.',
+        'article.lessons.item3': 'W module warto dodać logikę warunkową: jeśli aplikacja istnieje – wykorzystaj ją, nie twórz kolejnej.',
+        'article.summary.heading': 'Podsumowanie',
+        'article.summary.p1': 'Projekt przeszedł pełną ścieżkę nauki i wdrożenia OIDC:',
+        'article.summary.step1': 'od próby pełnej automatyzacji Terraformem,',
+        'article.summary.step2': 'przez błędy autoryzacji i ograniczenia Entra ID,',
+        'article.summary.step3': 'po ręczną konfigurację federacji w portalu.',
+        'article.summary.p2': 'Dziś pipeline GitHub Actions loguje się do Azure bez sekretów – bezpiecznie, automatycznie i zgodnie z zasadą „zero secrets in CI/CD”.',
+        'footer.note': 'Tak — tę stronę również stworzył <b>Tobiasz Lubowski</b>.'
+      },
+    };
+
+    function readStoredLanguage() {
+      try {
+        const stored = localStorage.getItem('preferredLanguage');
+        if (stored === 'pl' || stored === 'en') {
+          return stored;
+        }
+      } catch (err) {}
+      return 'en';
+    }
+
+    let currentLang = readStoredLanguage();
+    const languageToggle = document.getElementById('languageToggle');
+
+    function applyTranslations(lang) {
+      currentLang = lang;
+      try {
+        localStorage.setItem('preferredLanguage', currentLang);
+      } catch (err) {}
+      document.documentElement.lang = lang === 'pl' ? 'pl' : 'en';
+      document.body.setAttribute('data-lang', currentLang);
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        const value = (translations[currentLang] || {})[key];
+        if (typeof value === 'undefined') return;
+        el.innerHTML = value;
+      });
+
+      document.querySelectorAll('[data-i18n-attr]').forEach(el => {
+        const entries = el.getAttribute('data-i18n-attr').split(';');
+        entries.forEach(entry => {
+          const [attr, key] = entry.split(':').map(part => part && part.trim());
+          if (!attr || !key) return;
+          const val = (translations[currentLang] || {})[key];
+          if (typeof val === 'undefined') return;
+          el.setAttribute(attr, val);
+        });
+      });
+
+      if (languageToggle) {
+        const buttonText = (translations[currentLang] || {})['nav.langButton'];
+        if (typeof buttonText !== 'undefined') languageToggle.textContent = buttonText;
+        const ariaText = (translations[currentLang] || {})['nav.langAria'];
+        if (typeof ariaText !== 'undefined') languageToggle.setAttribute('aria-label', ariaText);
+        languageToggle.setAttribute('aria-pressed', currentLang === 'pl' ? 'true' : 'false');
+      }
+
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) {
+        const desc = (translations[currentLang] || {})['page.description'];
+        if (typeof desc !== 'undefined') metaDesc.setAttribute('content', desc);
+      }
+      const title = (translations[currentLang] || {})['page.title'];
+      if (typeof title !== 'undefined') document.title = title;
+    }
+
+    applyTranslations(currentLang);
+
+    if (languageToggle) {
+      languageToggle.addEventListener('click', () => {
+        const nextLang = currentLang === 'en' ? 'pl' : 'en';
+        applyTranslations(nextLang);
+      });
+    }
+
+    const menu = document.querySelector('.menu');
+    const menuToggle = document.getElementById('menuToggle');
+    if(menu && menuToggle){
+      menuToggle.addEventListener('click', ()=>{
+        const open = menu.classList.toggle('show');
+        menuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      menu.querySelectorAll('a, button').forEach(link=>link.addEventListener('click', ()=>{
+        if(menu.classList.contains('show')){
+          menu.classList.remove('show');
+          menuToggle.setAttribute('aria-expanded','false');
+        }
+      }));
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blue-green with Bicep — Blog — Tobiasz Lubowski</title>
+  <meta name="description" content="Designing a resilient Azure DevOps pipeline with Bicep templates and staged approvals." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%238b5cf6'/><stop offset='1' stop-color='%236ee7ff'/></linearGradient></defs><rect width='64' height='64' rx='14' fill='url(%23g)'/><circle cx='32' cy='34' r='14' fill='%23fde68a'/><path d='M18 28c3-6 10-10 14-10s10 4 14 10c-6-4-13-5-28 0z' fill='%23facc15'/><circle cx='27' cy='35' r='2.2' fill='%23000' opacity='0.9'/><circle cx='37' cy='35' r='2.2' fill='%23000' opacity='0.9'/><path d='M25 41c2.5 2 11.5 2 14 0' stroke='%23000' stroke-width='2' stroke-linecap='round' fill='none'/></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="nav" aria-label="Main">
+    <div class="row">
+      <div class="brand">Tobiasz Lubowski <small style="color:#9aa3af;font-weight:500">DevOps in progress</small></div>
+      <div class="spacer"></div>
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu" aria-expanded="false">☰</button>
+      <div class="menu">
+        <a href="../index.html">Home</a>
+        <a href="blog.html" class="active">Blog</a>
+        <a href="../index.html#contact" class="btn">Contact & CV</a>
+      </div>
+    </div>
+  </nav>
+
+  <article class="blog-post">
+    <header>
+      <h1>Blue-green with Bicep: resilient delivery on Azure DevOps</h1>
+      <div class="blog-post-meta">
+        <span><time datetime="2024-06-12">June 12, 2024</time></span>
+        <span>Azure • Bicep • Multi-stage pipelines</span>
+      </div>
+    </header>
+
+    <div class="blog-post-hero">
+      <img src="assets/projects/azure-devops.jpg" alt="Azure DevOps pipeline diagram" />
+    </div>
+
+    <section class="blog-post-content">
+      <p>This experiment set out to build confidence in Azure DevOps by applying production patterns to a learning project. The focus: blue-green deployments powered by Bicep templates and controlled through staged approvals.</p>
+
+      <h2>Composing infrastructure with Bicep</h2>
+      <p>Bicep templates define the full stack — resource groups, app service plan, web app, networking rules, and diagnostics. Parameters allow me to promote the same artefacts across environments without rework.</p>
+
+      <h2>Multi-stage delivery with guard rails</h2>
+      <p>The pipeline compiles Bicep to ARM, validates templates, then creates two identical environments (blue/green). Manual approvals sit between staging and production to simulate real-world change control. Traffic switching happens via Azure Front Door routing rules.</p>
+
+      <h2>Testing rollback scenarios</h2>
+      <p>By re-running the pipeline with intentionally failing builds, I validated rollback behaviour — the previous environment stays healthy while the failed slot is automatically isolated. Logging through Application Insights confirmed zero downtime deployments.</p>
+
+      <p>The outcome is a confidence boost in orchestrating Azure resources with code while respecting enterprise-style governance. It also opened doors to expand the pattern with automated security scans and policy checks.</p>
+    </section>
+
+    <div class="blog-back">
+      <a href="blog.html">← Back to all posts</a>
+    </div>
+  </article>
+
+  <div class="sep"></div>
+  <footer aria-label="Footer">
+    <section class="site-footer">
+      <p>Yes — this site was also created by <b>Tobiasz Lubowski</b>.</p>
+    </section>
+  </footer>
+
+  <script>
+    const menu = document.querySelector('.menu');
+    const menuToggle = document.getElementById('menuToggle');
+    if(menu && menuToggle){
+      menuToggle.addEventListener('click', ()=>{
+        const open = menu.classList.toggle('show');
+        menuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      menu.querySelectorAll('a').forEach(link=>link.addEventListener('click', ()=>{
+        if(menu.classList.contains('show')){
+          menu.classList.remove('show');
+          menuToggle.setAttribute('aria-expanded','false');
+        }
+      }));
+    }
+  </script>
+</body>
+</html>

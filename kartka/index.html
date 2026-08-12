@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magiczna Kartka Świąteczna</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Mountains+of+Christmas:wght@400;700&family=Lato:wght@300;400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Snow Animation Canvas -->
+    <canvas id="snow-canvas"></canvas>
+
+    <!-- Main App Container -->
+    <div class="app-container">
+
+        <!-- CREATOR MODE -->
+        <main id="creator-app" class="mode-container hidden">
+            <header class="app-header">
+                <h1>Stwórz Kartkę Świąteczną</h1>
+                <p>Zaprojektuj wyjątkowe życzenia i wyślij bliskim!</p>
+            </header>
+
+            <div class="creator-layout">
+                <!-- Form Section -->
+                <section class="form-section glass-panel">
+                    <div class="form-group">
+                        <label for="input-to">Dla kogo (opcjonalne)</label>
+                        <input type="text" id="input-to" placeholder="np. Cioci Grażynki" maxlength="50">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input-message">Twoje życzenia</label>
+                        <textarea id="input-message" rows="5" placeholder="Wpisz swoje życzenia..."
+                            maxlength="240"></textarea>
+                        <div class="char-count"><span id="char-current">0</span>/240</div>
+                    </div>
+
+                    <!-- Suggestions -->
+                    <div class="suggestions-wrapper">
+                        <button type="button" class="btn-outline btn-small" id="toggle-suggestions">Pokaż gotowe
+                            życzenia</button>
+                        <div id="suggestions-list" class="suggestions-list hidden">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input-sender">Twój podpis</label>
+                        <input type="text" id="input-sender" placeholder="np. Tomek" maxlength="50">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Wybierz styl kartki</label>
+                        <div id="style-selector" class="style-selector">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Removed Color Swatches if Styles dictate full look, but let's keep Text Color or Accent? 
+                         User said "Change colors... a bit weak". 
+                         Let's keep "Kolor akcentu" to give user control over text/details. -->
+
+
+                    <div class="actions">
+                        <button id="btn-generate" class="btn-primary">Generuj link</button>
+                    </div>
+
+                    <div id="link-result" class="link-result hidden">
+                        <input type="text" id="share-link" readonly>
+                        <button id="btn-copy" class="btn-secondary">Kopiuj</button>
+                    </div>
+                </section>
+
+                <!-- Live Preview Section -->
+                <aside class="preview-section">
+                    <h2>Podgląd (Kliknij!)</h2>
+                    <div class="card-preview-wrapper" id="live-preview-container">
+                        <!-- 3D Preview Card (Smaller Scale) -->
+                        <div class="card-scene preview-scene">
+                            <div class="card-object" id="preview-card">
+                                <!-- Front -->
+                                <div class="card-face card-front">
+                                    <div class="front-content">
+                                        <h2 id="prev-front-title" class="card-title">Wesołych Świąt!</h2>
+                                        <div class="style-decoration"></div>
+                                        <p class="click-hint">Kliknij, aby otworzyć</p>
+                                    </div>
+                                </div>
+                                <!-- Back (Message) -->
+                                <div class="card-face card-inside-right">
+                                    <div class="inside-content">
+                                        <div class="inside-header">
+                                            <span class="label-large">Dla:</span> <span id="prev-to">Bartka</span>
+                                        </div>
+                                        <div class="inside-body">
+                                            <p id="prev-message" class="handwritten">...</p>
+                                        </div>
+                                        <div class="inside-footer">
+                                            <span class="label">Od:</span> <span id="prev-sender">Tomka</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </main>
+
+        <!-- VIEWER MODE -->
+        <main id="viewer-app" class="mode-container hidden">
+            <div class="viewer-layout">
+
+                <div class="card-scene">
+                    <div class="card-object" id="gift-card">
+                        <!-- Front of the card -->
+                        <div class="card-face card-front">
+                            <div class="front-content">
+                                <h2 id="card-front-title" class="card-title">Wesołych Świąt!</h2>
+                                <div class="style-decoration"></div>
+                                <p class="click-hint">Kliknij, aby otworzyć</p>
+                            </div>
+                        </div>
+
+                        <!-- Inside Right (Message content) -->
+                        <div class="card-face card-inside-right">
+                            <div class="inside-content">
+                                <div class="inside-header">
+                                    <span class="label-to label-large">Dla:</span> <span id="card-to"></span>
+                                </div>
+                                <div class="inside-body">
+                                    <p id="card-message" class="handwritten"></p>
+                                </div>
+                                <div class="inside-footer">
+                                    <span class="label-from">Życzy:</span> <span id="card-sender"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="viewer-actions">
+                    <button id="btn-create-own" class="btn-primary glass-btn">Stwórz własną kartkę</button>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="app.js"></script>
+</body>
+
+</html>

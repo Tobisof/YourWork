@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TwojaWizytówka</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="brief-page">
+    <header class="brief-header">
+      <h1>Opowiedz nam o swojej wymarzonej stronie</h1>
+    </header>
+
+    <form id="briefForm" class="brief-form">
+      <fieldset>
+        <legend>Podstawowe informacje</legend>
+        <label>Jak nazywa się Twoja firma / marka?
+          <input name="brandName" type="text" placeholder="np. TWOJAFIRMA" required />
+        </label>
+        <label>Czym się zajmujesz? (krótki opis działalności)
+          <textarea name="businessDescription" rows="2" placeholder="Kilka zdań o działalności"></textarea>
+        </label>
+        <label>Jaki jest główny cel strony?
+          <input name="primaryGoal" type="text" placeholder="np. Prezentacja oferty i kontakt" required />
+        </label>
+        <label>Jeżeli chcesz zostawić kontakt na stronie to podaj
+          <input name="contactPerson" type="text" placeholder="Imię i nazwisko" />
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Wygląd i styl</legend>
+        <label>Jakie kolory mają dominować na stronie?
+          <input name="colors" type="text" placeholder="np. biały, fiolet, seledynowy" />
+        </label>
+        <label>Preferowany styl (minimalistyczny czy rozbudowany)
+          <input name="stylePreference" type="text" placeholder="np. z efektami i animacjami" />
+        </label>
+        <div class="field">
+          <span>Czy chcesz animacje na stronie?</span>
+          <div class="option-group" role="group" aria-label="Czy chcesz animacje">
+            <label class="option-chip">
+              <input type="radio" name="animations" value="Tak" checked />
+              <span>Tak</span>
+            </label>
+            <label class="option-chip">
+              <input type="radio" name="animations" value="Nie" />
+              <span>Nie</span>
+            </label>
+          </div>
+        </div>
+        <label>Czy są strony referencyjne?
+          <textarea name="references" rows="2" placeholder="Podaj linki lub nazwy"></textarea>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Struktura i treść</legend>
+        <label>Jakie sekcje mają znaleźć się na stronie?
+          <input name="sections" type="text" placeholder="np. Strona główna, o nas..." />
+        </label>
+        <label>Czy potrzebna jest mapa Google z lokalizacją firmy?
+          <input name="mapNeed" type="text" placeholder="np. Tak, Raków 56" />
+        </label>
+        <label>Czy chcesz dodać cennik lub sekcję z ofertami?
+          <textarea name="pricing" rows="2" placeholder="np. Kontakt w celu wyceny"></textarea>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Multimedia i funkcjonalności</legend>
+        <label>Czy chcesz integrację z mediami społecznościowymi? (podaj link)
+          <input name="socialMedia" type="text" placeholder="https://instagram.com/TwojProfil" />
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Podsumowanie</legend>
+        <label>Jakie emocje ma wzbudzać strona?
+          <textarea name="emotions" rows="2" placeholder="np. Zaufanie, profesjonalizm, zabawa"></textarea>
+        </label>
+        <label>Jaki efekt końcowy oczekujesz?
+          <textarea name="finalEffect" rows="2" placeholder="np. Nowoczesna, szybka strona zachęcająca do kontaktu"></textarea>
+        </label>
+        <label>Instagram lub inny link
+          <input name="instagram" type="text" placeholder="https://instagram.com/TwojProfil" />
+        </label>
+      </fieldset>
+
+      <button class="btn primary" type="submit">STWÓRZ SWOJĄ STRONĘ</button>
+      <p class="form-status" role="status" aria-live="polite"></p>
+    </form>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

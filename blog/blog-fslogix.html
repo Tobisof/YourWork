@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wdrożenie FSLogix na darmowej subskrypcji Azure — Blog — Tobiasz Lubowski</title>
+  <meta name="description" content="Jak na darmowej subskrypcji Azure zbudowałem środowisko z FSLogix dla profili użytkowników, optymalizując koszty i wydajność pracy zdalnej." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%238b5cf6'/><stop offset='1' stop-color='%236ee7ff'/></linearGradient></defs><rect width='64' height='64' rx='14' fill='url(%23g)'/><circle cx='32' cy='34' r='14' fill='%23fde68a'/><path d='M18 28c3-6 10-10 14-10s10 4 14 10c-6-4-13-5-28 0z' fill='%23facc15'/><circle cx='27' cy='35' r='2.2' fill='%23000' opacity='0.9'/><circle cx='37' cy='35' r='2.2' fill='%23000' opacity='0.9'/><path d='M25 41c2.5 2 11.5 2 14 0' stroke='%23000' stroke-width='2' stroke-linecap='round' fill='none'/></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="nav" aria-label="Main">
+    <div class="row">
+      <div class="brand">Tobiasz Lubowski <small style="color:#9aa3af;font-weight:500" data-i18n="brand.subtitle">DevOps in progress</small></div>
+      <div class="spacer"></div>
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu" aria-expanded="false" data-i18n-attr="aria-label:nav.menuToggle">☰</button>
+      <div class="menu">
+        <a href="../index.html" data-i18n="nav.home">Home</a>
+        <a href="blog.html" class="active" data-i18n="nav.blog">Blog</a>
+        <a href="../index.html#contact" class="btn" data-i18n="nav.contact">Contact & CV</a>
+        <button type="button" class="lang-toggle" id="languageToggle" aria-pressed="false" data-i18n="nav.langButton">Polski</button>
+      </div>
+    </div>
+  </nav>
+
+  <article class="blog-post">
+    <header>
+      <h1 data-i18n="article.title">Wdrożenie FSLogix na darmowej subskrypcji Azure</h1>
+      <div class="blog-post-meta">
+        <span><time datetime="2025-10-31" data-i18n="article.meta.date">31 października 2025</time></span>
+        <span data-i18n="article.meta.tags">Azure • Pulpit wirtualny • Zarządzanie profilami</span>
+      </div>
+    </header>
+
+    <div class="blog-post-hero">
+      <img src="assets/vlogs/fslogix-main.png" alt="Schemat usług Azure pokazujący lab z FSLogix" data-i18n-attr="alt:article.hero.alt" />
+    </div>
+
+    <section class="blog-post-content">
+      <p data-i18n="article.intro.p1">Ten lab z FSLogix powstał z pytania, czy na darmowej subskrypcji Azure da się utrzymać roaming profili bez domeny i całego ekosystemu AVD.</p>
+      <p data-i18n="article.intro.p2">Założenia były proste: pojedynczy Windows Server działa w trybie standalone, a kontenery profili montują się z udziału Azure Files SMB przy użyciu klucza konta Storage.</p>
+      <p data-i18n="article.intro.p3">Poniżej znajdziesz komplet decyzji, analizę problemów, finalne rozwiązanie oraz instrukcję, dzięki której odtworzysz PoC krok po kroku.</p>
+
+      <h2 data-i18n="article.context.heading">Kontekst, ograniczenia i decyzje architektoniczne</h2>
+      <p data-i18n="article.context.lead">Na starcie rozważałem klasyczny scenariusz domenowy, inspirowany materiałami społeczności.</p>
+
+      <h3 data-i18n="article.context.option.heading">Rozważany wariant domenowy</h3>
+      <ul>
+        <li data-i18n="article.context.option.item1">Nerdio Manager + AVD + Entra ID – automatyzacja hostów i FSLogix, logowanie przez Kerberos/NTLM.</li>
+        <li data-i18n="article.context.option.item2">Pełna integracja z tożsamościami, łatwe zarządzanie profilami i naturalny roaming między hostami AVD.</li>
+      </ul>
+      <p data-i18n="article.context.option.note">Brzmi idealnie, ale darmowy trial Azure nie udźwignie kosztów kontrolerów domeny i infrastruktury AVD.</p>
+
+      <h3 data-i18n="article.context.skip.heading">Dlaczego zrezygnowałem z domeny?</h3>
+      <ul>
+        <li data-i18n="article.context.skip.item1">Limity subskrypcji Free Trial uniemożliwiały ekonomiczne uruchomienie AVD i AD DS / Azure AD DS.</li>
+        <li data-i18n="article.context.skip.item2">Kerberos dla Azure Files wymaga domeny — przekraczało to budżet i zakres PoC.</li>
+        <li data-i18n="article.context.skip.item3">Celem było szybkie, tanie PoC, które da się zamknąć w jednej maszynie.</li>
+      </ul>
+
+      <h3 data-i18n="article.decision.heading">Finalna decyzja</h3>
+      <ul>
+        <li data-i18n="article.decision.item1">Windows Server pozostaje w trybie standalone.</li>
+        <li data-i18n="article.decision.item2">Azure Files (SMB) pełni rolę magazynu VHDX dla profili.</li>
+        <li data-i18n="article.decision.item3">Logowanie odbywa się z wykorzystaniem Storage Account Key.</li>
+        <li data-i18n="article.decision.item4">Dostęp do SMB wymuszamy w kontekście SYSTEM, czyli tak, jak działa agent FSLogix.</li>
+      </ul>
+
+      <h3 data-i18n="article.path.heading">Ścieżka dojścia</h3>
+      <ol>
+        <li data-i18n="article.path.step1">Testy z Nerdio/AVD/Entra ID — odrzucone przez limity triala.</li>
+        <li data-i18n="article.path.step2">Konfiguracja pojedynczej VM z FSLogix + Azure Files opartymi o Access Key.</li>
+        <li data-i18n="article.path.step3">Błąd montowania profilu: 1326 (niepoprawna nazwa użytkownika lub hasło).</li>
+        <li data-i18n="article.path.step4">Potwierdzenie, że dostęp SMB działa ręcznie w kontekście SYSTEM (<code>cmdkey</code> + <code>net use</code>).</li>
+        <li data-i18n="article.path.step5">Diagnoza: FSLogix łączył się jak użytkownik, zamiast jak komputer.</li>
+        <li data-i18n="article.path.step6">Dodanie klucza rejestru <code>AccessNetworkAsComputerObject=1</code>.</li>
+        <li data-i18n="article.path.step7">Efekt: kontenery <code>Profile.vhdx</code> montują się poprawnie na Azure Files.</li>
+      </ol>
+
+      <blockquote data-i18n="article.path.note">To minimum produkcyjnie sensowne dla PoC w środowisku bez domeny. Niżej znajdziesz kompletny przewodnik.</blockquote>
+
+      <h2 data-i18n="article.guide.heading">Instrukcja krok po kroku: FSLogix + Azure Files standalone</h2>
+      <p data-i18n="article.guide.intro">Instrukcja prowadzi od stworzenia storage po test logowania — bez potrzeby sięgania do dodatkowych źródeł.</p>
+
+      <h3 data-i18n="article.guide.step1.title">1. Utworzenie konta Storage i udziału Azure Files</h3>
+      <p data-i18n="article.guide.step1.p1">Standard_LRS jest tanie i wystarczające do PoC, a udział przechowuje kontenery profili.</p>
+      <pre><code>az storage account create `
+  --name &lt;nazwaKontaStorage&gt; `
+  --resource-group &lt;nazwaResourceGroup&gt; `
+  --location &lt;region&gt; `
+  --sku Standard_LRS</code></pre>
+      <pre><code>az storage share-rm create `
+  --storage-account &lt;nazwaKontaStorage&gt; `
+  --name &lt;nazwaUdzialu&gt;</code></pre>
+
+      <h3 data-i18n="article.guide.step2.title">2. Pobranie klucza dostępu</h3>
+      <p data-i18n="article.guide.step2.p1">Access Key przyda się do zapisania poświadczeń w magazynie SYSTEM i mapowania udziału.</p>
+      <pre><code>$key = (az storage account keys list `
+  --account-name &lt;nazwaKontaStorage&gt; `
+  --resource-group &lt;nazwaResourceGroup&gt; `
+  --query "[0].value" -o tsv)</code></pre>
+
+      <h3 data-i18n="article.guide.step3.title">3. Zapis poświadczeń i mapowanie udziału</h3>
+      <p data-i18n="article.guide.step3.p1">Poświadczenia zapisz w kontekście SYSTEM, aby agent FSLogix sięgnął po nie zanim użytkownik się zaloguje.</p>
+      <pre><code>psexec -i -s cmd.exe</code></pre>
+      <pre><code>cmdkey /add:&lt;nazwaKontaStorage&gt;.file.core.windows.net /user:Azure\&lt;nazwaKontaStorage&gt; /pass:&lt;klucz&gt;</code></pre>
+
+      <h3 data-i18n="article.guide.step4.title">4. Instalacja FSLogix</h3>
+      <p data-i18n="article.guide.step4.p1">Pobierz instalator FSLogix z witryny Microsoft i uruchom go z parametrem <code>-Wait</code>, by mieć pewność, że proces się domknie.</p>
+      <pre><code>Start-Process -FilePath .\FSLogixAppsSetup.exe -Wait</code></pre>
+
+      <h3 data-i18n="article.guide.step5.title">5. Konfiguracja rejestru FSLogix</h3>
+      <p data-i18n="article.guide.step5.p1">Klucz Profiles przechowuje najważniejsze ustawienia: włączenie kontenerów, lokalizację VHD i wpis rozwiązujący problem z uwierzytelnianiem.</p>
+      <pre><code>New-Item -Path 'HKLM:\SOFTWARE\FSLogix\Profiles' -Force
+Set-ItemProperty -Path 'HKLM:\SOFTWARE\FSLogix\Profiles' -Name 'Enabled' -Type DWord -Value 1
+Set-ItemProperty -Path 'HKLM:\SOFTWARE\FSLogix\Profiles' -Name 'VHDLocations' -Type String -Value '\\&lt;nazwaKontaStorage&gt;.file.core.windows.net\&lt;nazwaUdzialu&gt;'
+Set-ItemProperty -Path 'HKLM:\SOFTWARE\FSLogix\Profiles' -Name 'AccessNetworkAsComputerObject' -Type DWord -Value 1</code></pre>
+
+      <h3 data-i18n="article.guide.step6.title">6. Restart usługi i test logowania</h3>
+      <p data-i18n="article.guide.step6.p1">Zrestartuj usługę <code>frxsvc</code>, zaloguj się na konto testowe i sprawdź logi FSLogix.</p>
+      <pre><code>Restart-Service frxsvc</code></pre>
+      <p data-i18n="article.guide.step6.p2">Jeśli w Azure Files widzisz nowy katalog użytkownika, a logi w <code>C:\ProgramData\FSLogix\Logs\Profile</code> są czyste, PoC działa.</p>
+
+      <h2 data-i18n="article.summary.heading">Przegląd projektu</h2>
+      <p data-i18n="article.summary.p1">Projekt skupia się na uruchomieniu FSLogix w trybie standalone z Azure Files jako magazynem profili.</p>
+
+      <h2 data-i18n="article.goal.heading">Cel projektu</h2>
+      <p data-i18n="article.goal.p1">Zapewnić stabilne montowanie kontenerów FSLogix bez infrastruktury domenowej.</p>
+
+      <h2 data-i18n="article.env.heading">Środowisko testowe</h2>
+      <ul>
+        <li data-i18n="article.env.item1">Samodzielna maszyna Windows Server w Azure.</li>
+        <li data-i18n="article.env.item2">Udział Azure Files SMB dla plików VHDX.</li>
+        <li data-i18n="article.env.item3">Agent FSLogix Profile Container.</li>
+        <li data-i18n="article.env.item4">Reguły sieciowe i firewall dopuszczające ruch SMB.</li>
+      </ul>
+
+      <h2 data-i18n="article.problem.heading">Analiza problemu</h2>
+      <p data-i18n="article.problem.p1">Agent FSLogix zwracał błąd 1326 — brakowało uprawnień do dostępu w imieniu komputera.</p>
+
+      <h2 data-i18n="article.solution.heading">Rozwiązanie</h2>
+      <p data-i18n="article.solution.p1">Wpis <code>AccessNetworkAsComputerObject=1</code> pozwolił usłudze SYSTEM na uwierzytelnianie w Azure Files.</p>
+
+      <h2 data-i18n="article.results.heading">Rezultaty</h2>
+      <p data-i18n="article.results.p1">Profile montują się konsekwentnie z Azure Files, potwierdzając sensowność podejścia standalone.</p>
+
+      <h2 data-i18n="article.learn.heading">Najważniejsze wnioski</h2>
+      <ul>
+        <li data-i18n="article.learn.item1">Standalone FSLogix wymaga dostępu SMB jako SYSTEM.</li>
+        <li data-i18n="article.learn.item2">Klucz <code>AccessNetworkAsComputerObject</code> to krytyczna poprawka.</li>
+        <li data-i18n="article.learn.item3">Azure Files SMB sprawdza się jako magazyn profili poza domeną.</li>
+        <li data-i18n="article.learn.item4">Przy błędach 1326 zacznij od rejestru i poświadczeń SYSTEM.</li>
+      </ul>
+
+      <h2 data-i18n="article.future.heading">Możliwe usprawnienia</h2>
+      <p data-i18n="article.future.p1">Następny krok to integracja z AD lub migracja do Azure Virtual Desktop dla scenariuszy multi-user.</p>
+    </section>
+  </article>
+
+  <div class="sep"></div>
+  <footer aria-label="Footer">
+    <section class="site-footer">
+      <p data-i18n="footer.note">Yes — this site was also created by <b>Tobiasz Lubowski</b>.</p>
+    </section>
+  </footer>
+
+  <script>
+    const translations = {
+      en: {
+        'page.title': 'Deploying FSLogix on the Azure free tier — Blog — Tobiasz Lubowski',
+        'page.description': 'How I built an FSLogix profile container lab on the Azure free tier, keeping costs low while enabling fast logons for remote users.',
+        'brand.subtitle': 'DevOps in progress',
+        'nav.home': 'Home',
+        'nav.blog': 'Blog',
+        'nav.contact': 'Contact & CV',
+        'nav.langButton': 'Polski',
+        'nav.langAria': 'Switch language to Polish',
+        'nav.menuToggle': 'Toggle menu',
+        'article.title': 'Deploying FSLogix on the Azure free tier',
+        'article.meta.date': 'October 31, 2025',
+        'article.meta.tags': 'Azure • Virtual Desktop • Profile management',
+        'article.hero.alt': 'Azure services diagram visualising the FSLogix lab environment',
+        'article.intro.p1': 'This FSLogix lab started with a simple question: can I keep roaming profiles on the Azure free tier without standing up a full domain?',
+        'article.intro.p2': 'The constraints: a single Windows Server VM running standalone and profile containers mounted from Azure Files SMB using only a storage account key.',
+        'article.intro.p3': 'Here is every decision, the debugging path, the final fix, and a full guide so you can reproduce the PoC yourself.',
+        'article.context.heading': 'Context, constraints, and architecture decisions',
+        'article.context.lead': 'I first looked at the classic domain-based pattern inspired by community tutorials.',
+        'article.context.option.heading': 'Considered domain scenario',
+        'article.context.option.item1': 'Nerdio Manager + AVD + Entra ID — automate hosts and FSLogix with Nerdio, authenticate over Kerberos/NTLM.',
+        'article.context.option.item2': 'Provides identity integration, profile roaming, and simple management across AVD hosts.',
+        'article.context.option.note': 'Great in theory, but the Azure free trial budget does not stretch to domain controllers and full AVD infrastructure.',
+        'article.context.skip.heading': 'Why ditch the domain?',
+        'article.context.skip.item1': 'Free Trial limits made AVD and AD DS / Azure AD DS financially unrealistic.',
+        'article.context.skip.item2': 'Kerberos for Azure Files still requires a domain — outside the intended PoC scope.',
+        'article.context.skip.item3': 'Goal: deliver a fast, low-cost PoC that runs on a single machine.',
+        'article.decision.heading': 'Final decision',
+        'article.decision.item1': 'Keep Windows Server in standalone mode.',
+        'article.decision.item2': 'Use Azure Files (SMB) as the profile container backend.',
+        'article.decision.item3': 'Authenticate with the storage account key.',
+        'article.decision.item4': 'Force SMB access through the SYSTEM context that the FSLogix service uses.',
+        'article.path.heading': 'How the solution emerged',
+        'article.path.step1': 'Tested Nerdio/AVD/Entra ID — dropped due to trial limitations.',
+        'article.path.step2': 'Configured a single VM with FSLogix + Azure Files mounted via access key.',
+        'article.path.step3': 'Hit profile mount errors: code 1326 (bad username or password).',
+        'article.path.step4': 'Confirmed SMB connectivity manually under SYSTEM using `cmdkey` and `net use`.',
+        'article.path.step5': 'Root cause: FSLogix tried to connect as the user rather than the computer account.',
+        'article.path.step6': 'Added the registry key AccessNetworkAsComputerObject=1.',
+        'article.path.step7': 'Result: `Profile.vhdx` containers mounted correctly from Azure Files.',
+        'article.path.note': 'This is the production-sensible minimum for a no-domain PoC. The full guide follows.',
+        'article.guide.heading': 'Step-by-step: FSLogix + Azure Files in standalone mode',
+        'article.guide.intro': 'Follow these steps from storage creation to the first successful logon — no external references required.',
+        'article.guide.step1.title': '1. Create the storage account and Azure Files share',
+        'article.guide.step1.p1': 'Standard_LRS keeps costs down while the file share stores the profile containers.',
+        'article.guide.step2.title': '2. Retrieve the access key',
+        'article.guide.step2.p1': 'You will store this key in the SYSTEM credential manager before mapping the share.',
+        'article.guide.step3.title': '3. Store credentials and map the share',
+        'article.guide.step3.p1': 'Persist credentials under SYSTEM so FSLogix can reach the share before any user logs in.',
+        'article.guide.step4.title': '4. Install FSLogix',
+        'article.guide.step4.p1': 'Download the installer from Microsoft and run it with -Wait to ensure completion.',
+        'article.guide.step5.title': '5. Configure the FSLogix registry keys',
+        'article.guide.step5.p1': 'Enable profile containers, set the VHD location, and add the AccessNetworkAsComputerObject fix.',
+        'article.guide.step6.title': '6. Restart the service and test logon',
+        'article.guide.step6.p1': 'Restart frxsvc, sign in with a test account, and inspect the FSLogix logs.',
+        'article.guide.step6.p2': 'A successful run creates a new user folder in Azure Files and shows clean logs under C:\ProgramData\FSLogix\Logs\Profile.',
+        'article.summary.heading': 'Project overview',
+        'article.summary.p1': 'The project proves FSLogix can run standalone with Azure Files as the profile store.',
+        'article.goal.heading': 'Project goal',
+        'article.goal.p1': 'Deliver stable FSLogix profile mounts without any domain infrastructure.',
+        'article.env.heading': 'Lab environment',
+        'article.env.item1': 'Standalone Windows Server virtual machine in Azure.',
+        'article.env.item2': 'Azure Files SMB share storing the profile VHDX files.',
+        'article.env.item3': 'FSLogix Profile Container agent installed on the server.',
+        'article.env.item4': 'Firewall and network rules permitting SMB traffic.',
+        'article.problem.heading': 'Problem analysis',
+        'article.problem.p1': 'FSLogix returned error 1326 because the service lacked computer-account permissions to the SMB share.',
+        'article.solution.heading': 'Solution',
+        'article.solution.p1': 'Setting AccessNetworkAsComputerObject=1 let the SYSTEM service authenticate to Azure Files.',
+        'article.results.heading': 'Results',
+        'article.results.p1': 'Profiles mounted consistently from Azure Files, validating the standalone approach.',
+        'article.learn.heading': 'Key learnings',
+        'article.learn.item1': 'Standalone FSLogix requires SMB access from the SYSTEM context.',
+        'article.learn.item2': 'AccessNetworkAsComputerObject is a critical registry adjustment.',
+        'article.learn.item3': 'Azure Files SMB works well as a profile store outside traditional domains.',
+        'article.learn.item4': 'When you hit 1326 errors, start with registry entries and SYSTEM credentials.',
+        'article.future.heading': 'Future improvements',
+        'article.future.p1': 'Next steps: join an AD domain or scale out with Azure Virtual Desktop for multi-user scenarios.',
+        'footer.note': 'Yes — this site was also created by <b>Tobiasz Lubowski</b>.'
+      },
+
+      pl: {
+        'page.title': 'Wdrożenie FSLogix na darmowej subskrypcji Azure — Blog — Tobiasz Lubowski',
+        'page.description': 'Jak na darmowej subskrypcji Azure zbudowałem środowisko z FSLogix dla profili użytkowników, optymalizując koszty i wydajność pracy zdalnej.',
+        'brand.subtitle': 'DevOps w drodze',
+        'nav.home': 'Strona główna',
+        'nav.blog': 'Blog',
+        'nav.contact': 'Kontakt i CV',
+        'nav.langButton': 'English',
+        'nav.langAria': 'Zmień język na angielski',
+        'nav.menuToggle': 'Przełącz menu',
+        'article.title': 'Wdrożenie FSLogix na darmowej subskrypcji Azure',
+        'article.meta.date': '31 października 2025',
+        'article.meta.tags': 'Azure • Pulpit wirtualny • Zarządzanie profilami',
+        'article.hero.alt': 'Schemat usług Azure pokazujący lab z FSLogix',
+        'article.intro.p1': 'Ten lab z FSLogix powstał z pytania, czy na darmowej subskrypcji Azure da się utrzymać roaming profili bez domeny i całego ekosystemu AVD.',
+        'article.intro.p2': 'Założenia były proste: pojedynczy Windows Server działa w trybie standalone, a kontenery profili montują się z udziału Azure Files SMB przy użyciu klucza konta Storage.',
+        'article.intro.p3': 'Poniżej znajdziesz komplet decyzji, analizę problemów, finalne rozwiązanie oraz instrukcję, dzięki której odtworzysz PoC krok po kroku.',
+        'article.context.heading': 'Kontekst, ograniczenia i decyzje architektoniczne',
+        'article.context.lead': 'Na starcie rozważałem klasyczny scenariusz domenowy, inspirowany materiałami społeczności.',
+        'article.context.option.heading': 'Rozważany wariant domenowy',
+        'article.context.option.item1': 'Nerdio Manager + AVD + Entra ID – automatyzacja hostów i FSLogix, logowanie przez Kerberos/NTLM.',
+        'article.context.option.item2': 'Pełna integracja z tożsamościami, łatwe zarządzanie profilami i naturalny roaming między hostami AVD.',
+        'article.context.option.note': 'Brzmi idealnie, ale darmowy trial Azure nie udźwignie kosztów kontrolerów domeny i infrastruktury AVD.',
+        'article.context.skip.heading': 'Dlaczego zrezygnowałem z domeny?',
+        'article.context.skip.item1': 'Limity subskrypcji Free Trial uniemożliwiały ekonomiczne uruchomienie AVD i AD DS / Azure AD DS.',
+        'article.context.skip.item2': 'Kerberos dla Azure Files wymaga domeny — przekraczało to budżet i zakres PoC.',
+        'article.context.skip.item3': 'Celem było szybkie, tanie PoC, które da się zamknąć w jednej maszynie.',
+        'article.decision.heading': 'Finalna decyzja',
+        'article.decision.item1': 'Windows Server pozostaje w trybie standalone.',
+        'article.decision.item2': 'Azure Files (SMB) pełni rolę magazynu VHDX dla profili.',
+        'article.decision.item3': 'Logowanie odbywa się z wykorzystaniem Storage Account Key.',
+        'article.decision.item4': 'Dostęp do SMB wymuszamy w kontekście SYSTEM, czyli tak, jak działa agent FSLogix.',
+        'article.path.heading': 'Ścieżka dojścia',
+        'article.path.step1': 'Testy z Nerdio/AVD/Entra ID — odrzucone przez limity triala.',
+        'article.path.step2': 'Konfiguracja pojedynczej VM z FSLogix + Azure Files opartymi o Access Key.',
+        'article.path.step3': 'Błąd montowania profilu: 1326 (niepoprawna nazwa użytkownika lub hasło).',
+        'article.path.step4': 'Potwierdzenie, że dostęp SMB działa ręcznie w kontekście SYSTEM (<code>cmdkey</code> + <code>net use</code>).',
+        'article.path.step5': 'Diagnoza: FSLogix łączył się jak użytkownik, zamiast jak komputer.',
+        'article.path.step6': 'Dodanie klucza rejestru <code>AccessNetworkAsComputerObject=1</code>.',
+        'article.path.step7': 'Efekt: kontenery <code>Profile.vhdx</code> montują się poprawnie na Azure Files.',
+        'article.path.note': 'To minimum produkcyjnie sensowne dla PoC w środowisku bez domeny. Niżej znajdziesz kompletny przewodnik.',
+        'article.guide.heading': 'Instrukcja krok po kroku: FSLogix + Azure Files standalone',
+        'article.guide.intro': 'Instrukcja prowadzi od stworzenia storage po test logowania — bez potrzeby sięgania do dodatkowych źródeł.',
+        'article.guide.step1.title': '1. Utworzenie konta Storage i udziału Azure Files',
+        'article.guide.step1.p1': 'Standard_LRS jest tanie i wystarczające do PoC, a udział przechowuje kontenery profili.',
+        'article.guide.step2.title': '2. Pobranie klucza dostępu',
+        'article.guide.step2.p1': 'Access Key przyda się do zapisania poświadczeń w magazynie SYSTEM i mapowania udziału.',
+        'article.guide.step3.title': '3. Zapis poświadczeń i mapowanie udziału',
+        'article.guide.step3.p1': 'Poświadczenia zapisz w kontekście SYSTEM, aby agent FSLogix sięgnął po nie zanim użytkownik się zaloguje.',
+        'article.guide.step4.title': '4. Instalacja FSLogix',
+        'article.guide.step4.p1': 'Pobierz instalator FSLogix z witryny Microsoft i uruchom go z parametrem -Wait, by mieć pewność, że proces się domknie.',
+        'article.guide.step5.title': '5. Konfiguracja rejestru FSLogix',
+        'article.guide.step5.p1': 'Klucz Profiles przechowuje najważniejsze ustawienia: włączenie kontenerów, lokalizację VHD i wpis rozwiązujący problem z uwierzytelnianiem.',
+        'article.guide.step6.title': '6. Restart usługi i test logowania',
+        'article.guide.step6.p1': 'Zrestartuj usługę frxsvc, zaloguj się na konto testowe i sprawdź logi FSLogix.',
+        'article.guide.step6.p2': 'Jeśli w Azure Files widzisz nowy katalog użytkownika, a logi w C:\ProgramData\FSLogix\Logs\Profile są czyste, PoC działa.',
+        'article.summary.heading': 'Przegląd projektu',
+        'article.summary.p1': 'Projekt skupia się na uruchomieniu FSLogix w trybie standalone z Azure Files jako magazynem profili.',
+        'article.goal.heading': 'Cel projektu',
+        'article.goal.p1': 'Zapewnić stabilne montowanie kontenerów FSLogix bez infrastruktury domenowej.',
+        'article.env.heading': 'Środowisko testowe',
+        'article.env.item1': 'Samodzielna maszyna Windows Server w Azure.',
+        'article.env.item2': 'Udział Azure Files SMB dla plików VHDX.',
+        'article.env.item3': 'Agent FSLogix Profile Container.',
+        'article.env.item4': 'Reguły sieciowe i firewall dopuszczające ruch SMB.',
+        'article.problem.heading': 'Analiza problemu',
+        'article.problem.p1': 'Agent FSLogix zwracał błąd 1326 — brakowało uprawnień do dostępu w imieniu komputera.',
+        'article.solution.heading': 'Rozwiązanie',
+        'article.solution.p1': 'Wpis <code>AccessNetworkAsComputerObject=1</code> pozwolił usłudze SYSTEM na uwierzytelnianie w Azure Files.',
+        'article.results.heading': 'Rezultaty',
+        'article.results.p1': 'Profile montują się konsekwentnie z Azure Files, potwierdzając sensowność podejścia standalone.',
+        'article.learn.heading': 'Najważniejsze wnioski',
+        'article.learn.item1': 'Standalone FSLogix wymaga dostępu SMB jako SYSTEM.',
+        'article.learn.item2': 'Klucz <code>AccessNetworkAsComputerObject</code> to krytyczna poprawka.',
+        'article.learn.item3': 'Azure Files SMB sprawdza się jako magazyn profili poza domeną.',
+        'article.learn.item4': 'Przy błędach 1326 zacznij od rejestru i poświadczeń SYSTEM.',
+        'article.future.heading': 'Możliwe usprawnienia',
+        'article.future.p1': 'Następny krok to integracja z AD lub migracja do Azure Virtual Desktop dla scenariuszy multi-user.',
+        'footer.note': 'Tak — tę stronę również stworzył <b>Tobiasz Lubowski</b>.'
+      },
+    };
+
+    function readStoredLanguage() {
+      try {
+        const stored = localStorage.getItem('preferredLanguage');
+        if (stored === 'pl' || stored === 'en') {
+          return stored;
+        }
+      } catch (err) {}
+      return 'en';
+    }
+
+    let currentLang = readStoredLanguage();
+    const languageToggle = document.getElementById('languageToggle');
+
+    function applyTranslations(lang) {
+      currentLang = lang;
+      try {
+        localStorage.setItem('preferredLanguage', currentLang);
+      } catch (err) {}
+      document.documentElement.lang = lang === 'pl' ? 'pl' : 'en';
+      document.body.setAttribute('data-lang', currentLang);
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        const value = (translations[currentLang] || {})[key];
+        if (typeof value === 'undefined') return;
+        el.innerHTML = value;
+      });
+
+      document.querySelectorAll('[data-i18n-attr]').forEach(el => {
+        const entries = el.getAttribute('data-i18n-attr').split(';');
+        entries.forEach(entry => {
+          const [attr, key] = entry.split(':').map(part => part && part.trim());
+          if (!attr || !key) return;
+          const val = (translations[currentLang] || {})[key];
+          if (typeof val === 'undefined') return;
+          el.setAttribute(attr, val);
+        });
+      });
+
+      if (languageToggle) {
+        const buttonText = (translations[currentLang] || {})['nav.langButton'];
+        if (typeof buttonText !== 'undefined') languageToggle.textContent = buttonText;
+        const ariaText = (translations[currentLang] || {})['nav.langAria'];
+        if (typeof ariaText !== 'undefined') languageToggle.setAttribute('aria-label', ariaText);
+        languageToggle.setAttribute('aria-pressed', currentLang === 'pl' ? 'true' : 'false');
+      }
+
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) {
+        const desc = (translations[currentLang] || {})['page.description'];
+        if (typeof desc !== 'undefined') metaDesc.setAttribute('content', desc);
+      }
+      const title = (translations[currentLang] || {})['page.title'];
+      if (typeof title !== 'undefined') document.title = title;
+    }
+
+    applyTranslations(currentLang);
+
+    if (languageToggle) {
+      languageToggle.addEventListener('click', () => {
+        const nextLang = currentLang === 'en' ? 'pl' : 'en';
+        applyTranslations(nextLang);
+      });
+    }
+
+    const menu = document.querySelector('.menu');
+    const menuToggle = document.getElementById('menuToggle');
+    if (menu && menuToggle) {
+      menuToggle.addEventListener('click', () => {
+        const open = menu.classList.toggle('show');
+        menuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      menu.querySelectorAll('a, button').forEach(link => link.addEventListener('click', () => {
+        if (menu.classList.contains('show')) {
+          menu.classList.remove('show');
+          menuToggle.setAttribute('aria-expanded', 'false');
+        }
+      }));
+    }
+  </script>
+</body>
+</html>

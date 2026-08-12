@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tobiasz Lubowski - DevOps Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style_main.css">
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.29/bundled/lenis.min.js"></script>
+</head>
+
+<body>
+
+    <!-- Tło z animowanymi gradientami -->
+    <div class="ambient-bg"></div>
+    <div class="ambient-bg-2"></div>
+
+    <!-- Nawigacja (Hybrid) -->
+    <nav class="navbar">
+        <!-- 1. Left: Logo -->
+        <div class="logo"><span>lubow</span>SKISOLUTIONS</div>
+
+        <!-- 2. Center: Quick Links + Marker -->
+        <div class="nav-center">
+            <ul class="nav-list">
+                <li class="nav-item"><a href="#hero" class="nav-link">Home</a></li>
+                <li class="nav-item"><a href="#experience" class="nav-link">Experience</a></li>
+            </ul>
+            <div class="nav-marker" id="navMarker"></div>
+        </div>
+
+        <!-- 3. Right: Dropdown -->
+        <div class="nav-right">
+            <button class="dropdown-btn"><span>Menu</span> ▾</button>
+            <ul class="dropdown-menu">
+                <li><a href="blog.html">Blog</a></li>
+                <li><a href="christmas.html">🎁 Christmas</a></li>
+                <li><a href="/promptjutra/">✦ PromptJutra</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Sekcja Hero z Kartą Holograficzną -->
+    <section class="hero" id="hero">
+        <div class="hero-row">
+            <div class="holo-container">
+                <div class="holo-card" id="holo-card">
+                    <div class="holo-content">
+                        <div class="img-box">
+                            <img src="assets/tobi.jpg" alt="Tobiasz Lubowski">
+                        </div>
+                        <div class="details">
+                            <h2>Tobiasz Lubowski</h2>
+                            <span class="job-title">DEVOPS ENGINEER</span>
+                            <div class="data-rows">
+                                <div class="data-row">
+                                    <span class="label">Goal</span>
+                                    <span class="value">Automation</span>
+                                </div>
+                                <div class="data-row">
+                                    <span class="label">Status</span>
+                                    <span class="value"
+                                        style="color: #4ade80; text-shadow: 0 0 10px rgba(74, 222, 128, 0.5);">Online
+                                        <span class="blink">●</span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Przeniesiona książka (Book 3D) -->
+            <div class="book-wrapper">
+                <div class="book">
+                    <div class="book-cover">
+                        <!-- Front okładki -->
+                        <div class="front">
+                            <div class="cover-content">
+                                <h3>DevOps<br>Engineer</h3>
+                                <p style="color: #fff; margin-top: 10px;">Tobiasz Lubowski</p>
+                            </div>
+                        </div>
+                        <!-- Tył okładki (lewa strona po otwarciu) -->
+                        <div class="back"></div>
+                    </div>
+                    <div class="book-page">
+                        <h3 style="color: var(--accent-primary); margin-bottom: 15px;">Hi, I’m Tobiasz</h3>
+                        <p><strong>Stack:</strong> Docker, Kubernetes, Terraform, Bicep, Git, CI/CD, AWS/Azure/GCP,
+                            Linux, Ansible, Python, Postgresql, Windows, Windows Server</p>
+                        <br>
+                        <p>I connect the worlds of technology and business — from implementations to client
+                            relationships.</p>
+                        <p>My career path blends business, technology, and automation.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-text reveal" style="position: relative; z-index: 2;">
+            <!-- Background Animated Guy -->
+            <div class="cat-wrapper"
+                style="position: absolute; top: 150%; left: 50%; transform: translate(-50%, -50%); width: 300px; height: 220px; z-index: -1; opacity: 0.15; pointer-events: none;">
+                <svg class="bongo-cat" viewBox="0 0 250 180" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Laptop Screen -->
+                    <rect x="50" y="50" width="150" height="90" rx="5" fill="none" stroke="#fff" stroke-width="3" />
+                    <!-- Laptop Logo -->
+                    <circle cx="125" cy="95" r="8" fill="none" stroke="#fff" stroke-width="2" />
+
+                    <!-- Table line -->
+                    <path d="M0 150 L250 150" stroke="#fff" stroke-width="2" />
+
+                    <!-- Guy Body/Head (No Ears) -->
+                    <!-- Head is just a curve popping up from behind laptop -->
+                    <path d="M85 150 Q85 60 125 60 Q165 60 165 150" fill="#0b0b0f" stroke="#fff" stroke-width="4"
+                        stroke-linecap="round" />
+
+                    <!-- Face -->
+                    <circle cx="110" cy="100" r="3" fill="#fff" />
+                    <circle cx="140" cy="100" r="3" fill="#fff" />
+                    <path d="M120 110 Q125 115 130 110" fill="none" stroke="#fff" stroke-width="3"
+                        stroke-linecap="round" />
+
+                    <!-- Keyboard Base -->
+                    <rect x="40" y="140" width="170" height="15" rx="2" fill="#111" stroke="#fff" stroke-width="2" />
+
+                    <!-- Hands/Paws (Typing on keyboard base - Higher position) -->
+                    <!-- Moved Y coordinates up by ~10px to be 'on top' of the base -->
+                    <path class="cat-paw left-paw" d="M90 125 Q80 150 110 140" fill="#fff" stroke="#fff"
+                        stroke-width="3" stroke-linecap="round" />
+                    <path class="cat-paw right-paw" d="M160 125 Q170 150 140 140" fill="#fff" stroke="#fff"
+                        stroke-width="3" stroke-linecap="round" />
+                </svg>
+            </div>
+
+            <h1>Let's automate<br>something together.</h1>
+        </div>
+    </section>
+
+
+
+
+    <!-- Sekcja Doświadczenie -->
+    <section id="experience" class="content-section reveal">
+        <h2>Experience</h2>
+        <div class="timeline">
+            <div class="timeline-item highlight">
+                <h3>DEVOPS ENGINEER</h3>
+                <p>Automating, optimized, and delivering value through modern cloud & CI/CD solutions.</p>
+            </div>
+            <div class="timeline-item">
+                <h3>Team Leader of the KAM Department</h3>
+                <p>Coordinated strategic projects and led the account team.</p>
+            </div>
+            <div class="timeline-item">
+                <h3>Key Account Manager</h3>
+                <p>Combined presales, analytics, and customer success to grow partnerships.</p>
+            </div>
+            <div class="timeline-item">
+                <h3>Implementation Engineer</h3>
+                <p>Deployed company platforms and prepared infrastructure for go-live.</p>
+            </div>
+            <div class="timeline-item">
+                <h3>2nd Line Support Engineer</h3>
+                <p>Resolved complex client issues across infrastructure and applications.</p>
+            </div>
+            <div class="timeline-item">
+                <h3>Software Tester</h3>
+                <p>Ensured quality of enterprise solutions at the start of my IT journey.</p>
+            </div>
+        </div>
+
+        <h2 class="cert-header" style="text-align: center; margin-bottom: 40px; margin-top: 120px;">Certificates</h2>
+        <div class="cert-section" style="position: relative; height: 700px; width: 100%; overflow: visible;">
+            <div class="cert-galaxy" id="cert-galaxy">
+                <!-- Cert Items (Positions handled via CSS/Inline for Flow) -->
+                <div class="cert-item" style="top: 10%; left: 5%; animation-delay: 0s;"><img
+                        src="assets/certs/cert1.png" alt="Cert 1"></div>
+                <div class="cert-item" style="top: 25%; left: 20%; animation-delay: 1.5s;"><img
+                        src="assets/certs/cert2.png" alt="Cert 2"></div>
+                <div class="cert-item" style="top: 15%; left: 45%; animation-delay: 0.5s;"><img
+                        src="assets/certs/cert3.png" alt="Cert 3"></div>
+                <div class="cert-item" style="top: 30%; left: 75%; animation-delay: 2s;"><img
+                        src="assets/certs/cert4.png" alt="Cert 4"></div>
+                <div class="cert-item" style="top: 55%; left: 10%; animation-delay: 1s;"><img
+                        src="assets/certs/cert5.png" alt="Cert 5"></div>
+                <div class="cert-item" style="top: 60%; left: 35%; animation-delay: 2.5s;"><img
+                        src="assets/certs/cert6.png" alt="Cert 6"></div>
+                <div class="cert-item" style="top: 45%; left: 60%; animation-delay: 0.2s;"><img
+                        src="assets/certs/cert7.png" alt="Cert 7"></div>
+                <div class="cert-item" style="top: 70%; left: 80%; animation-delay: 1.8s;"><img
+                        src="assets/certs/cert8.png" alt="Cert 8"></div>
+                <div class="cert-item" style="top: 80%; left: 25%; animation-delay: 3s;"><img
+                        src="assets/certs/cert9.png" alt="Cert 9"></div>
+                <div class="cert-item" style="top: 85%; left: 55%; animation-delay: 0.8s;"><img
+                        src="assets/certs/cert10.png" alt="Cert 10"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sekcja Pasje (3D Gallery) -->
+    <section id="passions" class="content-section reveal">
+        <h2>Off the keyboard</h2>
+        <div class="gallery-container">
+            <div class="gallery-3d">
+                <!-- Card 1: Boxing -->
+                <div class="gallery-item" style="--i:0;">
+                    <img src="assets/passions/boxing-poster.jpg" alt="Boxing">
+                    <div class="gallery-caption">BOXING</div>
+                </div>
+                <!-- Card 2: Snowboard -->
+                <div class="gallery-item" style="--i:1;">
+                    <img src="assets/passions/snowboard-poster.jpg" alt="Snowboard">
+                    <div class="gallery-caption">SNOWBOARD</div>
+                </div>
+                <!-- Card 3: Gym -->
+                <div class="gallery-item" style="--i:2;">
+                    <img src="assets/passions/gym-poster.jpg" alt="Gym">
+                    <div class="gallery-caption">GYM</div>
+                </div>
+                <!-- Card 4: Learning -->
+                <div class="gallery-item" style="--i:3;">
+                    <img src="assets/passions/learning-poster.jpg" alt="Learning">
+                    <div class="gallery-caption">LEARNING</div>
+                </div>
+                <!-- Card 5: Music -->
+                <div class="gallery-item" style="--i:4;">
+                    <img src="assets/passions/music-poster.jpg" alt="Music">
+                    <div class="gallery-caption">MUSIC</div>
+                </div>
+                <!-- Card 6: Embroidery -->
+                <div class="gallery-item" style="--i:5;">
+                    <img src="assets/passions/embroidery-poster.jpg" alt="Embroidery">
+                    <div class="gallery-caption">EMBROIDERY</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer style="text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 0.9rem;">
+        <a href="mailto:lubowskitobiasz.kontakt@gmail.com"
+            style="color: var(--text-color); font-size: 1.1rem; text-decoration: none; border-bottom: 1px solid var(--accent-primary);">
+            lubowskitobiasz.kontakt@gmail.com
+        </a>
+        <p style="margin-top: 16px;">Created by Tobiasz</p>
+    </footer>
+
+    <!-- Przycisk zmiany motywu -->
+    <button id="theme-toggle" class="theme-btn" aria-label="Zmień motyw">
+        🌗
+    </button>
+
+    <script src="script_main.js"></script>
+</body>
+
+</html>

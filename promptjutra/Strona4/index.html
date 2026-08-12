@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WiesiuRowerzysta - Serwis Rowerowy i Sprzedaż</title>
+    <meta name="description" content="Sklep i serwis WiesiuRowerzysta. Oferujemy usługę Rowerowego Concierge z dojazdem oraz autorski Paszport Zdrowia Roweru. Odbierzemy i naprawimy Twój sprzęt!">
+    
+    <meta property="og:title" content="WiesiuRowerzysta - Serwis i Sklep Rowerowy">
+    <meta property="og:description" content="Rowerowy Concierge z dojazdem. Naprawiamy rowery i wręczamy Paszport Zdrowia Roweru. Zadzwoń!">
+    <meta property="og:type" content="website">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --main-color: #fff705;
+            --accent-color: #ff2e2e;
+            --text-color: #111111;
+            --spacing-section: 6rem 2rem;
+            --clip-retro: polygon(2% 0, 100% 2%, 98% 100%, 0 98%);
+            --clip-button: polygon(5% 0, 100% 5%, 95% 100%, 0 95%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Space Mono', monospace;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* SVG Noise Filter Background */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.25;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        h1, h2, h3 {
+            font-family: 'Abril Fatface', serif;
+            font-weight: normal;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            margin-bottom: 1.5rem;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Sticky Header */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--text-color);
+        }
+
+        .logo {
+            font-family: 'Abril Fatface', serif;
+            font-size: 1.5rem;
+            color: var(--accent-color);
+            text-shadow: 2px 2px 0 var(--main-color);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .nav-links a {
+            font-weight: 700;
+            text-transform: uppercase;
+            position: relative;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-color);
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: var(--text-color);
+            transition: 0.3s;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 80vh;
+            padding-top: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background-image: url('zdjeciestrona.png');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 247, 5, 0.75); /* main color overlay */
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            padding: 2rem;
+            background: var(--bg-color);
+            clip-path: var(--clip-retro);
+            border: 4px solid var(--text-color);
+            box-shadow: 10px 10px 0 var(--accent-color);
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+        }
+
+        .hero p.subtitle {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        /* Buttons / CTA */
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-color), #cc0000);
+            color: #ffffff;
+            padding: 1rem 2rem;
+            font-weight: 700;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            border: 3px solid var(--text-color);
+            clip-path: var(--clip-button);
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 6px 6px 0 var(--text-color);
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+
+        .cta-button:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 9px 9px 0 var(--main-color);
+            color: #ffffff;
+        }
+
+        .cta-button.dark {
+            background: linear-gradient(135deg, var(--text-color), #333);
+            color: var(--main-color);
+        }
+
+        /* Sections General */
+        section {
+            padding: var(--spacing-section);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            display: inline-block;
+            position: relative;
+        }
+
+        .section-header h2::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 15px;
+            background: var(--main-color);
+            bottom: 5px;
+            left: 0;
+            z-index: -1;
+            transform: skewX(-15deg);
+        }
+
+        .section-header .sub {
+            font-weight: 700;
+            color: var(--accent-color);
+            font-size: 1.2rem;
+        }
+
+        /* Grid Layouts */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
+
+        /* Cards Style */
+        .retro-card {
+            background: var(--bg-color);
+            border: 3px solid var(--text-color);
+            padding: 2rem;
+            clip-path: var(--clip-retro);
+            box-shadow: 8px 8px 0 var(--main-color);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .retro-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 12px 12px 0 var(--accent-color);
+        }
+
+        /* Images placeholder */
+        .img-placeholder {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(45deg, var(--main-color), var(--accent-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid var(--text-color);
+            clip-path: var(--clip-retro);
+            font-weight: bold;
+            color: var(--text-color);
+            text-align: center;
+            padding: 1rem;
+            box-shadow: 6px 6px 0 var(--text-color);
+        }
+
+        /* Pricing list */
+        .price-list {
+            list-style: none;
+        }
+
+        .price-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 2px dashed var(--text-color);
+            font-weight: 700;
+        }
+
+        .price-item:last-child {
+            border-bottom: none;
+        }
+
+        /* FAQ */
+        .faq-item {
+            margin-bottom: 2rem;
+            background: #fff;
+            padding: 1.5rem;
+            border: 3px solid var(--text-color);
+            clip-path: polygon(1% 1%, 99% 0%, 100% 99%, 0% 100%);
+            box-shadow: 5px 5px 0 var(--main-color);
+        }
+
+        .faq-item h3 {
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Contact Section */
+        .contact-section {
+            text-align: center;
+            background: var(--main-color);
+            padding: 4rem 2rem;
+            border: 4px solid var(--text-color);
+            clip-path: polygon(0 2%, 100% 0, 98% 100%, 2% 98%);
+            margin: 4rem auto;
+            max-width: 800px;
+            box-shadow: 12px 12px 0 var(--accent-color);
+        }
+
+        .phone-huge {
+            font-size: 3rem;
+            font-family: 'Abril Fatface', serif;
+            display: block;
+            margin: 2rem 0;
+            color: var(--text-color);
+            text-decoration: underline;
+            text-decoration-color: var(--accent-color);
+            text-decoration-thickness: 4px;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--text-color);
+            color: var(--bg-color);
+            text-align: center;
+            padding: 3rem;
+        }
+
+        /* Animations */
+        .hidden {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        .show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Media Queries */
+        @media (max-width: 768px) {
+            .hamburger { display: flex; }
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background: var(--bg-color);
+                border-bottom: 3px solid var(--text-color);
+                flex-direction: column;
+                text-align: center;
+                padding: 1rem 0;
+            }
+            .nav-links.active { display: flex; }
+            
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 2rem; }
+            .phone-huge { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">WiesiuRowerzysta</div>
+        <div class="hamburger" id="hamburger">
+            <span></span><span></span><span></span>
+        </div>
+        <nav class="nav-links" id="navLinks">
+            <a href="#o-nas">O nas</a>
+            <a href="#oferta">Oferta</a>
+            <a href="#cennik">Cennik</a>
+            <a href="#portfolio">Realizacje</a>
+            <a href="#kontakt">Kontakt</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero" id="hero">
+            <div class="hero-content hidden">
+                <h1>Twój rower ma po prostu jechać. Resztą zajmiemy się my.</h1>
+                <p class="subtitle">Odbieramy sprzęt z Twojego domu, naprawiamy i oddajemy gotowy na weekend. Odbierz swój Paszport Zdrowia Roweru i ciesz się wiatrem we włosach bez zgrzytów.</p>
+                <a href="tel:1233223232" class="cta-button">Zadzwoń po odbiór: 123 322 3232</a>
+            </div>
+        </section>
+
+        <!-- O nas -->
+        <section id="o-nas" class="hidden">
+            <div class="section-header">
+                <h2>Zbudowani z pasji do dwóch kółek</h2>
+                <p class="sub">Wiemy, że chcesz wsiąść i pojechać, a nie denerwować się, że coś odpadnie.</p>
+            </div>
+            <div class="grid-2">
+                <div>
+                    <p>WiesiuRowerzysta to miejsce, w którym przywracamy maszynom dawny blask. Tworzymy historie rodzin, które uciekają z miasta na leśne szlaki. U nas nie usłyszysz niezrozumiałego bełkotu mechaników.</p>
+                    <p>Diagnozujemy jasno, mówimy wprost i dbamy o Twój rower jak o własny – żebyś Ty mógł po prostu cieszyć się jazdą. Szkoda pogody na siedzenie w garażu.</p>
+                    <a href="#oferta" class="cta-button dark">Sprawdź naszą ofertę</a>
+                </div>
+                <div class="img-placeholder">
+                    [Tu byłby obraz uśmiechniętego mechanika przy starym rowerze]
+                </div>
+            </div>
+        </section>
+
+        <!-- Oferta -->
+        <section id="oferta" class="hidden">
+            <div class="section-header">
+                <h2>Co zdejmiemy z Twojej głowy?</h2>
+                <p class="sub">Od dziecięcych rowerków po maszyny na długie trasy.</p>
+            </div>
+            <div class="grid-3">
+                <div class="retro-card">
+                    <h3>Sprzedaż z doradztwem</h3>
+                    <p>Sprzedajemy rowery, które pasują do Twojego stylu życia. Dopasowane do Twoich potrzeb, gotowe od razu na pierwszą wycieczkę.</p>
+                </div>
+                <div class="retro-card">
+                    <h3>Serwis i Naprawa</h3>
+                    <p>Coś rzęzi w napędzie? Hamulce piszczą? Zrobimy to. Oddajemy cichy, płynnie działający sprzęt.</p>
+                </div>
+                <div class="retro-card">
+                    <h3>Rowerowy Concierge</h3>
+                    <p>Nasz zespół odbierze sprzęt spod Twoich drzwi. Po każdej naprawie wręczamy Ci autorski Paszport Zdrowia Roweru z pełną historią wpisów.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cennik -->
+        <section id="cennik" class="hidden">
+            <div class="section-header">
+                <h2>Jasne zasady, zero niespodzianek</h2>
+                <p class="sub">Zawsze dzwonimy z wyceną, zanim odkręcimy pierwszą śrubkę.</p>
+            </div>
+            <div class="retro-card" style="max-width: 800px; margin: 0 auto;">
+                <ul class="price-list">
+                    <li class="price-item">
+                        <span><strong>Pakiet Start</strong> (Regulacja, smarowanie łańcucha, diagnoza - dla kurzących się rowerów)</span>
+                    </li>
+                    <li class="price-item">
+                        <span><strong>Pakiet Plus</strong> (Mycie ramy i napędu, wymiana linek, centrowanie - idealny start sezonu)</span>
+                    </li>
+                    <li class="price-item">
+                        <span><strong>Rowerowy Concierge</strong> (Odbiór i dowóz sprzętu pod wskazany adres - wygoda totalna)</span>
+                    </li>
+                </ul>
+                <div style="text-align: center; margin-top: 2rem;">
+                    <a href="tel:1233223232" class="cta-button">Zadzwoń po wycenę: 123 322 3232</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Portfolio -->
+        <section id="portfolio" class="hidden">
+            <div class="section-header">
+                <h2>Z ciemnej piwnicy na słoneczny szlak</h2>
+                <p class="sub">Maszyny, którym daliśmy drugie życie.</p>
+            </div>
+            <div class="grid-2">
+                <div>
+                    <div class="img-placeholder">[Zdjęcie odnowionej Szosy z lat 90.]</div>
+                    <h3 style="margin-top: 1rem;">Szosa Kolarza Amatora</h3>
+                    <p>Pełna odbudowa napędu, wymiana owijki i ratowanie zardzewiałej ramy. Rower znów łyka kilometry bez szelestu.</p>
+                </div>
+                <div>
+                    <div class="img-placeholder">[Zdjęcie floty 4 rowerów górskich]</div>
+                    <h3 style="margin-top: 1rem;">Rodzinny Wypad do Lasu</h3>
+                    <p>Odbiór Concierge 4 rowerów z garażu podmiejskiego. Regulacja hamulców, mycie, smarowanie i zwrot przed długim weekendem.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Opinie -->
+        <section id="opinie" class="hidden">
+            <div class="section-header">
+                <h2>Historie prosto ze szlaku</h2>
+                <p class="sub">Kto już śmiga z naszym Paszportem?</p>
+            </div>
+            <div class="grid-3">
+                <div class="retro-card">
+                    <p>"Rower śmiga, zero piszczenia. Super opcja z tym odbiorem spod domu! Nie musiałem brudzić bagażnika w aucie."</p>
+                    <p><strong>- Marek K.</strong></p>
+                </div>
+                <div class="retro-card">
+                    <p>"Dzieciaki zachwycone nowymi góralami. Wiesiu doradził idealnie, a Paszport Zdrowia to genialny pomysł, wreszcie wiem, co było robione."</p>
+                    <p><strong>- Ania i Tomek</strong></p>
+                </div>
+                <div class="retro-card">
+                    <p>"Mój stary składak znowu jeździ. Szybka diagnoza przez telefon, zero naciągania. Świetna robota."</p>
+                    <p><strong>- Piotr z Centrum</strong></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ -->
+        <section id="faq" class="hidden">
+            <div class="section-header">
+                <h2>Zanim wsiądziesz i pojedziesz</h2>
+                <p class="sub">Konkretne odpowiedzi na Twoje pytania.</p>
+            </div>
+            <div style="max-width: 800px; margin: 0 auto;">
+                <div class="faq-item">
+                    <h3>Jak to działa z tym odbiorem?</h3>
+                    <p>Podajesz adres dzwoniąc do nas, nasz kierowca przyjeżdża po rower w ustalonym oknie czasowym, a po zakończonej naprawie odwozimy go na miejsce.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Kiedy rower będzie gotowy?</h3>
+                    <p>Staramy się zamykać większość serwisów w 48 godzin od momentu, gdy zaakceptujesz telefoniczną wycenę.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Co to jest Paszport Zdrowia Roweru?</h3>
+                    <p>To nasza autorska, mała książeczka. Wbijamy do niej pieczątki i zapisujemy, co dokładnie zostało zrobione. Dzięki temu wiesz, na czym stoisz i dbasz o wartość sprzętu.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Blog -->
+        <section id="blog" class="hidden">
+            <div class="section-header">
+                <h2>Czysty łańcuch i wiatr we włosach</h2>
+                <p class="sub">Wskazówki, które uratują Twoją wycieczkę.</p>
+            </div>
+            <div class="grid-2">
+                <div class="retro-card">
+                    <h3>3 powody, dla których Twoje hamulce piszczą</h3>
+                    <p>Dowiedz się, dlaczego hamowanie przypomina dźwięk pociągu i jak szybko zaradzić zatłuszczonym tarczom lub zdartym klockom przed wyjazdem do lasu.</p>
+                </div>
+                <div class="retro-card">
+                    <h3>Jak przygotować sprzęt po zimie?</h3>
+                    <p>Rower stał w piwnicy od zeszłego lata? Zobacz prostą checklistę, co sprawdzić, by pierwsza wiosenna wycieczka nie skończyła się powrotem na piechotę.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Kontakt -->
+        <section id="kontakt" class="hidden">
+            <div class="contact-section">
+                <h2>Ruszajmy w drogę!</h2>
+                <p style="font-weight: 700; font-size: 1.2rem;">Żadnych nudnych formularzy i czekania na maila. Łap za telefon, powiedz nam, co rzęzi w Twoim napędzie, umów odbiór i ciesz się nadchodzącym weekendem.</p>
+                <a href="tel:1233223232" class="phone-huge">123 322 3232</a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <h2>WiesiuRowerzysta</h2>
+        <p>Twój lokalny serwis i sklep rowerowy z usługą Concierge.</p>
+        <p>&copy; 2026 Wszelkie prawa zastrzeżone.</p>
+    </footer>
+
+    <script>
+        // Hamburger Menu Toggle
+        const hamburger = document.getElementById('hamburger');
+        const navLinks = document.getElementById('navLinks');
+
+        hamburger.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+            });
+        });
+
+        // Intersection Observer for Animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: "0px 0px -50px 0px"
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('show');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.hidden').forEach((element) => {
+            observer.observe(element);
+        });
+    </script>
+</body>
+</html>

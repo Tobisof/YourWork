@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vibecoding: crafting experiences — Blog — Tobiasz Lubowski</title>
+  <meta name="description" content="What vibecoding means, how close it is to traditional software, and why testing still matters." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%238b5cf6'/><stop offset='1' stop-color='%236ee7ff'/></linearGradient></defs><rect width='64' height='64' rx='14' fill='url(%23g)'/><circle cx='32' cy='34' r='14' fill='%23fde68a'/><path d='M18 28c3-6 10-10 14-10s10 4 14 10c-6-4-13-5-28 0z' fill='%23facc15'/><circle cx='27' cy='35' r='2.2' fill='%23000' opacity='0.9'/><circle cx='37' cy='35' r='2.2' fill='%23000' opacity='0.9'/><path d='M25 41c2.5 2 11.5 2 14 0' stroke='%23000' stroke-width='2' stroke-linecap='round' fill='none'/></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="nav" aria-label="Main">
+    <div class="row">
+      <div class="brand">Tobiasz Lubowski <small style="color:#9aa3af;font-weight:500" data-i18n="brand.subtitle">DevOps in progress</small></div>
+      <div class="spacer"></div>
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu" aria-expanded="false" data-i18n-attr="aria-label:nav.menuToggle">☰</button>
+      <div class="menu">
+        <a href="../index.html" data-i18n="nav.home">Home</a>
+        <a href="blog.html" class="active" data-i18n="nav.blog">Blog</a>
+        <a href="../index.html#contact" class="btn" data-i18n="nav.contact">Contact & CV</a>
+        <button type="button" class="lang-toggle" id="languageToggle" aria-pressed="false" data-i18n="nav.langButton">Polski</button>
+      </div>
+    </div>
+  </nav>
+
+  <article class="blog-post">
+    <header>
+      <h1 data-i18n="article.title">Vibecoding: build apps without coding</h1>
+      <div class="blog-post-meta">
+        <span><time datetime="2024-06-18" data-i18n="article.meta.date">June 18, 2024</time></span>
+        <span data-i18n="article.meta.tags">Vibecoding • No-Code • Testing</span>
+      </div>
+    </header>
+
+    <div class="blog-post-hero">
+      <img src="assets/vlogs/vibecoding.png" alt="Workspace assembling an application from blocks" data-i18n-attr="alt:article.hero.alt" />
+    </div>
+
+    <section class="blog-post-content">
+      <p data-i18n="article.intro">Vibecoding lets people who have ideas — not necessarily coding skills — launch working applications by describing outcomes. You assemble triggers, integrations, and UI blocks with natural language or a visual canvas while the platform writes the code on your behalf.</p>
+
+      <h2 data-i18n="article.equal.heading">Is vibecoding really software?</h2>
+      <p data-i18n="article.equal.body1">Yes. The logic still ends up as APIs, workflows, and infrastructure — the difference is that you express it through prompts and configurable building blocks. Tell the system “collect incident details and post them to Slack with a follow-up checklist” and it wires the plumbing without exposing you to YAML or SDKs.</p>
+
+      <p data-i18n="article.equal.body2">That makes vibecoding ideal for subject-matter experts who know the business flow but not the syntax. Engineers can still review or extend the generated artefacts, yet the first usable version can be delivered in hours instead of sprints.</p>
+
+      <h2 data-i18n="article.testing.heading">Why test no-code builds?</h2>
+      <p data-i18n="article.testing.body">Because real users depend on them. I keep a lightweight regression pack that checks validation rules, integration credentials, and fallback paths. Whenever I tweak a prompt, automated smoke tests rerun to ensure the generated logic still behaves as expected.</p>
+
+      <h2 data-i18n="article.build.heading">What you can launch with vibecoding</h2>
+      <p data-i18n="article.build.intro">Recent builds from my lab include:</p>
+      <ul data-i18n="article.build.list">
+        <li>Customer intake portals that push submissions into CRM and open follow-up tasks in Slack.</li>
+        <li>Incident command runbooks where operators pick a scenario and the platform executes the right automation.</li>
+        <li>Metrics dashboards combining API data, AI summaries, and scheduled reports — all delivered without writing code.</li>
+      </ul>
+
+      <p data-i18n="article.outro">No-code doesn’t mean no discipline. Vibecoding keeps the entry barrier low, while DevOps practices keep the results dependable so teams can experiment fast and ship with confidence.</p>
+    </section>
+
+    <div class="blog-back">
+      <a href="blog.html" data-i18n="article.back">← Back to all posts</a>
+    </div>
+  </article>
+
+  <div class="sep"></div>
+  <footer aria-label="Footer">
+    <section class="site-footer">
+      <p data-i18n="footer.note">Yes — this site was also created by <b>Tobiasz Lubowski</b>.</p>
+    </section>
+  </footer>
+
+  <script>
+    const translations = {
+      en: {
+        'page.title': 'Vibecoding: build apps without coding — Blog — Tobiasz Lubowski',
+        'page.description': 'How vibecoding enables no-code app creation and why testing those builds still matters.',
+        'brand.subtitle': 'DevOps in progress',
+        'nav.home': 'Home',
+        'nav.blog': 'Blog',
+        'nav.contact': 'Contact & CV',
+        'nav.langButton': 'Polski',
+        'nav.langAria': 'Switch language to Polish',
+        'nav.menuToggle': 'Toggle menu',
+        'article.title': 'Vibecoding: build apps without coding',
+        'article.meta.date': 'June 18, 2024',
+        'article.meta.tags': 'Vibecoding • No-Code • Testing',
+        'article.hero.alt': 'Workspace assembling an application from blocks',
+        'article.intro': 'Vibecoding lets people who have ideas — not necessarily coding skills — launch working applications by describing outcomes. You assemble triggers, integrations, and UI blocks with natural language or a visual canvas while the platform writes the code on your behalf.',
+        'article.equal.heading': 'Is vibecoding really software?',
+        'article.equal.body1': 'Yes. The logic still ends up as APIs, workflows, and infrastructure — the difference is that you express it through prompts and configurable building blocks. Tell the system “collect incident details and post them to Slack with a follow-up checklist” and it wires the plumbing without exposing you to YAML or SDKs.',
+        'article.equal.body2': 'That makes vibecoding ideal for subject-matter experts who know the business flow but not the syntax. Engineers can still review or extend the generated artefacts, yet the first usable version can be delivered in hours instead of sprints.',
+        'article.testing.heading': 'Why test no-code builds?',
+        'article.testing.body': 'Because real users depend on them. I keep a lightweight regression pack that checks validation rules, integration credentials, and fallback paths. Whenever I tweak a prompt, automated smoke tests rerun to ensure the generated logic still behaves as expected.',
+        'article.build.heading': 'What you can launch with vibecoding',
+        'article.build.intro': 'Recent builds from my lab include:',
+        'article.build.list': '<li>Customer intake portals that push submissions into CRM and open follow-up tasks in Slack.</li><li>Incident command runbooks where operators pick a scenario and the platform executes the right automation.</li><li>Metrics dashboards combining API data, AI summaries, and scheduled reports — all delivered without writing code.</li>',
+        'article.outro': 'No-code doesn’t mean no discipline. Vibecoding keeps the entry barrier low, while DevOps practices keep the results dependable so teams can experiment fast and ship with confidence.',
+        'article.back': '← Back to all posts',
+        'footer.note': 'Yes — this site was also created by <b>Tobiasz Lubowski</b>.'
+      },
+      pl: {
+        'page.title': 'Vibecoding: aplikacje bez kodu — Blog — Tobiasz Lubowski',
+        'page.description': 'Jak dzięki vibecodingowi tworzyć aplikacje bez znajomości programowania i jednocześnie je testować.',
+        'brand.subtitle': 'DevOps w drodze',
+        'nav.home': 'Strona główna',
+        'nav.blog': 'Blog',
+        'nav.contact': 'Kontakt i CV',
+        'nav.langButton': 'English',
+        'nav.langAria': 'Zmień język na angielski',
+        'nav.menuToggle': 'Przełącz menu',
+        'article.title': 'Vibecoding: aplikacje bez znajomości kodu',
+        'article.meta.date': '18 czerwca 2024',
+        'article.meta.tags': 'Vibecoding • Bez kodu • Testowanie',
+        'article.hero.alt': 'Interfejs układający aplikację z gotowych bloków',
+        'article.intro': 'Vibecoding pozwala osobom z pomysłami — nawet bez umiejętności programowania — uruchamiać działające aplikacje opisem oczekiwanych wyników. Łączysz wyzwalacze, integracje i elementy interfejsu tekstem lub wizualnym edytorem, a platforma pisze kod za Ciebie.',
+        'article.equal.heading': 'Czy vibecoding to naprawdę oprogramowanie?',
+        'article.equal.body1': 'Tak. Logika kończy jako API, workflowy i infrastruktura — różnica polega na tym, że opisujesz ją za pomocą promptów i konfigurowalnych bloków. Wpisujesz „zbierz zgłoszenie incydentu i wyślij do Slacka z checklistą” i narzędzie tworzy całą automatykę bez YAML-a czy SDK.',
+        'article.equal.body2': 'Dzięki temu eksperci dziedzinowi mogą iterować na procesach bez czekania na sprint programistów. Inżynierowie wciąż mogą przejrzeć lub rozszerzyć wygenerowane artefakty, ale pierwszy działający wariant powstaje w godziny, a nie tygodnie.',
+        'article.testing.heading': 'Po co testować rozwiązania no-code?',
+        'article.testing.body': 'Bo korzystają z nich prawdziwi użytkownicy. Utrzymuję lekki pakiet regresji, który sprawdza reguły walidacji, dane logowania do integracji i ścieżki awaryjne. Po każdej zmianie promptu automatyczne smoke testy upewniają się, że wygenerowana logika nadal działa zgodnie z planem.',
+        'article.build.heading': 'Co można uruchomić z vibecodingiem',
+        'article.build.intro': 'Ostatnio w moim labie powstały:',
+        'article.build.list': '<li>Portale zgłoszeniowe klientów, które zapisują dane w CRM i odpalają zadania follow-up w Slacku.</li><li>Runbooki incydentowe, gdzie operator wybiera scenariusz, a platforma wykonuje właściwą automatyzację.</li><li>Dashboardy metryk łączące API, podsumowania AI i raporty cykliczne — wszystko bez pisania kodu.</li>',
+        'article.outro': 'Brak kodu nie oznacza braku dyscypliny. Vibecoding obniża próg wejścia, a praktyki DevOps dbają o niezawodność, więc zespoły mogą eksperymentować szybko i dowozić z pewnością.',
+        'article.back': '← Powrót do wszystkich wpisów',
+        'footer.note': 'Tak — tę stronę również stworzył <b>Tobiasz Lubowski</b>.'
+      }
+    };
+
+    function readStoredLanguage() {
+      try {
+        const stored = localStorage.getItem('preferredLanguage');
+        if (stored === 'pl' || stored === 'en') {
+          return stored;
+        }
+      } catch (err) {}
+      return 'en';
+    }
+
+    let currentLang = readStoredLanguage();
+    const languageToggle = document.getElementById('languageToggle');
+
+    function t(key) {
+      return (translations[currentLang] && translations[currentLang][key]) || translations.en[key] || key;
+    }
+
+    function applyTranslations(lang) {
+      currentLang = lang;
+      try {
+        localStorage.setItem('preferredLanguage', currentLang);
+      } catch (err) {}
+      document.documentElement.lang = lang === 'pl' ? 'pl' : 'en';
+      document.body.setAttribute('data-lang', currentLang);
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        const value = (translations[currentLang] || {})[key];
+        if (typeof value === 'undefined') return;
+        el.innerHTML = value;
+      });
+
+      document.querySelectorAll('[data-i18n-attr]').forEach(el => {
+        const entries = el.getAttribute('data-i18n-attr').split(';');
+        entries.forEach(entry => {
+          const [attr, key] = entry.split(':').map(part => part && part.trim());
+          if (!attr || !key) return;
+          const val = (translations[currentLang] || {})[key];
+          if (typeof val === 'undefined') return;
+          el.setAttribute(attr, val);
+        });
+      });
+
+      if (languageToggle) {
+        const buttonText = (translations[currentLang] || {})['nav.langButton'];
+        if (typeof buttonText !== 'undefined') languageToggle.textContent = buttonText;
+        const ariaText = (translations[currentLang] || {})['nav.langAria'];
+        if (typeof ariaText !== 'undefined') languageToggle.setAttribute('aria-label', ariaText);
+        languageToggle.setAttribute('aria-pressed', currentLang === 'pl' ? 'true' : 'false');
+      }
+
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) {
+        const desc = (translations[currentLang] || {})['page.description'];
+        if (typeof desc !== 'undefined') metaDesc.setAttribute('content', desc);
+      }
+      const title = (translations[currentLang] || {})['page.title'];
+      if (typeof title !== 'undefined') document.title = title;
+    }
+
+    applyTranslations(currentLang);
+
+    if (languageToggle) {
+      languageToggle.addEventListener('click', () => {
+        const nextLang = currentLang === 'en' ? 'pl' : 'en';
+        applyTranslations(nextLang);
+      });
+    }
+
+    const menu = document.querySelector('.menu');
+    const menuToggle = document.getElementById('menuToggle');
+    if(menu && menuToggle){
+      menuToggle.addEventListener('click', ()=>{
+        const open = menu.classList.toggle('show');
+        menuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      menu.querySelectorAll('a, button').forEach(link=>link.addEventListener('click', ()=>{
+        if(menu.classList.contains('show')){
+          menu.classList.remove('show');
+          menuToggle.setAttribute('aria-expanded','false');
+        }
+      }));
+    }
+  </script>
+</body>
+</html>

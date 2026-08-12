@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portfolio - demo</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="sketchy-edge" x="-25%" y="-25%" width="150%" height="150%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.009" numOctaves="2" seed="7" result="noise"></feTurbulence>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="11" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+    </filter>
+    <filter id="sketchy-edge-2" x="-25%" y="-25%" width="150%" height="150%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.011" numOctaves="2" seed="23" result="noise"></feTurbulence>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="9" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+    </filter>
+  </defs>
+</svg>
+
+<div class="scroll-track">
+  <div class="stage">
+
+    <div class="halo" aria-hidden="true"></div>
+
+    <div class="head-wrap">
+      <div class="speech-bubble" id="speech-bubble" aria-hidden="true"><span id="speech-text"></span></div>
+      <svg id="head-svg" viewBox="0 0 400 400" role="button" tabindex="0" aria-label="Open this section">
+        <path id="blob-path" class="blob"></path>
+        <use href="#blob-path" class="blob-sketch"></use>
+        <path class="brow brow-left"></path>
+        <path class="brow brow-right"></path>
+        <g class="eye eye-left">
+          <ellipse class="eye-white" cx="160" cy="190" rx="36" ry="40"></ellipse>
+          <circle class="pupil" cx="160" cy="190" r="14"></circle>
+        </g>
+        <g class="eye eye-right">
+          <ellipse class="eye-white" cx="240" cy="190" rx="36" ry="40"></ellipse>
+          <circle class="pupil" cx="240" cy="190" r="14"></circle>
+        </g>
+      </svg>
+    </div>
+
+    <div class="copy copy-0">
+      <p class="section-label">01 - About Me</p>
+    </div>
+
+    <div class="copy copy-1">
+      <p class="section-label">02 - Projects</p>
+    </div>
+
+    <div class="copy copy-2">
+      <p class="section-label">03 - Certs</p>
+    </div>
+
+    <div class="scroll-hint" aria-hidden="true">
+      <span>scroll</span>
+      <svg width="14" height="20" viewBox="0 0 14 20"><path d="M7 0 L7 18 M1 12 L7 18 L13 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+
+  </div>
+</div>
+
+<div class="brand-header" aria-hidden="true">
+  <span>DevOps</span>
+  <span>Tobiasz L.</span>
+</div>
+
+<a class="order-btn" href="order/index.html" target="_blank" rel="noopener">Order Your Own Website</a>
+
+<nav class="section-nav" aria-label="Jump to section">
+  <button class="nav-item" type="button" data-jump="0">01 - About Me</button>
+  <button class="nav-item" type="button" data-jump="1">02 - Projects</button>
+  <button class="nav-item" type="button" data-jump="2">03 - Certs</button>
+</nav>
+
+<div class="expand-overlay" id="expand-overlay" aria-hidden="true">
+  <svg id="expand-svg" viewBox="0 0 400 400" preserveAspectRatio="none">
+    <path id="expand-blob" class="blob"></path>
+    <use href="#expand-blob" class="blob-sketch"></use>
+    <path class="brow brow-left"></path>
+    <path class="brow brow-right"></path>
+    <g class="eye eye-left">
+      <ellipse class="eye-white" cx="160" cy="190" rx="36" ry="40"></ellipse>
+      <circle class="pupil" cx="160" cy="190" r="14"></circle>
+    </g>
+    <g class="eye eye-right">
+      <ellipse class="eye-white" cx="240" cy="190" rx="36" ry="40"></ellipse>
+      <circle class="pupil" cx="240" cy="190" r="14"></circle>
+    </g>
+  </svg>
+  <button class="close-btn" id="close-btn" type="button" aria-label="Close section">&times;</button>
+  <div class="panel-content" id="panel-content"></div>
+</div>
+
+<div class="lightbox" id="lightbox" aria-hidden="true">
+  <button class="lightbox-close" id="lightbox-close" type="button" aria-label="Close image">&times;</button>
+  <button class="lightbox-nav lightbox-prev" id="lightbox-prev" type="button" aria-label="Previous certificate">&#10094;</button>
+  <button class="lightbox-nav lightbox-next" id="lightbox-next" type="button" aria-label="Next certificate">&#10095;</button>
+  <div class="lightbox-media" id="lightbox-media"></div>
+  <div class="lightbox-caption" id="lightbox-caption"></div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>From Docker to Kubernetes – why we need orchestration — Blog — Tobiasz Lubowski</title>
+  <meta name="description" content="Follow the journey from Docker recipes to Kubernetes orchestration and see why clusters feel like well-run neighbourhoods." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%238b5cf6'/><stop offset='1' stop-color='%236ee7ff'/></linearGradient></defs><rect width='64' height='64' rx='14' fill='url(%23g)'/><circle cx='32' cy='34' r='14' fill='%23fde68a'/><path d='M18 28c3-6 10-10 14-10s10 4 14 10c-6-4-13-5-28 0z' fill='%23facc15'/><circle cx='27' cy='35' r='2.2' fill='%23000' opacity='0.9'/><circle cx='37' cy='35' r='2.2' fill='%23000' opacity='0.9'/><path d='M25 41c2.5 2 11.5 2 14 0' stroke='%23000' stroke-width='2' stroke-linecap='round' fill='none'/></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="nav" aria-label="Main">
+    <div class="row">
+      <div class="brand">Tobiasz Lubowski <small style="color:#9aa3af;font-weight:500" data-i18n="brand.subtitle">DevOps in progress</small></div>
+      <div class="spacer"></div>
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu" aria-expanded="false" data-i18n-attr="aria-label:nav.menuToggle">☰</button>
+      <div class="menu">
+        <a href="../index.html" data-i18n="nav.home">Home</a>
+        <a href="blog.html" class="active" data-i18n="nav.blog">Blog</a>
+        <a href="../index.html#contact" class="btn" data-i18n="nav.contact">Contact & CV</a>
+        <button type="button" class="lang-toggle" id="languageToggle" aria-pressed="false" data-i18n="nav.langButton">Polski</button>
+      </div>
+    </div>
+  </nav>
+
+  <article class="blog-post">
+    <header>
+      <h1 data-i18n="article.title">Od Dockera do Kubernetesa – czyli dlaczego potrzebujemy orkiestracji</h1>
+      <div class="blog-post-meta">
+        <span><time datetime="2025-10-02" data-i18n="article.meta.date">October 2, 2025</time></span>
+        <span data-i18n="article.meta.tags">Kubernetes • Orchestration • Containers</span>
+      </div>
+    </header>
+
+    <div class="blog-post-hero">
+      <img src="assets/vlogs/kubernetes-main.png" alt="Illustration of a Kubernetes cluster shown as a neighbourhood map" data-i18n-attr="alt:article.hero.alt" />
+    </div>
+
+    <section class="blog-post-content">
+      <p data-i18n="article.story1">Od Dockera do Kubernetesa – czyli dlaczego potrzebujemy orkiestracji</p>
+      <p data-i18n="article.story2">Jakiś czas temu pisałem, czym jest Dockerfile i jak dzięki Dockerowi możemy zapakować aplikację w kontener.</p>
+      <p data-i18n="article.story3">Dockerfile nazwaliśmy przepisem, więc sam kontener w tym przypadku jest dla nas ciastem– zawsze takim samym, łatwym do przenoszenia i niezależnym od „kuchni”, w której powstał (o ile trzymamy się przepisu).</p>
+      <p data-i18n="article.story4">Wprowadzenie konteneryzacji rozwiązało duży problem w IT – aplikacje przestały być zależne od środowiska, w którym działają.</p>
+      <p data-i18n="article.story5">Ale… co w sytuacji, gdy mamy dziesiątki albo setki kontenerów, z których każdy odpowiada za inny kawałek systemu (mikroserwisy)?</p>
+
+      <p data-i18n="article.questions.intro">Nagle pojawiają się pytania:</p>
+      <ul data-i18n="article.questions.list">
+        <li>Kto pilnuje, żeby kontenerów było zawsze tyle, ile potrzeba?</li>
+        <li>Kto je uruchamia ponownie, gdy jeden się zepsuje?</li>
+        <li>Kto skaluje system, gdy rośnie ruch?</li>
+        <li>Kto utrzymuje porządek, gdy mamy wiele środowisk (dev, test, prod)?</li>
+      </ul>
+      <p data-i18n="article.questions.outro">Tutaj właśnie pojawia się orkiestracja, a wraz z nią Kubernetes.</p>
+
+      <h2 data-i18n="article.orchestration.heading">Orkiestracja w dwóch słowach</h2>
+      <p data-i18n="article.orchestration.body1">Docker dał nam kontenery, jednak dopiero Kubernetes sprawił, że całe środowisko, w którym działają setki kontenerów, jest stabilne, skalowalne, samonaprawiające się, a przede wszystkim lepiej zarządzalne.</p>
+      <p data-i18n="article.orchestration.body2">Pozwala między innymi na:</p>
+      <ul data-i18n="article.orchestration.list">
+        <li>Automatyczne rozmieszczanie aplikacji po dostępnych zasobach.</li>
+        <li>Samonaprawianie – jeśli kontener się zepsuje, automatycznie uruchamiany jest nowy.</li>
+        <li>Skalowanie – gdy nagle potrzebujemy 5 kopii zamiast dwóch żeby obsłużyć ruch.</li>
+        <li>Porządek i izolację – możemy oddzielać środowiska i projekty.</li>
+      </ul>
+
+      <h2 data-i18n="article.estate.heading">Kubernetes jako osiedle mieszkaniowe</h2>
+      <p data-i18n="article.estate.body1">By lepiej to zobrazować, wyobraźmy sobie klaster Kubernetes jako całe osiedle bloków.</p>
+      <p data-i18n="article.estate.body2">No ale kto tym zarządza? Tutaj wkracza Control Plane – zestaw komponentów odpowiedzialnych za sterowanie klastrem.</p>
+      <p data-i18n="article.estate.body3">W analogii do osiedla Control Plane to spółdzielnia mieszkaniowa, która pilnuje wszystkiego. W jej skład wchodzą m.in.:</p>
+
+      <ul data-i18n="article.control.list">
+        <li>API Server – recepcja, przez którą przechodzą wszystkie polecenia.</li>
+        <li>Scheduler – decyduje, w którym bloku (Node) znajdzie się nowe mieszkanie (Pod).</li>
+        <li>Controller Manager – pilnuje, by rzeczywistość zgadzała się z planem (np. zawsze było tyle mieszkań, ile zadeklarowano).</li>
+        <li>etcd – księga wieczysta osiedla, w której zapisany jest stan całego klastra.</li>
+      </ul>
+
+      <figure>
+        <img src="assets/vlogs/kubernetes_example.png" alt="Pods and nodes compared to apartments and buildings on an estate" data-i18n-attr="alt:article.analogy.figureAlt" />
+        <figcaption data-i18n="article.analogy.caption">Pods are like apartments in a building; the cluster is the whole neighbourhood where services live together.</figcaption>
+      </figure>
+
+      <p data-i18n="article.estate.body4">Poza tym mamy:</p>
+      <ul data-i18n="article.estate.components">
+        <li>Node = blok – budynek, w którym mieszkają aplikacje.</li>
+        <li>Pod = mieszkanie – w bloku mamy wiele mieszkań, każde to osobna przestrzeń.</li>
+        <li>Kontener = ciasto w mieszkaniu – w mieszkaniu może być jedno ciasto albo kilka.</li>
+        <li>Namespace = kolor klatki – różne kolory pozwalają odróżniać środowiska lub projekty.</li>
+        <li>Cluster = całe osiedle – zbiór wszystkich bloków i mieszkań, w których działają aplikacje.</li>
+      </ul>
+
+      <h2 data-i18n="article.summary.heading">Podsumowanie</h2>
+      <p data-i18n="article.summary.intro">Kubernetes składa się z takich „bloczków”:</p>
+      <ul data-i18n="article.summary.list">
+        <li>Kontener = ciasto</li>
+        <li>Pod = mieszkanie, w którym stoją ciasta</li>
+        <li>Node = blok pełen mieszkań</li>
+        <li>Cluster = całe osiedle</li>
+        <li>Control Plane = spółdzielnia, która wszystkim zarządza</li>
+        <li>Kubernetes (orkiestracja) = harmonia i automatyzacja, dzięki której nie musisz sam zarządzać kontenerami.</li>
+      </ul>
+
+      <h2 data-i18n="article.impact.heading">Wpływ Kubernetesa można streścić w kilku kluczowych punktach:</h2>
+      <ul data-i18n="article.impact.list">
+        <li>Niezawodność aplikacji – automatyczne naprawianie i podnoszenie usług, gdy padną.</li>
+        <li>Skalowalność – dynamiczne zwiększanie zasobów.</li>
+        <li>Elastyczność wdrożeń – aktualizacje bez zatrzymywania całego systemu.</li>
+        <li>Automatyzacja zarządzania – samodzielne pilnowanie stanu środowiska.</li>
+        <li>Izolacja i porządek – separacja środowisk i projektów.</li>
+        <li>Przenośność – czy to cloud, czy on-prem, wdrożenie wygląda podobnie.</li>
+        <li>Standaryzacja – wspólny język dla osób zarządzających.</li>
+      </ul>
+
+      <h2 data-i18n="article.deepDive.heading">Dla zainteresowanych – głębiej o Kubernetes</h2>
+      <p data-i18n="article.deepDive.intro">Powyższa analogia z osiedlem dobrze oddaje podstawy, ale Kubernetes to ogromny ekosystem. Jeśli chcesz lepiej zrozumieć, jak to wszystko działa, warto poznać kilka dodatkowych pojęć i mechanizmów:</p>
+
+      <h3 data-i18n="article.deepDive.cp.heading">1. Architektura Control Plane</h3>
+      <ul data-i18n="article.deepDive.cp.list">
+        <li>API Server – punkt wejścia, z którym komunikują się użytkownicy i komponenty klastra.</li>
+        <li>etcd – rozproszona baza danych przechowująca stan klastra (np. ile podów działa).</li>
+        <li>Scheduler – decyduje, na którym węźle uruchomić nowy Pod na podstawie dostępnych zasobów.</li>
+        <li>Controller Manager – zestaw kontrolerów pilnujących, by stan zadeklarowany (np. 5 replik) zgadzał się ze stanem rzeczywistym.</li>
+      </ul>
+
+      <h3 data-i18n="article.deepDive.nodes.heading">2. Komponenty na węzłach (Nodes)</h3>
+      <ul data-i18n="article.deepDive.nodes.list">
+        <li>Kubelet – agent działający na każdym węźle, który komunikuje się z API Serverem i uruchamia kontenery.</li>
+        <li>kube-proxy – odpowiada za routing i reguły sieciowe w klastrze.</li>
+        <li>Container Runtime (np. containerd) – silnik, który faktycznie uruchamia kontenery.</li>
+      </ul>
+
+      <h3 data-i18n="article.deepDive.objects.heading">3. Kluczowe obiekty w Kubernetes</h3>
+      <ul data-i18n="article.deepDive.objects.list">
+        <li>Deployment – definiuje, ile kopii aplikacji ma działać i jak je aktualizować.</li>
+        <li>ReplicaSet – dba o to, żeby zawsze działała zadana liczba replik Podów.</li>
+        <li>Service – zapewnia stabilny adres IP i load balancing pomiędzy Podami.</li>
+        <li>Ingress – umożliwia wystawienie aplikacji na zewnątrz (np. przez HTTPS).</li>
+        <li>ConfigMap i Secret – przechowują konfiguracje i wrażliwe dane.</li>
+        <li>PersistentVolume (PV) i PersistentVolumeClaim (PVC) – zapewniają trwałą pamięć dla aplikacji (np. bazy danych).</li>
+      </ul>
+
+      <h3 data-i18n="article.deepDive.mechanisms.heading">4. Mechanizmy ułatwiające życie</h3>
+      <ul data-i18n="article.deepDive.mechanisms.list">
+        <li>Health checks (Liveness i Readiness probes) – sprawdzają, czy aplikacja działa poprawnie.</li>
+        <li>Horizontal Pod Autoscaler (HPA) – automatyczne skalowanie na podstawie obciążenia.</li>
+        <li>Rolling updates – płynne aktualizacje aplikacji bez przestojów.</li>
+        <li>Namespaces – izolacja środowisk i projektów.</li>
+      </ul>
+    </section>
+
+    <div class="blog-back">
+      <a href="blog.html" data-i18n="article.back">← Back to all posts</a>
+    </div>
+  </article>
+
+  <div class="sep"></div>
+  <footer aria-label="Footer">
+    <section class="site-footer">
+      <p data-i18n="footer.note">Yes — this site was also created by <b>Tobiasz Lubowski</b>.</p>
+    </section>
+  </footer>
+
+  <script>
+    const translations = {
+      en: {
+        'page.title': 'From Docker to Kubernetes – why we need orchestration — Blog — Tobiasz Lubowski',
+        'page.description': 'Follow the journey from Docker recipes to Kubernetes orchestration and see why clusters feel like well-run neighbourhoods.',
+        'brand.subtitle': 'DevOps in progress',
+        'nav.home': 'Home',
+        'nav.blog': 'Blog',
+        'nav.contact': 'Contact & CV',
+        'nav.langButton': 'Polski',
+        'nav.langAria': 'Switch language to Polish',
+        'nav.menuToggle': 'Toggle menu',
+        'article.title': 'From Docker to Kubernetes – why we need orchestration',
+        'article.meta.date': 'October 2, 2025',
+        'article.meta.tags': 'Kubernetes • Orchestration • Containers',
+        'article.hero.alt': 'Illustration of a Kubernetes cluster shown as a neighbourhood map',
+        'article.story1': 'From Docker to Kubernetes – why we need orchestration.',
+        'article.story2': 'Some time ago I wrote about what a Dockerfile is and how Docker lets us pack an application into a container.',
+        'article.story3': 'We called the Dockerfile a recipe, so the container is our cake — always identical, easy to move, and independent of the “kitchen” where it was baked (as long as we stick to the recipe).',
+        'article.story4': 'Containerisation solved a major IT problem: applications stopped depending on the environment in which they run.',
+        'article.story5': 'But what happens when we have dozens or even hundreds of containers, each responsible for a different slice of the system (microservices)?',
+        'article.questions.intro': 'Suddenly these questions show up:',
+        'article.questions.list': '<li>Who keeps the right number of containers running?</li><li>Who restarts a service when one container breaks?</li><li>Who scales the system when traffic grows?</li><li>Who keeps order across dev, test, and prod environments?</li>',
+        'article.questions.outro': 'This is where orchestration enters the scene — and Kubernetes with it.',
+        'article.orchestration.heading': 'Orchestration in a nutshell',
+        'article.orchestration.body1': 'Docker gave us containers, but Kubernetes turned environments with hundreds of containers into something stable, scalable, self-healing, and easier to run.',
+        'article.orchestration.body2': 'It lets you:',
+        'article.orchestration.list': '<li>Place applications automatically on available resources.</li><li>Self-heal — if a container fails, a new one comes online automatically.</li><li>Scale — when you suddenly need five copies instead of two to handle traffic.</li><li>Keep order and isolation — separate environments and projects.</li>',
+        'article.estate.heading': 'Kubernetes as a housing estate',
+        'article.estate.body1': 'To make it tangible, imagine a Kubernetes cluster as an entire housing estate.',
+        'article.estate.body2': 'Who manages it all? That is where the Control Plane steps in — a set of components steering the cluster.',
+        'article.estate.body3': 'In the estate analogy, the Control Plane is the housing cooperative keeping everything in line. It includes:',
+        'article.control.list': '<li><strong>API Server</strong> – the reception desk every instruction passes through.</li><li><strong>Scheduler</strong> – decides which block (node) receives a new apartment (pod).</li><li><strong>Controller Manager</strong> – checks that reality matches the plan (for example, the declared number of apartments).</li><li><strong>etcd</strong> – the estate ledger recording the entire cluster state.</li>',
+        'article.analogy.figureAlt': 'Pods and nodes compared to apartments and buildings on an estate',
+        'article.analogy.caption': 'Pods are like apartments in a block; the cluster is the whole neighbourhood where services live side by side.',
+        'article.estate.body4': 'Beyond that we have:',
+        'article.estate.components': '<li>Node = block — the building where applications live.</li><li>Pod = apartment — a block holds many apartments, each a separate space.</li><li>Container = cake in the apartment — you might have one cake or several.</li><li>Namespace = staircase colour — colours help distinguish environments and projects.</li><li>Cluster = the entire estate — every block and apartment where applications run.</li>',
+        'article.summary.heading': 'Summary',
+        'article.summary.intro': 'Think of Kubernetes as a set of these bricks:',
+        'article.summary.list': '<li>Container = cake</li><li>Pod = apartment where the cakes sit</li><li>Node = block full of apartments</li><li>Cluster = the whole estate</li><li>Control Plane = the cooperative that runs everything</li><li>Kubernetes (orchestration) = harmony and automation so you do not manage containers by hand.</li>',
+        'article.impact.heading': 'Kubernetes impact in a few key points:',
+        'article.impact.list': '<li>Application reliability — automatic repairs and service recovery after failures.</li><li>Scalability — dynamically increasing resources.</li><li>Deployment flexibility — updates without taking the whole system offline.</li><li>Operational automation — the platform keeps the desired state in check.</li><li>Isolation and order — separation of environments and projects.</li><li>Portability — cloud or on-prem, the rollout looks similar.</li><li>Standardisation — a shared language for platform teams.</li>',
+        'article.deepDive.heading': 'For the curious — deeper into Kubernetes',
+        'article.deepDive.intro': 'The estate analogy covers the basics, but Kubernetes is a massive ecosystem. To understand how it really works, explore a few extra concepts and mechanisms:',
+        'article.deepDive.cp.heading': '1. Control Plane architecture',
+        'article.deepDive.cp.list': '<li>API Server — the entry point used by people and cluster components.</li><li>etcd — the distributed database that stores cluster state (for example, which pods run).</li><li>Scheduler — decides which node should host a new pod based on resources.</li><li>Controller Manager — controllers that keep the declared state (for example, 5 replicas) in sync with reality.</li>',
+        'article.deepDive.nodes.heading': '2. Components on the nodes',
+        'article.deepDive.nodes.list': '<li>Kubelet — an agent on every node that talks to the API Server and runs containers.</li><li>kube-proxy — manages routing and network rules inside the cluster.</li><li>Container runtime (for example, containerd) — the engine that actually runs containers.</li>',
+        'article.deepDive.objects.heading': '3. Core Kubernetes objects',
+        'article.deepDive.objects.list': '<li>Deployment — defines how many instances of an app should run and how to update them.</li><li>ReplicaSet — keeps the requested number of pod replicas running.</li><li>Service — provides a stable IP and load balancing between pods.</li><li>Ingress — exposes applications to the outside world (for example, via HTTPS).</li><li>ConfigMap and Secret — store configuration and sensitive data.</li><li>PersistentVolume (PV) and PersistentVolumeClaim (PVC) — deliver durable storage for apps (for example, databases).</li>',
+        'article.deepDive.mechanisms.heading': '4. Quality-of-life mechanisms',
+        'article.deepDive.mechanisms.list': '<li>Health checks (liveness and readiness probes) — verify that the app behaves correctly.</li><li>Horizontal Pod Autoscaler (HPA) — scales automatically based on load.</li><li>Rolling updates — roll out new versions without downtime.</li><li>Namespaces — isolate environments and teams.</li>',
+        'article.back': '&larr; Back to all posts',
+        'footer.note': 'Yes — this site was also created by <b>Tobiasz Lubowski</b>.'
+      },
+      pl: {
+        'page.title': 'Od Dockera do Kubernetesa – czyli dlaczego potrzebujemy orkiestracji — Blog — Tobiasz Lubowski',
+        'page.description': 'Od Dockera i przepisu na ciasto do orkiestracji klastra: poznaj Kubernetes w analogii do dobrze zarządzanego osiedla.',
+        'brand.subtitle': 'DevOps w drodze',
+        'nav.home': 'Strona główna',
+        'nav.blog': 'Blog',
+        'nav.contact': 'Kontakt i CV',
+        'nav.langButton': 'English',
+        'nav.langAria': 'Zmień język na angielski',
+        'nav.menuToggle': 'Przełącz menu',
+        'article.title': 'Od Dockera do Kubernetesa – czyli dlaczego potrzebujemy orkiestracji',
+        'article.meta.date': '2 października 2025',
+        'article.meta.tags': 'Kubernetes • Orkiestracja • Kontenery',
+        'article.hero.alt': 'Ilustracja klastra Kubernetes przedstawiona jak plan osiedla',
+        'article.story1': 'Od Dockera do Kubernetesa – czyli dlaczego potrzebujemy orkiestracji',
+        'article.story2': 'Jakiś czas temu pisałem, czym jest Dockerfile i jak dzięki Dockerowi możemy zapakować aplikację w kontener.',
+        'article.story3': 'Dockerfile nazwaliśmy przepisem, więc sam kontener w tym przypadku jest dla nas ciastem– zawsze takim samym, łatwym do przenoszenia i niezależnym od „kuchni”, w której powstał (o ile trzymamy się przepisu).',
+        'article.story4': 'Wprowadzenie konteneryzacji rozwiązało duży problem w IT – aplikacje przestały być zależne od środowiska, w którym działają.',
+        'article.story5': 'Ale… co w sytuacji, gdy mamy dziesiątki albo setki kontenerów, z których każdy odpowiada za inny kawałek systemu (mikroserwisy)?',
+        'article.questions.intro': 'Nagle pojawiają się pytania:',
+        'article.questions.list': '<li>Kto pilnuje, żeby kontenerów było zawsze tyle, ile potrzeba?</li><li>Kto je uruchamia ponownie, gdy jeden się zepsuje?</li><li>Kto skaluje system, gdy rośnie ruch?</li><li>Kto utrzymuje porządek, gdy mamy wiele środowisk (dev, test, prod)?</li>',
+        'article.questions.outro': 'Tutaj właśnie pojawia się orkiestracja, a wraz z nią Kubernetes.',
+        'article.orchestration.heading': 'Orkiestracja w dwóch słowach',
+        'article.orchestration.body1': 'Docker dał nam kontenery, jednak dopiero Kubernetes sprawił, że całe środowisko, w którym działają setki kontenerów, jest stabilne, skalowalne, samonaprawiające się, a przede wszystkim lepiej zarządzalne.',
+        'article.orchestration.body2': 'Pozwala między innymi na:',
+        'article.orchestration.list': '<li>Automatyczne rozmieszczanie aplikacji po dostępnych zasobach.</li><li>Samonaprawianie – jeśli kontener się zepsuje, automatycznie uruchamiany jest nowy.</li><li>Skalowanie – gdy nagle potrzebujemy 5 kopii zamiast dwóch żeby obsłużyć ruch.</li><li>Porządek i izolację – możemy oddzielać środowiska i projekty.</li>',
+        'article.estate.heading': 'Kubernetes jako osiedle mieszkaniowe',
+        'article.estate.body1': 'By lepiej to zobrazować, wyobraźmy sobie klaster Kubernetes jako całe osiedle bloków.',
+        'article.estate.body2': 'No ale kto tym zarządza? Tutaj wkracza Control Plane – zestaw komponentów odpowiedzialnych za sterowanie klastrem.',
+        'article.estate.body3': 'W analogii do osiedla Control Plane to spółdzielnia mieszkaniowa, która pilnuje wszystkiego. W jej skład wchodzą m.in.:',
+        'article.control.list': '<li>API Server – recepcja, przez którą przechodzą wszystkie polecenia.</li><li>Scheduler – decyduje, w którym bloku (Node) znajdzie się nowe mieszkanie (Pod).</li><li>Controller Manager – pilnuje, by rzeczywistość zgadzała się z planem (np. zawsze było tyle mieszkań, ile zadeklarowano).</li><li>etcd – księga wieczysta osiedla, w której zapisany jest stan całego klastra.</li>',
+        'article.analogy.figureAlt': 'Pody i nody porównane do mieszkań i bloków na osiedlu',
+        'article.analogy.caption': 'Pod to mieszkanie w bloku, a klaster to całe osiedle, w którym współistnieją usługi.',
+        'article.estate.body4': 'Poza tym mamy:',
+        'article.estate.components': '<li>Node = blok – budynek, w którym mieszkają aplikacje.</li><li>Pod = mieszkanie – w bloku mamy wiele mieszkań, każde to osobna przestrzeń.</li><li>Kontener = ciasto w mieszkaniu – w mieszkaniu może być jedno ciasto albo kilka.</li><li>Namespace = kolor klatki – różne kolory pozwalają odróżniać środowiska lub projekty.</li><li>Cluster = całe osiedle – zbiór wszystkich bloków i mieszkań, w których działają aplikacje.</li>',
+        'article.summary.heading': 'Podsumowanie',
+        'article.summary.intro': 'Kubernetes składa się z takich „bloczków”:',
+        'article.summary.list': '<li>Kontener = ciasto</li><li>Pod = mieszkanie, w którym stoją ciasta</li><li>Node = blok pełen mieszkań</li><li>Cluster = całe osiedle</li><li>Control Plane = spółdzielnia, która wszystkim zarządza</li><li>Kubernetes (orkiestracja) = harmonia i automatyzacja, dzięki której nie musisz sam zarządzać kontenerami.</li>',
+        'article.impact.heading': 'Wpływ Kubernetesa można streścić w kilku kluczowych punktach:',
+        'article.impact.list': '<li>Niezawodność aplikacji – automatyczne naprawianie i podnoszenie usług, gdy padną.</li><li>Skalowalność – dynamiczne zwiększanie zasobów.</li><li>Elastyczność wdrożeń – aktualizacje bez zatrzymywania całego systemu.</li><li>Automatyzacja zarządzania – samodzielne pilnowanie stanu środowiska.</li><li>Izolacja i porządek – separacja środowisk i projektów.</li><li>Przenośność – czy to cloud, czy on-prem, wdrożenie wygląda podobnie.</li><li>Standaryzacja – wspólny język dla osób zarządzających.</li>',
+        'article.deepDive.heading': 'Dla zainteresowanych – głębiej o Kubernetes',
+        'article.deepDive.intro': 'Powyższa analogia z osiedlem dobrze oddaje podstawy, ale Kubernetes to ogromny ekosystem. Jeśli chcesz lepiej zrozumieć, jak to wszystko działa, warto poznać kilka dodatkowych pojęć i mechanizmów:',
+        'article.deepDive.cp.heading': '1. Architektura Control Plane',
+        'article.deepDive.cp.list': '<li>API Server – punkt wejścia, z którym komunikują się użytkownicy i komponenty klastra.</li><li>etcd – rozproszona baza danych przechowująca stan klastra (np. ile podów działa).</li><li>Scheduler – decyduje, na którym węźle uruchomić nowy Pod na podstawie dostępnych zasobów.</li><li>Controller Manager – zestaw kontrolerów pilnujących, by stan zadeklarowany (np. 5 replik) zgadzał się ze stanem rzeczywistym.</li>',
+        'article.deepDive.nodes.heading': '2. Komponenty na węzłach (Nodes)',
+        'article.deepDive.nodes.list': '<li>Kubelet – agent działający na każdym węźle, który komunikuje się z API Serverem i uruchamia kontenery.</li><li>kube-proxy – odpowiada za routing i reguły sieciowe w klastrze.</li><li>Container Runtime (np. containerd) – silnik, który faktycznie uruchamia kontenery.</li>',
+        'article.deepDive.objects.heading': '3. Kluczowe obiekty w Kubernetes',
+        'article.deepDive.objects.list': '<li>Deployment – definiuje, ile kopii aplikacji ma działać i jak je aktualizować.</li><li>ReplicaSet – dba o to, żeby zawsze działała zadana liczba replik Podów.</li><li>Service – zapewnia stabilny adres IP i load balancing pomiędzy Podami.</li><li>Ingress – umożliwia wystawienie aplikacji na zewnątrz (np. przez HTTPS).</li><li>ConfigMap i Secret – przechowują konfiguracje i wrażliwe dane.</li><li>PersistentVolume (PV) i PersistentVolumeClaim (PVC) – zapewniają trwałą pamięć dla aplikacji (np. bazy danych).</li>',
+        'article.deepDive.mechanisms.heading': '4. Mechanizmy ułatwiające życie',
+        'article.deepDive.mechanisms.list': '<li>Health checks (Liveness i Readiness probes) – sprawdzają, czy aplikacja działa poprawnie.</li><li>Horizontal Pod Autoscaler (HPA) – automatyczne skalowanie na podstawie obciążenia.</li><li>Rolling updates – płynne aktualizacje aplikacji bez przestojów.</li><li>Namespaces – izolacja środowisk i projektów.</li>',
+        'article.back': '&larr; Wróć do wszystkich wpisów',
+        'footer.note': 'Tak — tę stronę również stworzył <b>Tobiasz Lubowski</b>.'
+      }
+    };
+
+    function readStoredLanguage() {
+      try {
+        const stored = localStorage.getItem('preferredLanguage');
+        if (stored === 'pl' || stored === 'en') {
+          return stored;
+        }
+      } catch (err) {}
+      return 'en';
+    }
+
+    let currentLang = readStoredLanguage();
+    const languageToggle = document.getElementById('languageToggle');
+
+    function t(key) {
+      return (translations[currentLang] && translations[currentLang][key]) || translations.en[key] || key;
+    }
+
+    function applyTranslations(lang) {
+      currentLang = lang;
+      try {
+        localStorage.setItem('preferredLanguage', currentLang);
+      } catch (err) {}
+      document.documentElement.lang = lang === 'pl' ? 'pl' : 'en';
+      document.body.setAttribute('data-lang', currentLang);
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        const value = (translations[currentLang] || {})[key];
+        if (typeof value === 'undefined') return;
+        el.innerHTML = value;
+      });
+
+      document.querySelectorAll('[data-i18n-attr]').forEach(el => {
+        const entries = el.getAttribute('data-i18n-attr').split(';');
+        entries.forEach(entry => {
+          const [attr, key] = entry.split(':').map(part => part && part.trim());
+          if (!attr || !key) return;
+          const val = (translations[currentLang] || {})[key];
+          if (typeof val === 'undefined') return;
+          el.setAttribute(attr, val);
+        });
+      });
+
+      if (languageToggle) {
+        const buttonText = (translations[currentLang] || {})['nav.langButton'];
+        if (typeof buttonText !== 'undefined') languageToggle.textContent = buttonText;
+        const ariaText = (translations[currentLang] || {})['nav.langAria'];
+        if (typeof ariaText !== 'undefined') languageToggle.setAttribute('aria-label', ariaText);
+        languageToggle.setAttribute('aria-pressed', currentLang === 'pl' ? 'true' : 'false');
+      }
+
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) {
+        const desc = (translations[currentLang] || {})['page.description'];
+        if (typeof desc !== 'undefined') metaDesc.setAttribute('content', desc);
+      }
+      const title = (translations[currentLang] || {})['page.title'];
+      if (typeof title !== 'undefined') document.title = title;
+    }
+
+    applyTranslations(currentLang);
+
+    if (languageToggle) {
+      languageToggle.addEventListener('click', () => {
+        const nextLang = currentLang === 'en' ? 'pl' : 'en';
+        applyTranslations(nextLang);
+      });
+    }
+
+    const menu = document.querySelector('.menu');
+    const menuToggle = document.getElementById('menuToggle');
+    if(menu && menuToggle){
+      menuToggle.addEventListener('click', ()=>{
+        const open = menu.classList.toggle('show');
+        menuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      menu.querySelectorAll('a, button').forEach(link=>link.addEventListener('click', ()=>{
+        if(menu.classList.contains('show')){
+          menu.classList.remove('show');
+          menuToggle.setAttribute('aria-expanded','false');
+        }
+      }));
+    }
+  </script>
+</body>
+</html>

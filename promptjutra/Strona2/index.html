@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PaznokcieWiesia - Power-Manicure dla Pracujących Kobiet</title>
+    <meta name="description" content="Power-Manicure z opcją Silent Work dla pracujących kobiet. Ekologiczny, ultra-trwały manicure odporny na klawiaturę w 45 minut. Odzyskaj pewność siebie w pracy!">
+    <meta property="og:title" content="PaznokcieWiesia - Manicure, który pracuje na Twój sukces">
+    <meta property="og:description" content="Odzyskaj kontrolę nad wizerunkiem dzięki usłudze stworzonej dla zapracowanych kobiet. Czas to pieniądz, my go szanujemy.">
+    <meta property="og:type" content="website">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #059669;
+            --accent: #10B981;
+            --bg-light: #F0FDF4;
+            --text-dark: #1f2937;
+            --text-light: #4b5563;
+            --white: #ffffff;
+            --glass-bg: rgba(240, 253, 244, 0.7);
+            --glass-border: rgba(16, 185, 129, 0.2);
+            --radius-sm: 8px;
+            --radius-lg: 20px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-dark);
+            background-color: var(--bg-light);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--primary);
+            line-height: 1.2;
+        }
+
+        /* Reusable UI Components */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 16px 32px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: var(--white);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4), 0 0 30px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6), 0 0 40px rgba(16, 185, 129, 0.4);
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(5, 150, 105, 0.05);
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(5, 150, 105, 0.1);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+        }
+
+        .section-header p {
+            font-size: 1.125rem;
+            color: var(--text-light);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        section {
+            padding: 100px 0;
+        }
+
+        /* Navigation */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            background: rgba(240, 253, 244, 0.85);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(5, 150, 105, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-dark);
+            font-weight: 600;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background-color: var(--accent);
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .hamburger {
+            display: none;
+            cursor: pointer;
+            border: none;
+            background: none;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .hamburger span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background-color: var(--primary);
+            transition: all 0.3s;
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding-top: 80px;
+            background-image: linear-gradient(rgba(240, 253, 244, 0.9), rgba(240, 253, 244, 0.8)), url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="%23e0f2fe" opacity="0.1"/></svg>');
+            background-attachment: fixed;
+            overflow: hidden;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .hero-content {
+            z-index: 2;
+        }
+
+        .hero-title-wrap {
+            min-height: 120px;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            color: var(--primary);
+            border-right: 3px solid var(--accent);
+            white-space: nowrap;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .hero .subtitle {
+            font-size: 1.25rem;
+            color: var(--text-light);
+            margin-bottom: 24px;
+            font-weight: 400;
+        }
+
+        .hero p {
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+
+        .hero-image {
+            position: relative;
+            height: 600px;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(5, 150, 105, 0.2);
+        }
+
+        .hero-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .hero-image::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top right, rgba(5, 150, 105, 0.2), transparent);
+        }
+
+        /* About Section */
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .about-image-placeholder {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            height: 500px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 1.2rem;
+            box-shadow: inset 0 0 50px rgba(16, 185, 129, 0.1);
+        }
+
+        .about-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+        }
+        
+        .about-content h3 {
+            font-size: 1.25rem;
+            color: var(--accent);
+            margin-bottom: 24px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+        }
+
+        .about-content p {
+            margin-bottom: 32px;
+            font-size: 1.1rem;
+            color: var(--text-light);
+        }
+
+        /* Services Section */
+        .services {
+            background-color: var(--white);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 32px;
+        }
+
+        .service-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+            color: var(--primary);
+        }
+
+        .service-card p {
+            color: var(--text-light);
+        }
+
+        /* Testimonials Section */
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 32px;
+        }
+
+        .testimonial-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .quote-icon {
+            font-size: 3rem;
+            color: var(--accent);
+            opacity: 0.3;
+            line-height: 1;
+            margin-bottom: 16px;
+            font-family: serif;
+        }
+
+        .testimonial-text {
+            font-style: italic;
+            margin-bottom: 24px;
+            color: var(--text-dark);
+            flex-grow: 1;
+        }
+
+        .testimonial-author {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .testimonial-role {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        /* Contact Section */
+        .contact {
+            background: linear-gradient(to bottom, var(--white), var(--bg-light));
+            text-align: center;
+        }
+
+        .contact-content {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .contact-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+        }
+
+        .contact-content h3 {
+            font-size: 1.25rem;
+            color: var(--accent);
+            margin-bottom: 24px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+        }
+
+        .contact-content p {
+            font-size: 1.125rem;
+            color: var(--text-light);
+            margin-bottom: 40px;
+        }
+
+        .contact-info-box {
+            display: inline-flex;
+            flex-direction: column;
+            gap: 16px;
+            background: var(--glass-bg);
+            padding: 40px 60px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+        }
+
+        .contact-link {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .contact-link:hover {
+            color: var(--accent);
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--primary);
+            color: var(--white);
+            text-align: center;
+            padding: 40px 24px;
+        }
+
+        /* Animations */
+        .animate-up {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        .animate-in-left {
+            opacity: 0;
+            transform: translateX(-40px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        .animate-in-right {
+            opacity: 0;
+            transform: translateX(40px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        .is-visible {
+            opacity: 1;
+            transform: translate(0);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .hero h1 { font-size: 2.8rem; }
+            .hero-grid, .about-grid { grid-template-columns: 1fr; gap: 40px; }
+            .hero-image { height: 400px; order: 2; }
+            .hero-content { order: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .hamburger { display: flex; }
+            .nav-links {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background: rgba(240, 253, 244, 0.95);
+                backdrop-filter: blur(15px);
+                flex-direction: column;
+                align-items: center;
+                padding: 20px 0;
+                gap: 20px;
+                clip-path: circle(0 at 50% -20%);
+                transition: all 0.5s ease-out;
+            }
+            .nav-links.active {
+                clip-path: circle(1000px at 50% -20%);
+            }
+            .hero h1 { font-size: 2.2rem; white-space: normal; border-right: none; }
+            .hero-title-wrap { min-height: auto; }
+            .section-header h2 { font-size: 2rem; }
+            .contact-info-box { padding: 30px; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <header id="header">
+        <nav>
+            <a href="#" class="logo">PaznokcieWiesia</a>
+            <ul class="nav-links">
+                <li><a href="#hero">Start</a></li>
+                <li><a href="#about">O nas</a></li>
+                <li><a href="#services">Oferta</a></li>
+                <li><a href="#testimonials">Opinie</a></li>
+                <li><a href="#contact">Kontakt</a></li>
+            </ul>
+            <button class="hamburger" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section id="hero" class="hero">
+            <div class="container hero-grid">
+                <div class="hero-content animate-in-left">
+                    <div class="hero-title-wrap">
+                        <h1 id="typewriter"></h1>
+                    </div>
+                    <h2 class="subtitle">Odzyskaj kontrolę nad wizerunkiem. Ekologiczny, ultra-trwały manicure, który przetrwa każde uderzenie w klawiaturę. Ty skupiasz się na awansie, my dbamy o detale.</h2>
+                    <p>Znowu chowasz dłonie pod stół podczas ważnego spotkania? Rozumiemy, że w natłoku maili i raportów brakuje czasu na pielęgnację, a odprysk lakieru niszczy pewność siebie. Poznaj Power-Manicure: stworzony specjalnie dla pracujących kobiet. Bez opóźnień, w wegańskim standardzie, dopasowany do Twojego kalendarza.</p>
+                    <a href="#contact" class="btn btn-primary">Zarezerwuj swój Power-Manicure</a>
+                </div>
+                <div class="hero-image animate-in-right delay-1">
+                    <img src="zdjeciestrona.png" alt="Zadbane dłonie pracującej kobiety opierające się o laptopa w zielonym otoczeniu">
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about">
+            <div class="container about-grid">
+                <div class="about-image-placeholder animate-in-left glass-card">
+                    Strefa relaksu i zieleni sprzyjająca skupieniu
+                </div>
+                <div class="about-content animate-in-right">
+                    <h2>Pracuj bez Przeszkód. Odpoczywaj w Zieleni.</h2>
+                    <h3>Strefa "Silent Work" stworzona dla ambitnych.</h3>
+                    <p>Drażni Cię wymuszony small talk, gdy w głowie układasz plan prezentacji? W PaznokcieWiesia stworzyłyśmy przestrzeń, która szanuje Twój czas.</p>
+                    <p>Wybierz opcję "Silent Work", postaw laptopa na specjalnej podkładce i odpisuj na maile, podczas gdy my nakładamy organiczne, oddychające bazy. Zadbane dłonie to symbol Twojego ogarnięcia – dajemy Ci narzędzie, by z dumą gestykulować podczas trudnych negocjacji. Miejsce stworzone przez kobiety biznesu, dla kobiet biznesu.</p>
+                    <a href="#services" class="btn btn-primary">Poznaj nasz etos pracy</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Services Section -->
+        <section id="services" class="services">
+            <div class="container">
+                <div class="section-header animate-up">
+                    <h2>Manicure, Który Pracuje na Twój Sukces</h2>
+                    <p>Zero kompromisów między karierą a estetyką.</p>
+                </div>
+                <div class="services-grid">
+                    <div class="glass-card service-card animate-up" style="transition-delay: 0.1s;">
+                        <h3>Lunch-Break Express</h3>
+                        <p>Musisz wejść, zrobić co trzeba i wracać do biura? Gwarantujemy żelazną punktualność. Brak poślizgów, pełna gotowość do pracy w dokładnie 45 minut.</p>
+                    </div>
+                    <div class="glass-card service-card animate-up" style="transition-delay: 0.2s;">
+                        <h3>Office Shield</h3>
+                        <p>Wzmocniona, wegańska baza i lakier przetestowany na 100 tysięcy uderzeń w klawiaturę. Twoje paznokcie przetrwają otwieranie segregatorów i intensywny tydzień bez ani jednego odprysku.</p>
+                    </div>
+                    <div class="glass-card service-card animate-up" style="transition-delay: 0.3s;">
+                        <h3>Business Color Code</h3>
+                        <p>Odcienie dobrane pod psychologię biznesu. Od "Power Red", który dodaje śmiałości przy decyzjach, po "Calm Green", idealny do głębokiej pracy analitycznej.</p>
+                    </div>
+                </div>
+                <div class="text-center" style="text-align: center; margin-top: 50px;">
+                    <a href="#contact" class="btn btn-primary animate-up" style="transition-delay: 0.4s;">Wybierz pakiet dla siebie</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials Section -->
+        <section id="testimonials">
+            <div class="container">
+                <div class="section-header animate-up">
+                    <h2>Kobiety, Które Trzymają Sukces w Swoich Dłoniach</h2>
+                    <p>Zobacz, jak Power-Manicure zmienia codzienną pracę.</p>
+                </div>
+                <div class="testimonials-grid">
+                    <div class="glass-card testimonial-card animate-up" style="transition-delay: 0.1s;">
+                        <div class="quote-icon">"</div>
+                        <p class="testimonial-text">Nie mam czasu siedzieć dwóch godzin u kosmetyczki. Tutaj wpadam z laptopem, odpisuję na maile w strefie Silent Work, a po 45 minutach mam paznokcie gotowe na kwartalne podsumowanie. Odprysk przed ważnym spotkaniem to już na szczęście przeszłość.</p>
+                        <div>
+                            <div class="testimonial-author">Anna K.</div>
+                            <div class="testimonial-role">Project Manager</div>
+                        </div>
+                    </div>
+                    <div class="glass-card testimonial-card animate-up" style="transition-delay: 0.2s;">
+                        <div class="quote-icon">"</div>
+                        <p class="testimonial-text">Moje paznokcie w końcu wytrzymują pisanie na klawiaturze po 8 godzin dziennie. Dodatkowo wegańskie lakiery widocznie zregenerowały moją zniszczoną płytkę. Polecam każdej zapracowanej dziewczynie, która chce czuć, że ma wszystko pod kontrolą.</p>
+                        <div>
+                            <div class="testimonial-author">Karolina W.</div>
+                            <div class="testimonial-role">Analityk Finansowy</div>
+                        </div>
+                    </div>
+                    <div class="glass-card testimonial-card animate-up" style="transition-delay: 0.3s;">
+                        <div class="quote-icon">"</div>
+                        <p class="testimonial-text">Zadbane dłonie to moja wizytówka na spotkaniach z kluczowymi klientami. Zawsze wybieram sprawdzony odcień przed negocjacjami. W PaznokcieWiesia nikt nie marnuje mojego czasu, a zielone wnętrze pozwala mi przez chwilę odetchnąć.</p>
+                        <div>
+                            <div class="testimonial-author">Marta S.</div>
+                            <div class="testimonial-role">Dyrektor Sprzedaży</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center" style="text-align: center; margin-top: 50px;">
+                    <a href="#contact" class="btn btn-primary animate-up" style="transition-delay: 0.4s;">Dołącz do grona zadowolonych klientek</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="contact">
+            <div class="container">
+                <div class="contact-content animate-up">
+                    <h2>Zrób Pierwszy Krok do Lepszego Dnia</h2>
+                    <h3>Twój czas jest bezcenny. Zarezerwuj termin w kilkanaście sekund.</h3>
+                    <p>Gotowa, by wejść na wyższy poziom pewności siebie i ułatwić sobie codzienne obowiązki? Jesteśmy tu, by wspierać Twoje zawodowe wyzwania pięknym i trwałym detalem. Zadzwoń lub napisz do nas już teraz – dobierzemy termin idealnie wpasowany w Twoją przerwę na lunch.</p>
+                    
+                    <div class="contact-info-box">
+                        <span style="color: var(--text-light); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 0.9rem;">Zarezerwuj bezpośrednio</span>
+                        <a href="tel:[TELEFON]" class="contact-link">[TELEFON]</a>
+                        <a href="mailto:[EMAIL]" class="contact-link" style="font-size: 1.25rem;">[EMAIL]</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 PaznokcieWiesia. Wszelkie prawa zastrzeżone.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Typewriter Effect logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const typewriterElement = document.getElementById('typewriter');
+            const textToType = "Twoja Wizytówka w Świecie Biznesu";
+            let i = 0;
+            
+            // Only run typing animation on larger screens to avoid weird wrapping jumps, 
+            // on mobile just display the text.
+            if(window.innerWidth > 768) {
+                function typeWriter() {
+                    if (i < textToType.length) {
+                        typewriterElement.innerHTML += textToType.charAt(i);
+                        i++;
+                        // Random delay for realistic typing
+                        const randomDelay = Math.random() * (120 - 50) + 50;
+                        setTimeout(typeWriter, randomDelay);
+                    } else {
+                        // Keep cursor blinking
+                        typewriterElement.style.borderRightColor = 'transparent';
+                        setTimeout(() => {
+                           typewriterElement.style.transition = 'border-color 0.5s step-end infinite alternate';
+                        }, 500);
+                    }
+                }
+                setTimeout(typeWriter, 500);
+            } else {
+                typewriterElement.innerHTML = textToType;
+                typewriterElement.style.borderRight = 'none';
+            }
+
+            // Intersection Observer for Scroll Animations
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.15
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            const animElements = document.querySelectorAll('.animate-up, .animate-in-left, .animate-in-right');
+            animElements.forEach(el => {
+                observer.observe(el);
+            });
+
+            // Hamburger Menu Toggle
+            const hamburger = document.querySelector('.hamburger');
+            const navLinks = document.querySelector('.nav-links');
+            const links = document.querySelectorAll('.nav-links li a');
+
+            hamburger.addEventListener('click', () => {
+                navLinks.classList.toggle('active');
+                
+                // Animate hamburger to X
+                const spans = hamburger.querySelectorAll('span');
+                if(navLinks.classList.contains('active')){
+                    spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
+                    spans[1].style.opacity = '0';
+                    spans[2].style.transform = 'rotate(-45deg) translate(7px, -6px)';
+                } else {
+                    spans[0].style.transform = 'none';
+                    spans[1].style.opacity = '1';
+                    spans[2].style.transform = 'none';
+                }
+            });
+
+            // Close menu on link click (mobile)
+            links.forEach(link => {
+                link.addEventListener('click', () => {
+                    if(navLinks.classList.contains('active')) {
+                        hamburger.click();
+                    }
+                });
+            });
+
+            // Sticky Header shadow on scroll
+            const header = document.getElementById('header');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    header.style.boxShadow = '0 4px 20px rgba(5, 150, 105, 0.1)';
+                } else {
+                    header.style.boxShadow = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

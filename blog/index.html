@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blog — Tobiasz Lubowski</title>
+  <meta name="description" content="Insights and project write-ups from Tobiasz Lubowski, aspiring DevOps engineer." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%238b5cf6'/><stop offset='1' stop-color='%236ee7ff'/></linearGradient></defs><rect width='64' height='64' rx='14' fill='url(%23g)'/><circle cx='32' cy='34' r='14' fill='%23fde68a'/><path d='M18 28c3-6 10-10 14-10s10 4 14 10c-6-4-13-5-28 0z' fill='%23facc15'/><circle cx='27' cy='35' r='2.2' fill='%23000' opacity='0.9'/><circle cx='37' cy='35' r='2.2' fill='%23000' opacity='0.9'/><path d='M25 41c2.5 2 11.5 2 14 0' stroke='%23000' stroke-width='2' stroke-linecap='round' fill='none'/></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="nav" aria-label="Main">
+    <div class="row">
+      <div class="brand">Tobiasz Lubowski <small style="color:#9aa3af;font-weight:500" data-i18n="brand.subtitle">DevOps</small></div>
+      <div class="spacer"></div>
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu" aria-expanded="false" data-i18n-attr="aria-label:nav.menuToggle">☰</button>
+      <div class="menu">
+        <a href="../index.html" data-i18n="nav.home">Home</a>
+        <a href="../index.html#projects" data-i18n="nav.projects">Projects</a>
+        <a href="../index.html#experience" data-i18n="nav.experience">Experience</a>
+        <a href="../index.html#passions" data-i18n="nav.passions">Passions</a>
+        <a href="blog.html" class="active" data-i18n="nav.blog">Blog</a>
+        <a href="../index.html#contact" class="btn" data-i18n="nav.contact">Contact & CV</a>
+        <button type="button" class="lang-toggle" id="languageToggle" aria-pressed="false" data-i18n="nav.langButton">Polski</button>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <section class="blog-hero">
+      <h1 class="blog-section-title" data-i18n="blog.hero.title">Stories from the lab</h1>
+      <p data-i18n="blog.hero.desc">Deep dives into what I do and DevOps topics explained in plain language.</p>
+    </section>
+
+    <section aria-label="Latest blog posts">
+      <div class="blog-grid">
+        <article class="blog-card">
+          <a class="blog-card-link" href="blog-cicd.html">
+            <figure>
+              <img src="assets/vlogs/MainCICD.png" alt="Airplane ready for take-off representing CI/CD pipeline" data-i18n-attr="alt:blog.card.cicd.imageAlt" />
+            </figure>
+            <div class="blog-card-body">
+              <div class="blog-tags" data-i18n="blog.card.cicd.tags">
+                <span class="blog-tag">CI/CD</span>
+                <span class="blog-tag">Automation</span>
+                <span class="blog-tag">DevOps</span>
+              </div>
+              <h3 data-i18n="blog.card.cicd.title">Co wspólnego ma CI/CD z Twoimi wakacjami?</h3>
+              <p data-i18n="blog.card.cicd.desc">Plan a release the same way you plan a holiday and discover how CI/CD keeps your flights — and deployments — on schedule.</p>
+              <span class="blog-card-cta" data-i18n="blog.card.cicd.cta">Grab the boarding pass →</span>
+            </div>
+          </a>
+        </article>
+        <article class="blog-card">
+          <a class="blog-card-link" href="blog-dockerfile.html">
+            <figure>
+              <img src="assets/vlogs/dockerfile-main.png" alt="Dockerfile presented like a cake recipe" data-i18n-attr="alt:blog.card.docker.imageAlt" />
+            </figure>
+            <div class="blog-card-body">
+              <div class="blog-tags" data-i18n="blog.card.docker.tags">
+                <span class="blog-tag">Docker</span>
+                <span class="blog-tag">Containers</span>
+                <span class="blog-tag">Best practices</span>
+              </div>
+              <h3 data-i18n="blog.card.docker.title">Dockerfile like a cake recipe</h3>
+              <p data-i18n="blog.card.docker.desc">Use a kitchen analogy to understand Dockerfile basics and see how multi-stage builds keep your images tidy.</p>
+              <span class="blog-card-cta" data-i18n="blog.card.docker.cta">Read the recipe →</span>
+            </div>
+          </a>
+        </article>
+
+        <article class="blog-card">
+          <a class="blog-card-link" href="blog-kubernetes.html">
+            <figure>
+              <img src="assets/vlogs/kubernetes-main.png" alt="Kubernetes cluster visualised as a neighbourhood" data-i18n-attr="alt:blog.card.kubernetes.imageAlt" />
+            </figure>
+            <div class="blog-card-body">
+              <div class="blog-tags" data-i18n="blog.card.kubernetes.tags">
+                <span class="blog-tag">Kubernetes</span>
+                <span class="blog-tag">Orchestration</span>
+                <span class="blog-tag">Containers</span>
+              </div>
+              <h3 data-i18n="blog.card.kubernetes.title">Kubernetes like a well-run neighbourhood</h3>
+              <p data-i18n="blog.card.kubernetes.desc">Understand the control plane, nodes, and pods through a housing estate analogy and see why orchestration matters.</p>
+              <span class="blog-card-cta" data-i18n="blog.card.kubernetes.cta">Tour the cluster →</span>
+            </div>
+          </a>
+        </article>
+
+      </div>
+    </section>
+
+    <section aria-label="Learning stories">
+      <div style="text-align:center; max-width:720px; margin:0 auto 48px; padding:0 20px;">
+        <h2 class="blog-section-title" data-i18n="blog.learningStories.heading">Historie z nauki</h2>
+        <p data-i18n="blog.learningStories.desc">Pierwsze wpisy dokumentujące moje podejście do labów, eksperymentów i nietypowych wdrożeń.</p>
+      </div>
+      <div class="blog-grid">
+        <article class="blog-card">
+          <a class="blog-card-link" href="blog-fslogix.html">
+            <figure>
+              <img src="assets/vlogs/fslogix-main.png" alt="Schemat usług Azure wykorzystanych w labie FSLogix" data-i18n-attr="alt:blog.card.fslogix.imageAlt" />
+            </figure>
+            <div class="blog-card-body">
+              <div class="blog-tags" data-i18n="blog.card.fslogix.tags">
+                <span class="blog-tag">Azure</span>
+                <span class="blog-tag">Virtual Desktop</span>
+                <span class="blog-tag">FSLogix</span>
+              </div>
+              <h3 data-i18n="blog.card.fslogix.title">Wdrożenie FSLogix na darmowej subskrypcji Azure</h3>
+              <p data-i18n="blog.card.fslogix.desc">Jak dzięki Azure Files i wpisowi AccessNetworkAsComputerObject ustabilizowałem profile FSLogix na samodzielnym serwerze w Azure.</p>
+              <span class="blog-card-cta" data-i18n="blog.card.fslogix.cta">Wejdź do labu →</span>
+            </div>
+          </a>
+        </article>
+        <article class="blog-card">
+          <a class="blog-card-link" href="blog-oidc.html">
+            <figure>
+              <img src="assets/vlogs/OIDC_main.png" alt="Schemat federacji OIDC między GitHub Actions i Azure" data-i18n-attr="alt:blog.card.oidc.imageAlt" />
+            </figure>
+            <div class="blog-card-body">
+              <div class="blog-tags" data-i18n="blog.card.oidc.tags">
+                <span class="blog-tag">Azure</span>
+                <span class="blog-tag">Security</span>
+                <span class="blog-tag">CI/CD</span>
+              </div>
+              <h3 data-i18n="blog.card.oidc.title">Federacja OIDC w projekcie UczSięWNecie</h3>
+              <p data-i18n="blog.card.oidc.desc">Jak pozbyłem się statycznych sekretów z GitHub Actions, budując zaufanie OIDC między repozytorium a Azure.</p>
+              <span class="blog-card-cta" data-i18n="blog.card.oidc.cta">Otwórz case study →</span>
+            </div>
+          </a>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <div class="sep"></div>
+  <footer aria-label="Footer">
+    <section class="site-footer">
+      <p data-i18n="footer.note">Yes — this site was also created by <b>Tobiasz Lubowski</b>.</p>
+    </section>
+  </footer>
+
+    <script>
+    const translations = {
+      en: {
+        'page.title': 'Blog — Tobiasz Lubowski',
+        'page.description': 'Insights and project write-ups from Tobiasz Lubowski, aspiring DevOps engineer.',
+        'brand.subtitle': 'DevOps',
+        'nav.home': 'Home',
+        'nav.projects': 'Projects',
+        'nav.experience': 'Experience',
+        'nav.passions': 'Passions',
+        'nav.blog': 'Blog',
+        'nav.contact': 'Contact & CV',
+        'nav.langButton': 'Polski',
+        'nav.langAria': 'Switch language to Polish',
+        'nav.menuToggle': 'Toggle menu',
+        'blog.hero.title': 'Stories from the lab',
+        'blog.hero.desc': 'Deep dives into what I do and DevOps topics explained in plain language.',
+        'blog.card.cicd.tags': '<span class="blog-tag">CI/CD</span><span class="blog-tag">Automation</span><span class="blog-tag">DevOps</span>',
+        'blog.card.cicd.title': 'Co wspólnego ma CI/CD z Twoimi wakacjami?',
+        'blog.card.cicd.desc': 'Plan a release the same way you plan a holiday and discover how CI/CD keeps your flights — and deployments — on schedule.',
+        'blog.card.cicd.cta': 'Grab the boarding pass →',
+        'blog.card.cicd.imageAlt': 'Airplane ready for take-off representing a CI/CD pipeline',
+        'blog.card.docker.tags': '<span class="blog-tag">Docker</span><span class="blog-tag">Containers</span><span class="blog-tag">Best practices</span>',
+        'blog.card.docker.title': 'Dockerfile like a cake recipe',
+        'blog.card.docker.desc': 'Use a kitchen analogy to understand Dockerfile basics and see how multi-stage builds keep your images tidy.',
+        'blog.card.docker.cta': 'Read the recipe →',
+        'blog.card.docker.imageAlt': 'Dockerfile presented like a cake recipe',
+        'blog.card.kubernetes.tags': '<span class="blog-tag">Kubernetes</span><span class="blog-tag">Orchestration</span><span class="blog-tag">Containers</span>',
+        'blog.card.kubernetes.title': 'Kubernetes like a well-run neighbourhood',
+        'blog.card.kubernetes.desc': 'Understand the control plane, nodes, and pods through a housing estate analogy and see why orchestration matters.',
+        'blog.card.kubernetes.cta': 'Tour the cluster →',
+        'blog.card.kubernetes.imageAlt': 'Kubernetes cluster visualised as a neighbourhood',
+        'blog.learningStories.heading': 'Learning stories',
+        'blog.learningStories.desc': 'First entries documenting how I approach labs, experiments, and unusual deployments.',
+        'blog.card.fslogix.tags': '<span class="blog-tag">Azure</span><span class="blog-tag">Virtual Desktop</span><span class="blog-tag">FSLogix</span>',
+        'blog.card.fslogix.title': 'Deploying FSLogix on the Azure free tier',
+        'blog.card.fslogix.desc': 'Using Azure Files and a registry tweak to keep FSLogix profiles alive on a standalone Azure VM.',
+        'blog.card.fslogix.cta': 'Enter the lab →',
+        'blog.card.fslogix.imageAlt': 'Azure services diagram showcasing the FSLogix lab setup',
+        'blog.card.oidc.tags': '<span class="blog-tag">Azure</span><span class="blog-tag">Security</span><span class="blog-tag">CI/CD</span>',
+        'blog.card.oidc.title': 'OIDC federation in the UczSięWNecie project',
+        'blog.card.oidc.desc': 'How I removed static secrets from GitHub Actions by building trust between the repository and Azure with OIDC.',
+        'blog.card.oidc.cta': 'Open the case study →',
+        'blog.card.oidc.imageAlt': 'Diagram of OIDC federation between GitHub Actions and Azure',
+        'footer.note': 'Yes — this site was also created by <b>Tobiasz Lubowski</b>.'
+      },
+      pl: {
+        'page.title': 'Blog — Tobiasz Lubowski',
+        'page.description': 'Artykuły i case study z mojej ścieżki DevOps – architektura, narzędzia i wnioski z automatyzacji.',
+        'brand.subtitle': 'DevOps',
+        'nav.home': 'Strona główna',
+        'nav.projects': 'Projekty',
+        'nav.experience': 'Doświadczenie',
+        'nav.passions': 'Pasje',
+        'nav.blog': 'Blog',
+        'nav.contact': 'Kontakt i CV',
+        'nav.langButton': 'English',
+        'nav.langAria': 'Zmień język na angielski',
+        'nav.menuToggle': 'Przełącz menu',
+        'blog.hero.title': 'Historie z laboratorium',
+        'blog.hero.desc': 'Zanurzenie w to, co robię, oraz zagadnienia DevOps przedstawione w bardziej ludzkim języku.',
+        'blog.card.cicd.tags': '<span class="blog-tag">CI/CD</span><span class="blog-tag">Automatyzacja</span><span class="blog-tag">DevOps</span>',
+        'blog.card.cicd.title': 'Co wspólnego ma CI/CD z Twoimi wakacjami?',
+        'blog.card.cicd.desc': 'Zaplanuj wdrożenie tak jak urlop i zobacz, jak CI/CD pilnuje, by loty i release\'y startowały o czasie.',
+        'blog.card.cicd.cta': 'Wejdź na pokład →',
+        'blog.card.cicd.imageAlt': 'Samolot gotowy do startu symbolizujący pipeline CI/CD',
+        'blog.card.docker.tags': '<span class="blog-tag">Docker</span><span class="blog-tag">Kontenery</span><span class="blog-tag">Dobre praktyki</span>',
+        'blog.card.docker.title': 'Dockerfile jak przepis na ciasto',
+        'blog.card.docker.desc': 'Analogią kuchenną przyswój podstawy Dockerfile i zobacz, jak multistage porządkuje obrazy.',
+        'blog.card.docker.cta': 'Poznaj przepis →',
+        'blog.card.docker.imageAlt': 'Dockerfile przedstawiony jak przepis na ciasto',
+        'blog.card.kubernetes.tags': '<span class="blog-tag">Kubernetes</span><span class="blog-tag">Orkiestracja</span><span class="blog-tag">Kontenery</span>',
+        'blog.card.kubernetes.title': 'Kubernetes jak dobrze zarządzane osiedle',
+        'blog.card.kubernetes.desc': 'Poznaj control plane, nody i pody przez analogię do osiedla i sprawdź, czemu orkiestracja jest tak ważna.',
+        'blog.card.kubernetes.cta': 'Zwiedź klaster →',
+        'blog.card.kubernetes.imageAlt': 'Klaster Kubernetes przedstawiony jak osiedle',
+        'blog.learningStories.heading': 'Historie z nauki',
+        'blog.learningStories.desc': 'Pierwsze wpisy dokumentujące moje podejście do labów, eksperymentów i nietypowych wdrożeń.',
+        'blog.card.fslogix.tags': '<span class="blog-tag">Azure</span><span class="blog-tag">Pulpit wirtualny</span><span class="blog-tag">FSLogix</span>',
+        'blog.card.fslogix.title': 'Wdrożenie FSLogix na darmowej subskrypcji Azure',
+        'blog.card.fslogix.desc': 'Jak dzięki Azure Files i wpisowi AccessNetworkAsComputerObject ustabilizowałem profile FSLogix na samodzielnym serwerze w Azure.',
+        'blog.card.fslogix.cta': 'Wejdź do labu →',
+        'blog.card.fslogix.imageAlt': 'Schemat usług Azure wykorzystanych w labie FSLogix',
+        'blog.card.oidc.tags': '<span class="blog-tag">Azure</span><span class="blog-tag">Bezpieczeństwo</span><span class="blog-tag">CI/CD</span>',
+        'blog.card.oidc.title': 'Federacja OIDC w projekcie UczSięWNecie',
+        'blog.card.oidc.desc': 'Jak pozbyłem się statycznych sekretów z GitHub Actions, budując zaufanie OIDC między repozytorium a Azure.',
+        'blog.card.oidc.cta': 'Otwórz case study →',
+        'blog.card.oidc.imageAlt': 'Schemat federacji OIDC między GitHub Actions i Azure',
+        'footer.note': 'Tak — tę stronę również stworzył <b>Tobiasz Lubowski</b>.'
+      }
+    };
+
+    function readStoredLanguage() {
+      try {
+        const stored = localStorage.getItem('preferredLanguage');
+        if (stored === 'pl' || stored === 'en') {
+          return stored;
+        }
+      } catch (err) {}
+      return 'en';
+    }
+
+    let currentLang = readStoredLanguage();
+    const languageToggle = document.getElementById('languageToggle');
+
+    function t(key) {
+      return (translations[currentLang] && translations[currentLang][key]) || translations.en[key] || key;
+    }
+
+    function applyTranslations(lang) {
+      currentLang = lang;
+      try {
+        localStorage.setItem('preferredLanguage', currentLang);
+      } catch (err) {}
+      document.documentElement.lang = lang === 'pl' ? 'pl' : 'en';
+      document.body.setAttribute('data-lang', currentLang);
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        const value = (translations[currentLang] || {})[key];
+        if (typeof value === 'undefined') return;
+        el.innerHTML = value;
+      });
+
+      document.querySelectorAll('[data-i18n-attr]').forEach(el => {
+        const entries = el.getAttribute('data-i18n-attr').split(';');
+        entries.forEach(entry => {
+          const [attr, key] = entry.split(':').map(part => part && part.trim());
+          if (!attr || !key) return;
+          const val = (translations[currentLang] || {})[key];
+          if (typeof val === 'undefined') return;
+          el.setAttribute(attr, val);
+        });
+      });
+
+      if (languageToggle) {
+        const buttonText = (translations[currentLang] || {})['nav.langButton'];
+        if (typeof buttonText !== 'undefined') languageToggle.textContent = buttonText;
+        const ariaText = (translations[currentLang] || {})['nav.langAria'];
+        if (typeof ariaText !== 'undefined') languageToggle.setAttribute('aria-label', ariaText);
+        languageToggle.setAttribute('aria-pressed', currentLang === 'pl' ? 'true' : 'false');
+      }
+
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) {
+        const desc = (translations[currentLang] || {})['page.description'];
+        if (typeof desc !== 'undefined') metaDesc.setAttribute('content', desc);
+      }
+      const title = (translations[currentLang] || {})['page.title'];
+      if (typeof title !== 'undefined') document.title = title;
+    }
+
+    applyTranslations(currentLang);
+
+    if (languageToggle) {
+      languageToggle.addEventListener('click', () => {
+        const nextLang = currentLang === 'en' ? 'pl' : 'en';
+        applyTranslations(nextLang);
+      });
+    }
+
+    const menu = document.querySelector('.menu');
+    const menuToggle = document.getElementById('menuToggle');
+    if(menu && menuToggle){
+      menuToggle.addEventListener('click', ()=>{
+        const open = menu.classList.toggle('show');
+        menuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      menu.querySelectorAll('a, button').forEach(link=>link.addEventListener('click', ()=>{
+        if(menu.classList.contains('show')){
+          menu.classList.remove('show');
+          menuToggle.setAttribute('aria-expanded','false');
+        }
+      }));
+    }
+  </script>
+
+</body>
+</html>

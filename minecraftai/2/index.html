@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebCraft - Voxel Engine</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Importmap: pozwala importować Three.js w wersji modułowej (ES6) z CDN -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body>
+
+    <!-- Kontener canvasu Three.js -->
+    <div id="game-container"></div>
+
+    <!-- Celownik na środku ekranu -->
+    <div id="crosshair">
+        <div class="crosshair-line crosshair-horizontal"></div>
+        <div class="crosshair-line crosshair-vertical"></div>
+    </div>
+
+    <!-- Pasek ekwipunku (hotbar) -->
+    <div id="hotbar">
+        <div class="hotbar-slot active" data-block="grass">
+            <div class="block-icon icon-grass"></div>
+            <span class="key-hint">1</span>
+        </div>
+        <div class="hotbar-slot" data-block="dirt">
+            <div class="block-icon icon-dirt"></div>
+            <span class="key-hint">2</span>
+        </div>
+        <div class="hotbar-slot" data-block="stone">
+            <div class="block-icon icon-stone"></div>
+            <span class="key-hint">3</span>
+        </div>
+        <div class="hotbar-slot" data-block="wood">
+            <div class="block-icon icon-wood"></div>
+            <span class="key-hint">4</span>
+        </div>
+        <div class="hotbar-slot" data-block="leaves">
+            <div class="block-icon icon-leaves"></div>
+            <span class="key-hint">5</span>
+        </div>
+        <div class="hotbar-slot" data-block="porkchop" data-type="food">
+            <div class="block-icon icon-porkchop"></div>
+            <span class="key-hint">6</span>
+            <span class="item-count" id="porkchop-count">0</span>
+        </div>
+    </div>
+
+    <!-- Wskaznik trwajacej animacji jedzenia -->
+    <div id="eating-indicator" class="hidden">Jedzenie...</div>
+
+    <!-- Wskazniki zdrowia i glodu gracza -->
+    <div id="stats-bars">
+        <div id="hunger-bar">
+            <div id="hunger-fill"></div>
+            <span id="hunger-text">Glod: 20</span>
+        </div>
+        <div id="health-bar">
+            <div id="health-fill"></div>
+            <span id="health-text">Zdrowie: 20</span>
+        </div>
+    </div>
+
+    <!-- Informacje debugowe -->
+    <div id="debug-info">
+        <div id="fps-counter">FPS: --</div>
+        <div id="pos-counter">Pozycja: --</div>
+        <div id="chunk-counter">Chunki: --</div>
+    </div>
+
+    <!-- Ekran startowy -->
+    <div id="start-screen">
+        <div class="start-box">
+            <h1>WebCraft</h1>
+            <p>Klon Minecrafta w przegladarce - Three.js Voxel Engine</p>
+            <button id="play-button">Kliknij, aby grac</button>
+            <div class="controls-info">
+                <p><b>WASD</b> - ruch &nbsp; | &nbsp; <b>Spacja</b> - skok &nbsp; | &nbsp; <b>Shift</b> - sprint</p>
+                <p><b>LPM</b> - niszcz blok &nbsp; | &nbsp; <b>PPM</b> - postaw blok</p>
+                <p><b>1-5</b> / <b>Kolko myszy</b> - wybor bloku &nbsp; | &nbsp; <b>ESC</b> - menu</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Glowny skrypt gry (modul ES6) -->
+    <script type="module" src="main.js"></script>
+</body>
+</html>

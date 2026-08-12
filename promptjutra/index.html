@@ -1,0 +1,2159 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PromptJutra — Stwórz Swoją Stronę WWW z AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --p: #7B8FF5;
+  --p-dark: #5B6FE0;
+  --p-light: #A8B4F8;
+  --p-100: #E8ECFE;
+  --p-50: #F2F4FF;
+  --indigo: #9B87F5;
+  --grad: linear-gradient(135deg, #6B82F4 0%, #9B87F5 100%);
+  --white: #FFFFFF;
+  --g50: #F9FAFB;
+  --g100: #F3F4F6;
+  --g200: #E5E7EB;
+  --g400: #9CA3AF;
+  --g500: #6B7280;
+  --g600: #4B5563;
+  --g800: #1F2937;
+  --g900: #111827;
+  --sh: 0 4px 16px rgba(0,0,0,.08);
+  --sh-lg: 0 8px 40px rgba(0,0,0,.12);
+  --sh-p: 0 4px 24px rgba(107,130,244,.3);
+  --r: 12px;
+  --r-lg: 20px;
+}
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--g50);
+  color: var(--g900);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* HEADER */
+.hdr {
+  background: var(--white);
+  border-bottom: 1px solid var(--g200);
+  padding: 0 32px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--p);
+  text-decoration: none;
+}
+
+.logo-icon {
+  width: 34px;
+  height: 34px;
+  background: var(--grad);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 17px;
+}
+
+.hdr-badge {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--p);
+  background: var(--p-50);
+  border: 1px solid var(--p-100);
+  padding: 4px 14px;
+  border-radius: 100px;
+}
+
+/* HERO */
+.hero {
+  background: linear-gradient(-45deg, #4B6CF5, #9040F0, #6B82F4, #C060F8, #3F5EE8, #8B50F0);
+  background-size: 400% 400%;
+  animation: heroPulse 5s ease infinite;
+  padding: 80px 32px 130px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes heroPulse {
+  0%   { background-position: 0% 50%; }
+  33%  { background-position: 100% 0%; }
+  66%  { background-position: 50% 100%; }
+  100% { background-position: 0% 50%; }
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: -30%;
+  width: 160%;
+  height: 220%;
+  background: radial-gradient(ellipse at 60% 40%, rgba(255,255,255,.10) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: var(--g50);
+  clip-path: ellipse(55% 60px at 50% 60px);
+}
+
+.hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.25);
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 18px;
+  border-radius: 100px;
+  margin-bottom: 28px;
+}
+
+.hero h1 {
+  font-size: clamp(30px, 5vw, 54px);
+  font-weight: 800;
+  color: white;
+  line-height: 1.15;
+  margin-bottom: 18px;
+  letter-spacing: -.02em;
+}
+
+.hero p {
+  font-size: 18px;
+  color: rgba(255,255,255,.85);
+  max-width: 560px;
+  margin: 0 auto 44px;
+}
+
+.hero-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hf-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.2);
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 100px;
+}
+
+.hf-num {
+  width: 20px;
+  height: 20px;
+  background: rgba(255,255,255,.25);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.hf-arrow { color: rgba(255,255,255,.45); font-size: 16px; }
+
+/* MAIN */
+.main {
+  max-width: 760px;
+  margin: -96px auto 80px;
+  padding: 0 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* STEPPER */
+.stepper {
+  background: var(--white);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-lg);
+  padding: 26px 32px;
+  margin-bottom: 20px;
+}
+
+.stepper-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.stepper-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--p);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.stepper-name {
+  font-size: 13px;
+  color: var(--g400);
+  font-weight: 500;
+}
+
+.bar-track {
+  height: 6px;
+  background: var(--g100);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: var(--grad);
+  border-radius: 100px;
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+}
+
+.dots {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  justify-content: center;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--g200);
+  transition: all .3s;
+  cursor: pointer;
+}
+
+.dot.active {
+  background: var(--p);
+  width: 24px;
+  border-radius: 100px;
+}
+
+.dot.done { background: var(--p-light); }
+
+/* CARD */
+.card {
+  background: var(--white);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-lg);
+  padding: 40px;
+  display: none;
+  animation: fadeUp .32s cubic-bezier(.4,0,.2,1);
+}
+
+.card.active { display: block; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.card-tag {
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--p);
+  background: var(--p-50);
+  border: 1px solid var(--p-100);
+  padding: 3px 12px;
+  border-radius: 100px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+
+.card-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--g900);
+  margin-bottom: 8px;
+  letter-spacing: -.01em;
+}
+
+.card-desc {
+  font-size: 15px;
+  color: var(--g500);
+  margin-bottom: 32px;
+}
+
+/* FORM */
+.fg { margin-bottom: 22px; }
+
+.lbl {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--g800);
+  margin-bottom: 6px;
+}
+
+.lbl span { color: var(--p); }
+
+.hint {
+  font-size: 12px;
+  color: var(--g400);
+  margin-bottom: 7px;
+  display: block;
+}
+
+.inp, .ta {
+  width: 100%;
+  padding: 13px 16px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--g900);
+  background: var(--g50);
+  border: 2px solid var(--g200);
+  border-radius: var(--r);
+  outline: none;
+  transition: all .2s;
+  resize: vertical;
+}
+
+.inp:focus, .ta:focus {
+  border-color: var(--p);
+  background: var(--white);
+  box-shadow: 0 0 0 4px rgba(124,58,237,.08);
+}
+
+.inp::placeholder, .ta::placeholder { color: var(--g400); }
+.ta { min-height: 120px; }
+
+.inp.err, .ta.err {
+  border-color: #EF4444;
+  background: #FFF5F5;
+}
+
+.err-msg {
+  font-size: 12px;
+  color: #EF4444;
+  margin-top: 4px;
+}
+
+.char-cnt {
+  font-size: 11px;
+  color: var(--g400);
+  text-align: right;
+  margin-top: 4px;
+}
+
+/* CHECKBOXES */
+.cb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
+  gap: 10px;
+}
+
+.cb-item { position: relative; }
+
+.cb-item input[type=checkbox] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.cb-lbl {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  background: var(--g50);
+  border: 2px solid var(--g200);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: all .2s;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--g600);
+}
+
+.cb-lbl:hover {
+  border-color: var(--p-light);
+  background: var(--p-50);
+}
+
+.cb-item input:checked + .cb-lbl {
+  border-color: var(--p);
+  background: var(--p-50);
+  color: var(--p-dark);
+}
+
+.cb-ico { font-size: 16px; flex-shrink: 0; }
+
+.cb-chk {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--g300, #D1D5DB);
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .2s;
+}
+
+.cb-item input:checked + .cb-lbl .cb-chk {
+  background: var(--p);
+  border-color: var(--p);
+}
+
+.cb-item input:checked + .cb-lbl .cb-chk::after {
+  content: '✓';
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* COLOR PRESETS */
+.divider { height: 1px; background: var(--g100); margin: 28px 0; }
+
+.cp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.cp-item { position: relative; }
+
+.cp-item input[type=radio] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.cp-lbl {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 2px solid var(--g200);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: all .2s;
+  background: var(--g50);
+}
+
+.cp-lbl:hover { border-color: var(--p-light); }
+
+.cp-item input:checked + .cp-lbl {
+  border-color: var(--p);
+  background: var(--p-50);
+}
+
+.swatches { display: flex; gap: 3px; flex-shrink: 0; }
+
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+}
+
+.preset-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--g800);
+}
+
+.preset-sub { font-size: 11px; color: var(--g400); }
+
+/* CUSTOM COLOR */
+.custom-box {
+  display: none;
+  padding: 20px;
+  background: var(--g50);
+  border: 2px solid var(--g200);
+  border-radius: var(--r);
+  margin-top: 12px;
+}
+
+.custom-box.show { display: block; }
+
+.pickers { display: flex; gap: 20px; flex-wrap: wrap; }
+
+.pg { display: flex; flex-direction: column; gap: 6px; }
+
+.pg-label { font-size: 12px; font-weight: 500; color: var(--g600); }
+
+.pg-row { display: flex; align-items: center; gap: 8px; }
+
+input[type=color] {
+  width: 46px;
+  height: 40px;
+  border: 2px solid var(--g200);
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 2px;
+  background: white;
+}
+
+.hex-inp {
+  font-size: 13px;
+  font-family: monospace;
+  color: var(--g600);
+  padding: 8px 10px;
+  background: white;
+  border: 2px solid var(--g200);
+  border-radius: 8px;
+  width: 88px;
+  outline: none;
+}
+
+.hex-inp:focus { border-color: var(--p); }
+
+/* NAV BUTTONS */
+.fnav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 32px;
+  padding-top: 22px;
+  border-top: 1px solid var(--g100);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 24px;
+  border-radius: var(--r);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all .2s;
+  border: none;
+}
+
+.btn-primary {
+  background: var(--grad);
+  color: white;
+  box-shadow: var(--sh-p);
+}
+
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(124,58,237,.4); }
+.btn-primary:active { transform: none; }
+
+.btn-secondary {
+  background: var(--g100);
+  color: var(--g600);
+}
+
+.btn-secondary:hover { background: var(--g200); }
+
+.btn-lg { padding: 15px 32px; font-size: 16px; border-radius: var(--r-lg); }
+
+/* RESULT */
+.result-hero {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.result-icon {
+  width: 64px;
+  height: 64px;
+  background: var(--grad);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin: 0 auto 16px;
+}
+
+.prompt-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.pm-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--g500);
+}
+
+.pm-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--p);
+}
+
+.prompt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.pactions { display: flex; gap: 10px; }
+
+.btn-copy, .btn-dl {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  border-radius: var(--r);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all .2s;
+  border: 2px solid;
+}
+
+.btn-copy {
+  background: var(--p-50);
+  border-color: var(--p-100);
+  color: var(--p);
+}
+
+.btn-copy:hover, .btn-copy.copied {
+  background: var(--p);
+  border-color: var(--p);
+  color: white;
+}
+
+.btn-dl {
+  background: white;
+  border-color: var(--g200);
+  color: var(--g700, #374151);
+}
+
+.btn-dl:hover { background: var(--g50); }
+
+.prompt-box {
+  background: var(--g50);
+  border: 1px solid var(--g200);
+  border-radius: var(--r);
+  padding: 24px;
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--g800);
+  white-space: pre-wrap;
+  max-height: 480px;
+  overflow-y: auto;
+  font-family: 'Monaco', 'Courier New', monospace;
+}
+
+.prompt-box::-webkit-scrollbar { width: 6px; }
+.prompt-box::-webkit-scrollbar-track { background: var(--g100); border-radius: 10px; }
+.prompt-box::-webkit-scrollbar-thumb { background: var(--p-light); border-radius: 10px; }
+
+.info-box {
+  background: var(--p-50);
+  border: 1px solid var(--p-100);
+  border-radius: var(--r);
+  padding: 20px 24px;
+  margin-top: 22px;
+}
+
+.info-box h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--p-dark);
+  margin-bottom: 12px;
+}
+
+.info-box ol { padding-left: 18px; }
+
+.info-box li {
+  font-size: 14px;
+  color: var(--g700, #374151);
+  margin-bottom: 6px;
+}
+
+/* RESPONSIVE */
+@media(max-width:640px) {
+  .hero { padding: 60px 20px 90px; }
+  .hero-flow { display: none; }
+  .main { padding: 0 14px; }
+  .card { padding: 26px 20px; }
+  .stepper { padding: 20px 22px; }
+  .cb-grid { grid-template-columns: 1fr 1fr; }
+  .cp-grid { grid-template-columns: 1fr; }
+  .fnav { flex-direction: column-reverse; gap: 10px; }
+  .fnav .btn { width: 100%; justify-content: center; }
+  .prompt-header { flex-direction: column; }
+  .pactions { width: 100%; }
+  .btn-copy, .btn-dl { flex: 1; justify-content: center; }
+  .pickers { flex-direction: column; }
+}
+
+/* LANDING */
+#landing {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(-45deg, #b8c8ff, #d8b0ff, #a8c0ff, #e8b0f8, #b0b8ff, #c8a0f0);
+  background-size: 400% 400%;
+  animation: heroPulse 6s ease infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  flex-direction: column;
+  text-align: center;
+  padding: 24px;
+  overflow: hidden;
+  clip-path: circle(150% at 50% 50%);
+  transition: clip-path .85s cubic-bezier(0.76,0,0.24,1), opacity .4s .5s;
+  will-change: clip-path;
+}
+
+#landing.hide {
+  clip-path: circle(0% at 52px 32px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* CONTENT REVEAL — .main bez opóźnienia żeby przyciski były od razu klikalne */
+.app-reveal .hdr  { animation: revealDown .4s .1s  both cubic-bezier(0.4,0,0.2,1); }
+.app-reveal .hero { animation: revealFade .5s both; }
+.app-reveal .main { animation: revealUp   .45s cubic-bezier(0.4,0,0.2,1) forwards; }
+
+@keyframes revealDown { from { transform: translateY(-24px); opacity:0; } to { transform:none; opacity:1; } }
+@keyframes revealFade { from { opacity:0; } to { opacity:1; } }
+@keyframes revealUp   { from { transform: translateY(20px); opacity:0; } to { transform:none; opacity:1; } }
+
+.landing-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: .35;
+  animation: orbFloat 6s ease-in-out infinite;
+}
+
+.landing-orb-1 { width:400px;height:400px;background:#6B82F4;top:-100px;left:-100px; }
+.landing-orb-2 { width:350px;height:350px;background:#9B87F5;bottom:-80px;right:-80px;animation-delay:2s; }
+.landing-orb-3 { width:200px;height:200px;background:#A8B4F8;top:40%;right:10%;animation-delay:1s; }
+
+@keyframes orbFloat {
+  0%,100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-20px) scale(1.05); }
+}
+
+.landing-inner { position: relative; z-index: 1; }
+
+.landing-logo-wrap {
+  width: 88px;
+  height: 88px;
+  background: linear-gradient(-45deg, #6B82F4, #9B87F5, #5B6FE0, #A8B4F8);
+  background-size: 300% 300%;
+  animation: heroPulse 6s ease infinite, logoFloat 3s ease-in-out infinite;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
+  margin: 0 auto 24px;
+  box-shadow: 0 8px 40px rgba(107,130,244,.4);
+  animation: logoFloat 3s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.landing-title {
+  font-size: clamp(42px,8vw,72px);
+  font-weight: 800;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -.03em;
+  margin-bottom: 12px;
+}
+
+.landing-sub {
+  font-size: 18px;
+  color: var(--g500);
+  margin-bottom: 44px;
+  max-width: 380px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.landing-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 18px 44px;
+  min-width: 240px;
+  background: linear-gradient(-45deg, #6B82F4, #9B87F5, #5B6FE0, #A8B4F8);
+  background-size: 300% 300%;
+  animation: heroPulse 6s ease infinite, btnPulse 2.4s ease-in-out infinite;
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: inherit;
+  border: none;
+  border-radius: 100px;
+  cursor: pointer;
+  box-shadow: 0 4px 30px rgba(107,130,244,.4);
+  animation: btnPulse 2.4s ease-in-out infinite;
+  transition: transform .2s, box-shadow .2s;
+  letter-spacing: -.01em;
+}
+
+.landing-btn:hover {
+  transform: scale(1.07);
+  box-shadow: 0 10px 50px rgba(107,130,244,.6);
+  animation: heroPulse 6s ease infinite;
+}
+
+@keyframes btnPulse {
+  0%,100% { box-shadow: 0 4px 30px rgba(107,130,244,.4); }
+  50% { box-shadow: 0 4px 54px rgba(107,130,244,.7); }
+}
+
+/* EXAMPLES */
+.examples-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--p);
+  background: var(--p-50);
+  border: 1.5px solid var(--p-100);
+  padding: 6px 14px;
+  border-radius: 100px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .2s;
+}
+
+.examples-btn:hover { background: var(--p); color: white; border-color: var(--p); }
+
+.examples-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17,24,39,.55);
+  backdrop-filter: blur(6px);
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn .2s;
+}
+
+.examples-overlay.hidden { display: none; }
+
+.examples-panel {
+  background: white;
+  border-radius: 24px;
+  padding: 36px 32px 32px;
+  max-width: 880px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 80px rgba(0,0,0,.25);
+  animation: revealUp .32s cubic-bezier(0.4,0,0.2,1);
+}
+
+.examples-panel-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.examples-panel-hdr h3 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--g900);
+}
+
+.examples-close {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: var(--g100); border-radius: 50%;
+  cursor: pointer; font-size: 16px; color: var(--g500);
+  transition: all .2s; font-family: inherit;
+}
+
+.examples-close:hover { background: var(--g200); color: var(--g900); }
+
+.examples-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.example-card {
+  border-radius: var(--r);
+  overflow: hidden;
+  border: 2px solid var(--g200);
+  transition: all .2s;
+  background: white;
+}
+
+.example-card:hover {
+  border-color: var(--p);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(107,130,244,.2);
+}
+
+.example-thumb {
+  aspect-ratio: 3/4;
+  overflow: hidden;
+  background: var(--g100);
+  position: relative;
+}
+
+.example-thumb img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  transition: transform .3s;
+}
+
+.example-card:hover .example-thumb img { transform: scale(1.04); }
+
+.example-info { padding: 10px 12px 12px; }
+
+.example-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--g800);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.example-desc {
+  font-size: 11px;
+  color: var(--g400);
+  margin-bottom: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.example-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--p);
+  text-decoration: none;
+  background: var(--p-50);
+  padding: 5px 12px;
+  border-radius: 100px;
+  transition: all .15s;
+}
+
+.example-link:hover { background: var(--p); color: white; }
+
+@media(max-width:640px){
+  .examples-panel { padding: 24px 18px 20px; }
+  .examples-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+}
+
+/* SIDE BY SIDE PROMPTS */
+.prompts-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin-bottom: 4px;
+}
+
+.prompts-row.has-two { grid-template-columns: 1fr 1fr; }
+
+.prompt-panel-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+@media(max-width:800px){
+  .prompts-row.has-two { grid-template-columns: 1fr; }
+}
+
+/* PHOTO UPLOAD */
+.photo-upload {
+  width: 100%;
+  height: 130px;
+  border: 2px dashed var(--g200);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
+  background: var(--g50);
+  overflow: hidden;
+  position: relative;
+}
+
+.photo-upload:hover { border-color: var(--p-light); background: var(--p-50); }
+
+.photo-placeholder { text-align: center; pointer-events: none; }
+
+#photoPreview { width:100%; height:100%; object-fit:cover; border-radius:10px; display:none; }
+
+.footer {
+  text-align: center;
+  padding: 28px;
+  color: var(--g400);
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+
+<div id="landing">
+  <div class="landing-inner">
+    <div class="landing-logo-wrap">✦</div>
+    <h1 class="landing-title">PromptJutra</h1>
+    <button class="landing-btn" onclick="startApp()"><span id="lbtnTxt">Zaczynajmy →</span></button>
+  </div>
+</div>
+
+<header class="hdr">
+  <a href="#" class="logo" onclick="resetToStart();return false;">
+    <div class="logo-icon">✦</div>
+    PromptJutra
+  </a>
+  <button class="examples-btn" onclick="toggleExamples()">🖼 Przykłady</button>
+</header>
+
+<!-- EXAMPLES OVERLAY -->
+<div id="examplesOverlay" class="examples-overlay hidden">
+  <div class="examples-panel">
+    <div class="examples-panel-hdr">
+      <h3>Kilka przykładów</h3>
+      <button class="examples-close" onclick="toggleExamples()">✕</button>
+    </div>
+    <p style="font-size:14px;color:var(--g500)">Kliknij żeby zobaczyć jak wygląda gotowa strona.</p>
+    <div class="examples-grid">
+
+      <div class="example-card">
+        <div class="example-thumb">
+          <img src="./Strona1/zdjeciestrona.png" alt="SkiSolution" loading="lazy">
+        </div>
+        <div class="example-info">
+          <div class="example-name">SkiSolution</div>
+          <div class="example-desc">Cloud & AI Monitoring</div>
+          <a class="example-link" href="./Strona1/" target="_blank">Otwórz →</a>
+        </div>
+      </div>
+
+      <div class="example-card">
+        <div class="example-thumb">
+          <img src="./Strona2/zdjeciestrona.png" alt="PaznokcieWiesia" loading="lazy">
+        </div>
+        <div class="example-info">
+          <div class="example-name">PaznokcieWiesia</div>
+          <div class="example-desc">Power-Manicure</div>
+          <a class="example-link" href="./Strona2/" target="_blank">Otwórz →</a>
+        </div>
+      </div>
+
+      <div class="example-card">
+        <div class="example-thumb">
+          <img src="./Strona3/zdjeciestrona.png" alt="WiesiuElektryk" loading="lazy">
+        </div>
+        <div class="example-info">
+          <div class="example-name">WiesiuElektryk</div>
+          <div class="example-desc">Montaż & Home AI</div>
+          <a class="example-link" href="./Strona3/" target="_blank">Otwórz →</a>
+        </div>
+      </div>
+
+      <div class="example-card">
+        <div class="example-thumb">
+          <img src="./Strona4/zdjeciestrona.png" alt="WiesiuRowerzysta" loading="lazy">
+        </div>
+        <div class="example-info">
+          <div class="example-name">WiesiuRowerzysta</div>
+          <div class="example-desc">Serwis Rowerowy</div>
+          <a class="example-link" href="./Strona4/" target="_blank">Otwórz →</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<section class="hero">
+  <h1>Stwórz swoją stronę WWW<br>z pomocą AI</h1>
+  <p>Wypełnij formularz w 4 krokach, pobierz gotowy prompt i wklej do Gemini. Strona w 4 minuty.</p>
+  <div class="hero-flow">
+    <div class="hf-item"><div class="hf-num">1</div> Wypełnij formularz</div>
+    <span class="hf-arrow">→</span>
+    <div class="hf-item"><div class="hf-num">2</div> Pobierz prompt</div>
+    <span class="hf-arrow">→</span>
+    <div class="hf-item"><div class="hf-num">3</div> Wklej do AI</div>
+    <span class="hf-arrow">→</span>
+    <div class="hf-item"><div class="hf-num">4</div> Gotowa strona!</div>
+  </div>
+</section>
+
+<main class="main">
+
+  <!-- STEPPER -->
+  <div class="stepper">
+    <div class="stepper-top">
+      <span class="stepper-label" id="sLabel">Krok 1 z 4</span>
+      <span class="stepper-name" id="sName">O Twojej Firmie</span>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill" id="sBar" style="width:25%"></div>
+    </div>
+    <div class="dots">
+      <div class="dot active" onclick="jumpTo(1)"></div>
+      <div class="dot" onclick="jumpTo(2)"></div>
+      <div class="dot" onclick="jumpTo(3)"></div>
+      <div class="dot" onclick="jumpTo(4)"></div>
+    </div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="card active" id="s1">
+    <div class="card-tag">01 / Firma</div>
+    <h2 class="card-title">Opowiedz o swojej firmie</h2>
+    <p class="card-desc">Kilka słów o tym co robisz i dla kogo. Resztą zajmie się Gemini.</p>
+
+    <div class="fg">
+      <label class="lbl" for="f_name">Nazwa firmy <span>*</span></label>
+      <input class="inp" type="text" id="f_name" placeholder="np. Studio Kreatywne Marki, TechFlow Solutions…">
+    </div>
+
+    <div class="fg">
+      <label class="lbl" for="f_ind">Branża, czym się zajmujesz? <span>*</span></label>
+      <span class="hint">Opisz swoją działalność w kilku słowach</span>
+      <input class="inp" type="text" id="f_ind" placeholder="np. agencja marketingowa, sklep z odzieżą, coaching biznesowy, kancelaria prawna…">
+    </div>
+
+    <div class="fg">
+      <label class="lbl" for="f_srv">Produkt / Usługa <span>*</span></label>
+      <span class="hint">Co konkretnie sprzedajesz lub oferujesz klientom?</span>
+      <textarea class="ta" id="f_srv" placeholder="np. Prowadzimy kursy online z fotografii portretowej dla hobbystów, pakiety od podstawowych po zaawansowane, z certyfikatem ukończenia…"></textarea>
+      <div class="char-cnt"><span id="c_srv">0</span> / 500</div>
+    </div>
+
+    <div class="fnav">
+      <div></div>
+      <button class="btn btn-primary" onclick="next(1)">Dalej →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="card" id="s2">
+    <div class="card-tag">02 / Strategia</div>
+    <h2 class="card-title">Strategia i cel biznesowy</h2>
+    <p class="card-desc">To co napiszesz tutaj zadecyduje czy strona będzie sprzedawać, czy tylko ładnie wyglądać.</p>
+
+    <div class="fg">
+      <label class="lbl" for="f_mis">Misja i wartości firmy <span>*</span></label>
+      <span class="hint">Co jest dla Ciebie ważne? Dlaczego robisz to, co robisz?</span>
+      <textarea class="ta" id="f_mis" placeholder="np. Wierzymy, że każdy ma prawo do dobrego projektu. Pomagamy małym firmom wyglądać profesjonalnie bez wielkich budżetów. Zależy nam na szczerości i długoterminowych relacjach…"></textarea>
+      <div class="char-cnt"><span id="c_mis">0</span> / 500</div>
+    </div>
+
+    <div class="fg">
+      <label class="lbl" for="f_goal">Cel biznesowy strony <span>*</span></label>
+      <span class="hint">Co chcesz osiągnąć dzięki tej stronie?</span>
+      <input class="inp" type="text" id="f_goal" placeholder="np. Pozyskać 20 nowych klientów miesięcznie, sprzedać 500 kursów w Q1, zbudować listę mailingową 1000 osób…">
+    </div>
+
+    <div class="fnav">
+      <button class="btn btn-secondary" onclick="prev(2)">← Wstecz</button>
+      <button class="btn btn-primary" onclick="next(2)">Dalej →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="card" id="s3">
+    <div class="card-tag">03 / Klient</div>
+    <h2 class="card-title">Kim jest Twój klient?</h2>
+    <p class="card-desc">Opisz go po swojemu: kto to jest, czego chce, co go boli. Nie musisz być precyzyjny.</p>
+
+    <div class="fg">
+      <label class="lbl" for="f_per">Wstępny opis klienta <span>*</span></label>
+      <span class="hint">Nie musisz być precyzyjny — AI to rozwinie</span>
+      <textarea class="ta" id="f_per" style="min-height:160px" placeholder="np. Kobiety 30–45 lat, właścicielki małych firm lub freelancerki. Chcą wyglądać profesjonalnie w internecie, ale nie mają czasu ani budżetu na agencję. Często prowadzą social media. Czują się przytłoczone technologią…"></textarea>
+      <div class="char-cnt"><span id="c_per">0</span> / 800</div>
+    </div>
+
+    <div class="fnav">
+      <button class="btn btn-secondary" onclick="prev(3)">← Wstecz</button>
+      <button class="btn btn-primary" onclick="next(3)">Dalej →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="card" id="s4">
+    <div class="card-tag">04 / Strona WWW</div>
+    <h2 class="card-title">Jak ma wyglądać Twoja strona?</h2>
+    <p class="card-desc">Zaznacz co ma być na stronie, wybierz kolory i styl. Dostaniesz gotowy plik do wgrania.</p>
+
+    <div class="fg">
+      <label class="lbl">Sekcje strony <span>*</span></label>
+      <span class="hint">Wybierz wszystkie sekcje, które mają się pojawić na stronie</span>
+      <div class="cb-grid" id="secGrid">
+        <div class="cb-item">
+          <input type="checkbox" id="sec1" value="Hero / Baner główny" checked>
+          <label for="sec1" class="cb-lbl"><span class="cb-ico">🏠</span>Hero / Baner<span class="cb-chk"></span></label>
+        </div>
+        <div class="cb-item">
+          <input type="checkbox" id="sec2" value="O nas">
+          <label for="sec2" class="cb-lbl"><span class="cb-ico">👤</span>O nas<span class="cb-chk"></span></label>
+        </div>
+        <div class="cb-item">
+          <input type="checkbox" id="sec3" value="Oferta / Usługi" checked>
+          <label for="sec3" class="cb-lbl"><span class="cb-ico">💼</span>Oferta / Usługi<span class="cb-chk"></span></label>
+        </div>
+        <div class="cb-item">
+          <input type="checkbox" id="sec4" value="Cennik">
+          <label for="sec4" class="cb-lbl"><span class="cb-ico">💰</span>Cennik<span class="cb-chk"></span></label>
+        </div>
+        <div class="cb-item">
+          <input type="checkbox" id="sec5" value="Referencje / Opinie klientów">
+          <label for="sec5" class="cb-lbl"><span class="cb-ico">⭐</span>Referencje<span class="cb-chk"></span></label>
+        </div>
+        <div class="cb-item">
+          <input type="checkbox" id="sec6" value="FAQ — Najczęstsze pytania">
+          <label for="sec6" class="cb-lbl"><span class="cb-ico">❓</span>FAQ<span class="cb-chk"></span></label>
+        </div>
+        <div class="cb-item">
+          <input type="checkbox" id="sec7" value="Portfolio / Realizacje">
+          <label for="sec7" class="cb-lbl"><span class="cb-ico">🎨</span>Portfolio<span class="cb-chk"></span></label>
+        </div>
+        <div class="cb-item">
+          <input type="checkbox" id="sec8" value="Blog / Artykuły">
+          <label for="sec8" class="cb-lbl"><span class="cb-ico">📝</span>Blog<span class="cb-chk"></span></label>
+        </div>
+        <div class="cb-item">
+          <input type="checkbox" id="sec9" value="Kontakt / Formularz" checked>
+          <label for="sec9" class="cb-lbl"><span class="cb-ico">📬</span>Kontakt<span class="cb-chk"></span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider" id="contactDivider"></div>
+
+    <div class="fg" id="contactFg">
+      <label class="lbl">Dane kontaktowe <span style="font-weight:500;color:var(--g400);font-size:13px">(dla sekcji Kontakt)</span></label>
+      <span class="hint">Strona wyświetli klikalne linki, bez formularza. Możesz zostawić puste i uzupełnić później.</span>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div>
+          <div style="font-size:13px;font-weight:500;color:var(--g600);margin-bottom:6px">Numer telefonu</div>
+          <input class="inp" type="tel" id="f_phone" placeholder="+48 123 456 789">
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:500;color:var(--g600);margin-bottom:6px">Adres e-mail</div>
+          <input class="inp" type="email" id="f_email" placeholder="kontakt@firma.pl">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <div class="cp-item" style="flex:1;min-width:130px">
+          <input type="radio" name="cmode" id="cm1" value="both" checked>
+          <label for="cm1" class="cp-lbl" style="justify-content:center;padding:10px 8px">
+            <span style="font-size:13px;font-weight:600;color:var(--g800)">📞 + ✉️&nbsp; Telefon i e-mail</span>
+          </label>
+        </div>
+        <div class="cp-item" style="flex:1;min-width:130px">
+          <input type="radio" name="cmode" id="cm2" value="phone">
+          <label for="cm2" class="cp-lbl" style="justify-content:center;padding:10px 8px">
+            <span style="font-size:13px;font-weight:600;color:var(--g800)">📞&nbsp; Tylko telefon</span>
+          </label>
+        </div>
+        <div class="cp-item" style="flex:1;min-width:130px">
+          <input type="radio" name="cmode" id="cm3" value="email">
+          <label for="cm3" class="cp-lbl" style="justify-content:center;padding:10px 8px">
+            <span style="font-size:13px;font-weight:600;color:var(--g800)">✉️&nbsp; Tylko e-mail</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="fg">
+      <label class="lbl">Kolorystyka strony</label>
+      <span class="hint">Brak wyboru = domyślne kolory Google. Możesz też ustawić własną paletę.</span>
+      <div class="cp-grid">
+        <div class="cp-item">
+          <input type="radio" name="pal" id="pal0" value="google" checked>
+          <label for="pal0" class="cp-lbl">
+            <div class="swatches">
+              <div class="swatch" style="background:#4285F4"></div>
+              <div class="swatch" style="background:#EA4335"></div>
+              <div class="swatch" style="background:#FBBC05"></div>
+              <div class="swatch" style="background:#34A853"></div>
+            </div>
+            <div><div class="preset-name">Google (domyślny)</div><div class="preset-sub">niebieski, czerwony, żółty, zielony</div></div>
+          </label>
+        </div>
+        <div class="cp-item">
+          <input type="radio" name="pal" id="pal1" value="purple">
+          <label for="pal1" class="cp-lbl">
+            <div class="swatches">
+              <div class="swatch" style="background:#7C3AED"></div>
+              <div class="swatch" style="background:#A78BFA"></div>
+              <div class="swatch" style="background:#4F46E5"></div>
+            </div>
+            <div><div class="preset-name">Fioletowy</div><div class="preset-sub">nowoczesny, kreatywny, premium</div></div>
+          </label>
+        </div>
+        <div class="cp-item">
+          <input type="radio" name="pal" id="pal2" value="dark">
+          <label for="pal2" class="cp-lbl">
+            <div class="swatches">
+              <div class="swatch" style="background:#111827"></div>
+              <div class="swatch" style="background:#374151"></div>
+              <div class="swatch" style="background:#F59E0B"></div>
+            </div>
+            <div><div class="preset-name">Ciemny / Premium</div><div class="preset-sub">elegancki, luksusowy, tech</div></div>
+          </label>
+        </div>
+        <div class="cp-item">
+          <input type="radio" name="pal" id="pal3" value="green">
+          <label for="pal3" class="cp-lbl">
+            <div class="swatches">
+              <div class="swatch" style="background:#059669"></div>
+              <div class="swatch" style="background:#10B981"></div>
+              <div class="swatch" style="background:#F0FDF4"></div>
+            </div>
+            <div><div class="preset-name">Zielony / Eco</div><div class="preset-sub">naturalny, zdrowotny, ekologiczny</div></div>
+          </label>
+        </div>
+        <div class="cp-item">
+          <input type="radio" name="pal" id="pal4" value="navy">
+          <label for="pal4" class="cp-lbl">
+            <div class="swatches">
+              <div class="swatch" style="background:#1E3A5F"></div>
+              <div class="swatch" style="background:#2563EB"></div>
+              <div class="swatch" style="background:#EFF6FF"></div>
+            </div>
+            <div><div class="preset-name">Granatowy / B2B</div><div class="preset-sub">profesjonalny, korporacyjny</div></div>
+          </label>
+        </div>
+        <div class="cp-item">
+          <input type="radio" name="pal" id="pal5" value="custom">
+          <label for="pal5" class="cp-lbl">
+            <div class="swatches">
+              <div class="swatch" style="background:linear-gradient(135deg,#FF6B6B,#4ECDC4)"></div>
+            </div>
+            <div><div class="preset-name">Własna paleta</div><div class="preset-sub">wybierz swoje kolory</div></div>
+          </label>
+        </div>
+      </div>
+
+      <div class="custom-box" id="customBox">
+        <div class="pickers">
+          <div class="pg">
+            <div class="pg-label">Kolor główny (Primary)</div>
+            <div class="pg-row">
+              <input type="color" id="c1" value="#7C3AED" oninput="syncHex('c1','h1')">
+              <input type="text" class="hex-inp" id="h1" value="#7C3AED" onchange="syncPicker('h1','c1')">
+            </div>
+          </div>
+          <div class="pg">
+            <div class="pg-label">Kolor uzupełniający (Accent)</div>
+            <div class="pg-row">
+              <input type="color" id="c2" value="#4F46E5" oninput="syncHex('c2','h2')">
+              <input type="text" class="hex-inp" id="h2" value="#4F46E5" onchange="syncPicker('h2','c2')">
+            </div>
+          </div>
+          <div class="pg">
+            <div class="pg-label">Tło (Background)</div>
+            <div class="pg-row">
+              <input type="color" id="c3" value="#FFFFFF" oninput="syncHex('c3','h3')">
+              <input type="text" class="hex-inp" id="h3" value="#FFFFFF" onchange="syncPicker('h3','c3')">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="fg">
+      <label class="lbl">Strona referencyjna <span style="font-weight:500;color:var(--g400);font-size:13px">(opcjonalne)</span></label>
+      <span class="hint">Gemini odwiedzi ten adres i użyje go jako inspiracji: układ, typografia, klimat. Treść zignoruje.</span>
+      <input class="inp" type="url" id="f_refurl" placeholder="https://przykladowastrona.pl">
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="fg">
+      <label class="lbl">Styl strony</label>
+      <span class="hint">Ogólny charakter wizualny i animacje całej strony</span>
+      <div class="cp-grid">
+        <div class="cp-item">
+          <input type="radio" name="stheme" id="st1" value="standard" checked>
+          <label for="st1" class="cp-lbl">
+            <span style="font-size:20px">🏛️</span>
+            <div><div class="preset-name">Standard</div><div class="preset-sub">czysty, profesjonalny</div></div>
+          </label>
+        </div>
+        <div class="cp-item">
+          <input type="radio" name="stheme" id="st2" value="modern">
+          <label for="st2" class="cp-lbl">
+            <span style="font-size:20px">⚡</span>
+            <div><div class="preset-name">Modern</div><div class="preset-sub">animacje, neon, typewriter</div></div>
+          </label>
+        </div>
+        <div class="cp-item">
+          <input type="radio" name="stheme" id="st3" value="retro">
+          <label for="st3" class="cp-lbl">
+            <span style="font-size:20px">🎞️</span>
+            <div><div class="preset-name">Retro</div><div class="preset-sub">uciecia rogów, vintage</div></div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="fg">
+      <label class="lbl">Układ baneru hero</label>
+      <span class="hint">Pozycja treści i zdjęcia w sekcji głównej. Zdjęcie (zdjeciestrona.png) jest tłem baneru.</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <div class="cp-item" style="flex:1;min-width:140px">
+          <input type="radio" name="hlayout" id="lay1" value="left" checked>
+          <label for="lay1" class="cp-lbl" style="justify-content:center;gap:10px;padding:12px">
+            <span style="font-size:22px">⬅️</span>
+            <div><div class="preset-name">Tekst lewo</div><div class="preset-sub">zdjęcie po prawej</div></div>
+          </label>
+        </div>
+        <div class="cp-item" style="flex:1;min-width:140px">
+          <input type="radio" name="hlayout" id="lay2" value="center">
+          <label for="lay2" class="cp-lbl" style="justify-content:center;gap:10px;padding:12px">
+            <span style="font-size:22px">↕️</span>
+            <div><div class="preset-name">Środek</div><div class="preset-sub">zdjęcie jako pełne tło</div></div>
+          </label>
+        </div>
+        <div class="cp-item" style="flex:1;min-width:140px">
+          <input type="radio" name="hlayout" id="lay3" value="right">
+          <label for="lay3" class="cp-lbl" style="justify-content:center;gap:10px;padding:12px">
+            <span style="font-size:22px">➡️</span>
+            <div><div class="preset-name">Tekst prawo</div><div class="preset-sub">zdjęcie po lewej</div></div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="fg">
+      <label class="lbl">Zdjęcie na stronę <span style="font-weight:500;color:var(--g400);font-size:13px">(opcjonalne)</span></label>
+      <span class="hint">Wybierz styl — generator stworzy prompt do Gemini, gdzie wgrasz swoje zdjęcie jako referencję twarzy. Plik zapisz jako <strong>zdjeciestrona.png</strong> w folderze ze stroną.</span>
+
+      <div style="font-size:13px;font-weight:600;color:var(--g700,#374151);margin-bottom:8px;margin-top:12px">Styl graficzny</div>
+      <div class="cp-grid">
+        <div class="cp-item">
+          <input type="radio" name="pstyle" id="ps0" value="none" checked>
+          <label for="ps0" class="cp-lbl">
+            <span style="font-size:20px">🚫</span>
+            <div><div class="preset-name">Bez zdjęcia</div><div class="preset-sub">pomiń ten krok</div></div>
+          </label>
+        </div>
+        <div class="cp-item">
+          <input type="radio" name="pstyle" id="ps1" value="pencil">
+          <label for="ps1" class="cp-lbl">
+            <span style="font-size:20px">✏️</span>
+            <div><div class="preset-name">Szkic ołówkowy</div><div class="preset-sub">jak Umiejętności Jutra AI</div></div>
+          </label>
+        </div>
+        <div class="cp-item">
+          <input type="radio" name="pstyle" id="ps2" value="artistic">
+          <label for="ps2" class="cp-lbl">
+            <span style="font-size:20px">🎨</span>
+            <div><div class="preset-name">Portret artystyczny</div><div class="preset-sub">miękki, malarski styl</div></div>
+          </label>
+        </div>
+        <div class="cp-item">
+          <input type="radio" name="pstyle" id="ps3" value="realistic">
+          <label for="ps3" class="cp-lbl">
+            <span style="font-size:20px">📷</span>
+            <div><div class="preset-name">Realistyczny</div><div class="preset-sub">profesjonalne studio</div></div>
+          </label>
+        </div>
+        <div class="cp-item">
+          <input type="radio" name="pstyle" id="ps4" value="digital">
+          <label for="ps4" class="cp-lbl">
+            <span style="font-size:20px">🖥️</span>
+            <div><div class="preset-name">Ilustracja cyfrowa</div><div class="preset-sub">nowoczesna, wektorowa</div></div>
+          </label>
+        </div>
+      </div>
+
+      <div id="shotBox" style="display:none;margin-top:14px">
+        <div style="font-size:13px;font-weight:600;color:var(--g700,#374151);margin-bottom:8px">Rodzaj ujęcia</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div class="cp-item" style="flex:1;min-width:130px">
+            <input type="radio" name="pshot" id="ph1" value="portrait" checked>
+            <label for="ph1" class="cp-lbl" style="justify-content:center;gap:8px;padding:10px">
+              <span>👤</span><span style="font-size:13px;font-weight:600">Portret (twarz)</span>
+            </label>
+          </div>
+          <div class="cp-item" style="flex:1;min-width:130px">
+            <input type="radio" name="pshot" id="ph2" value="halfbody">
+            <label for="ph2" class="cp-lbl" style="justify-content:center;gap:8px;padding:10px">
+              <span>🧍</span><span style="font-size:13px;font-weight:600">Półfigura</span>
+            </label>
+          </div>
+          <div class="cp-item" style="flex:1;min-width:130px">
+            <input type="radio" name="pshot" id="ph3" value="scene">
+            <label for="ph3" class="cp-lbl" style="justify-content:center;gap:8px;padding:10px">
+              <span>🏢</span><span style="font-size:13px;font-weight:600">Scenka branżowa</span>
+            </label>
+          </div>
+        </div>
+
+        <div id="scenePersonsBox" style="display:none;margin-top:10px">
+          <div style="font-size:12px;font-weight:600;color:var(--g500);margin-bottom:7px;text-transform:uppercase;letter-spacing:.05em">Scenka — kto jest na zdjęciu?</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <div class="cp-item" style="flex:1;min-width:180px">
+              <input type="radio" name="scenepersons" id="sp1" value="solo" checked>
+              <label for="sp1" class="cp-lbl" style="gap:10px;padding:10px 12px">
+                <span style="font-size:18px">🧑‍💼</span>
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:var(--g800)">Tylko ta postać</div>
+                  <div style="font-size:11px;color:var(--g400)">wykonuje czynność branżową</div>
+                </div>
+              </label>
+            </div>
+            <div class="cp-item" style="flex:1;min-width:180px">
+              <input type="radio" name="scenepersons" id="sp2" value="group">
+              <label for="sp2" class="cp-lbl" style="gap:10px;padding:10px 12px">
+                <span style="font-size:18px">👥</span>
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:var(--g800)">Z innymi osobami</div>
+                  <div style="font-size:11px;color:var(--g400)">pokazuje świadczoną usługę</div>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fnav">
+      <button class="btn btn-secondary" onclick="prev(4)">← Wstecz</button>
+      <button class="btn btn-primary btn-lg" onclick="generate()">✨ Generuj Prompt</button>
+    </div>
+  </div>
+
+  <!-- STEP 5 — RESULT -->
+  <div class="card" id="s5" style="padding:32px 28px">
+    <div class="result-hero">
+      <div class="result-icon">✨</div>
+      <h2 class="card-title">Gotowe!</h2>
+      <p class="card-desc">Skopiuj i wrzuć do Gemini, za chwilę masz stronę.</p>
+    </div>
+
+    <div class="prompt-meta" id="pmeta"></div>
+
+    <div class="prompts-row" id="promptsRow">
+
+      <!-- LEWY: prompt strony -->
+      <div class="prompt-panel">
+        <div class="prompt-panel-hdr">
+          <div class="card-tag">PROMPT STRONY v2.0</div>
+          <div class="pactions">
+            <button class="btn-copy" id="cpBtn" onclick="copyPrompt()">📋 Kopiuj</button>
+            <button class="btn-dl" onclick="dlPrompt()">⬇ .txt</button>
+          </div>
+        </div>
+        <div class="prompt-box" id="pbox"></div>
+        <div class="info-box" style="margin-top:14px">
+          <h4>📌 Jak użyć?</h4>
+          <ol>
+            <li>Otwórz <strong>Gemini</strong> (gemini.google.com)</li>
+            <li>Wklej prompt i naciśnij Enter</li>
+            <li>Gemini przejdzie przez analizę i wygeneruje stronę w Canvas</li>
+            <li>Pobierz plik lub skopiuj kod</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- PRAWY: prompt zdjęcia Gemini -->
+      <div class="prompt-panel" id="geminiPanel" style="display:none">
+        <div class="prompt-panel-hdr">
+          <div class="card-tag">PROMPT ZDJECIA v1.3</div>
+          <div class="pactions">
+            <button class="btn-copy" id="cpImgBtn" onclick="copyImgPrompt()">📋 Kopiuj</button>
+            <button class="btn-dl" onclick="dlImgPrompt()">⬇ .txt</button>
+          </div>
+        </div>
+        <div class="prompt-box" id="imgpbox"></div>
+        <div class="info-box" style="margin-top:14px">
+          <h4>📸 Jak użyć?</h4>
+          <ol>
+            <li>Otwórz <strong>Gemini</strong> (gemini.google.com)</li>
+            <li>Załącz swoje zdjęcie (ikona spinacza)</li>
+            <li>Wklej prompt</li>
+            <li>Zapisz jako <strong>zdjeciestrona.png</strong> w folderze gdzie masz plik ze stroną</li>
+          </ol>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="fnav" style="justify-content:center;border-top:none;padding-top:0;margin-top:22px">
+      <button class="btn btn-secondary" onclick="reset()">← Wróć i edytuj</button>
+    </div>
+  </div>
+
+</main>
+
+<footer class="footer">© 2026 PromptJutra</footer>
+
+<script>
+// --- LANDING ---
+const _titleOrig = 'PromptJutra';
+let _waveInterval = null;
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  const btn   = document.querySelector('.landing-btn');
+  const title = document.querySelector('.landing-title');
+  if(!btn || !title) return;
+
+  btn.addEventListener('mouseenter', ()=>{
+    let pos = 0;
+    let phase = 'encode';
+    const chars = _titleOrig.split('');
+    _waveInterval = setInterval(()=>{
+      if(phase === 'encode'){
+        chars[pos] = Math.random() > .5 ? '1' : '0';
+        pos++;
+        if(pos >= _titleOrig.length){ pos = 0; phase = 'decode'; }
+      } else {
+        chars[pos] = _titleOrig[pos];
+        pos++;
+        if(pos >= _titleOrig.length){ pos = 0; phase = 'encode'; }
+      }
+      title.textContent = chars.join('');
+    }, 55);
+  });
+
+  btn.addEventListener('mouseleave', ()=>{
+    clearInterval(_waveInterval);
+    title.textContent = _titleOrig;
+  });
+});
+
+function toggleExamples(){
+  const o = document.getElementById('examplesOverlay');
+  o.classList.toggle('hidden');
+}
+
+document.addEventListener('click', e=>{
+  const o = document.getElementById('examplesOverlay');
+  if(!o.classList.contains('hidden') && e.target === o) o.classList.add('hidden');
+});
+
+function startApp(){
+  const l = document.getElementById('landing');
+  l.classList.add('hide');
+  document.body.classList.add('app-reveal');
+  setTimeout(()=>{ l.style.display='none'; }, 900);
+}
+
+function resetToStart(){
+  reset();
+  const l = document.getElementById('landing');
+  l.style.removeProperty('display');
+  l.style.transition = 'none';
+  l.classList.remove('hide');
+  // force reflow then re-enable transition
+  l.offsetHeight;
+  l.style.transition = '';
+  document.body.classList.remove('app-reveal');
+}
+
+const STEPS = { 1:'O Twojej Firmie', 2:'Strategia i Cel', 3:'Twój Klient', 4:'Strona WWW' };
+const PROG  = { 1:25, 2:50, 3:75, 4:100 };
+let cur = 1;
+
+// char counters
+[['f_srv','c_srv'],['f_mis','c_mis'],['f_per','c_per']].forEach(([ta,cnt])=>{
+  const el = document.getElementById(ta);
+  if(el) el.addEventListener('input', ()=> document.getElementById(cnt).textContent = el.value.length);
+});
+
+// color toggle
+document.querySelectorAll('input[name=pal]').forEach(r=>{
+  r.addEventListener('change',()=>{
+    document.getElementById('customBox').classList.toggle('show', r.value==='custom');
+  });
+});
+
+// photo style toggle
+document.querySelectorAll('input[name=pstyle]').forEach(r=>{
+  r.addEventListener('change',()=>{
+    document.getElementById('shotBox').style.display = r.value==='none' ? 'none' : 'block';
+    if(r.value==='none') document.getElementById('scenePersonsBox').style.display='none';
+  });
+});
+
+// scene persons toggle
+document.querySelectorAll('input[name=pshot]').forEach(r=>{
+  r.addEventListener('change',()=>{
+    document.getElementById('scenePersonsBox').style.display = r.value==='scene' ? 'block' : 'none';
+  });
+});
+
+// contact section conditional
+function toggleContact(){
+  const on = document.getElementById('sec9').checked;
+  document.getElementById('contactFg').style.display = on ? 'block' : 'none';
+  document.getElementById('contactDivider').style.display = on ? 'block' : 'none';
+}
+document.getElementById('sec9').addEventListener('change', toggleContact);
+toggleContact();
+
+function getStyleTheme(){
+  const v = document.querySelector('input[name=stheme]:checked')?.value || 'standard';
+  return {
+    standard: 'Styl Standard: czysty, profesjonalny design. Minimalne animacje (fade-in przy scrollu przez Intersection Observer). Klasyczne zaokraglone rogi (8-16px). Brak efektow neon ani ciemnych motywow. Prosty hover na przyciskach (transform translateY -2px).',
+    modern:   'Styl Modern: dynamiczne animacje CSS. Efekt typewriter (piszacy sie tekst) na glownym naglowku H1 — uzyj CSS @keyframes lub JS. Efekty neon glow (text-shadow, box-shadow) na przyciskach CTA i akcentach w kolorach palety. Glassmorphism na kartach (backdrop-filter: blur + polprzezroczyste tlo). Animacje slide-in i fade-up przy scrollu z losowym opozdnieniem. Parallax na tle hero.',
+    retro:    'Styl Retro: nieregularne uciecia rogow przez clip-path polygon (zamiast border-radius). Asymetryczne ramki i dekoracje. Retro typografia (grube slab-serif lub monospace). Subtelna faktura lub szum jako tlo sekcji (CSS noise filter lub SVG feTurbulence). Vintage color grading (sepia lub desaturacja na obrazach). Nierowne ramki dekoracyjne (border-image lub pseudo-elementy).',
+  }[v];
+}
+
+function getHeroLayout(){
+  const v = document.querySelector('input[name=hlayout]:checked')?.value || 'left';
+  return {
+    left:   'Uklad hero: dwukolumnowy — lewa kolumna zawiera H1, podtytul i CTA (tekst wyrownany do lewej); prawa kolumna to obraz zdjeciestrona.png (img z object-fit cover lub CSS background). Na mobile: kolumny ukladaja sie pionowo, obraz pod tekstem.',
+    center: 'Uklad hero: pelna szerokosc — zdjeciestrona.png jako tlo calej sekcji hero (CSS: background-image url zdjeciestrona.png, background-size cover, background-position center). Na obrazie polprzezroczysty overlay z kolorow palety (opacity 0.6-0.75) zapewniajacy czytelnosc. Tekst H1, podtytul i CTA wycentrowane na srodku.',
+    right:  'Uklad hero: dwukolumnowy — lewa kolumna to obraz zdjeciestrona.png; prawa kolumna zawiera H1, podtytul i CTA (tekst wyrownany do prawej). Na mobile: kolumny ukladaja sie pionowo, obraz nad tekstem.',
+  }[v];
+}
+
+function syncHex(c,h){ document.getElementById(h).value = document.getElementById(c).value; }
+function syncPicker(h,c){
+  const v = document.getElementById(h).value;
+  if(/^#[0-9A-Fa-f]{6}$/.test(v)) document.getElementById(c).value = v;
+}
+
+function validate(step){
+  document.querySelectorAll('.err').forEach(e=>e.classList.remove('err'));
+  document.querySelectorAll('.err-msg').forEach(e=>e.remove());
+  let ok = true;
+  function bad(el, msg){
+    el.classList.add('err');
+    const d = document.createElement('div');
+    d.className='err-msg'; d.textContent=msg;
+    el.parentNode.insertBefore(d, el.nextSibling);
+    ok=false;
+  }
+  if(step===1){
+    const n=document.getElementById('f_name'), i=document.getElementById('f_ind'), s=document.getElementById('f_srv');
+    if(!n.value.trim()) bad(n,'Wpisz nazwę firmy');
+    if(!i.value.trim()) bad(i,'Wpisz branżę');
+    if(!s.value.trim()) bad(s,'Opisz produkt lub usługę');
+  }
+  if(step===2){
+    const m=document.getElementById('f_mis'), g=document.getElementById('f_goal');
+    if(!m.value.trim()) bad(m,'Opisz misję i wartości');
+    if(!g.value.trim()) bad(g,'Wpisz cel biznesowy');
+  }
+  if(step===3){
+    const p=document.getElementById('f_per');
+    if(!p.value.trim()) bad(p,'Opisz swojego klienta');
+  }
+  if(step===4){
+    const checked = document.querySelectorAll('#secGrid input:checked');
+    if(!checked.length){
+      const g=document.getElementById('secGrid');
+      const d=document.createElement('div'); d.className='err-msg'; d.textContent='Wybierz co najmniej jedną sekcję';
+      g.parentNode.insertBefore(d, g.nextSibling); ok=false;
+    }
+  }
+  return ok;
+}
+
+function show(from, to){
+  document.getElementById('s'+from).classList.remove('active');
+  document.getElementById('s'+to).classList.add('active');
+  if(to <= 4){
+    document.getElementById('sLabel').textContent = `Krok ${to} z 4`;
+    document.getElementById('sName').textContent = STEPS[to]||'';
+    document.getElementById('sBar').style.width = PROG[to]+'%';
+  }
+  document.querySelectorAll('.dot').forEach((d,i)=>{
+    d.classList.remove('active','done');
+    if(i+1===to) d.classList.add('active');
+    else if(i+1<to) d.classList.add('done');
+  });
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function next(s){ if(validate(s)){ cur=s+1; show(s,cur); } }
+function prev(s){ cur=s-1; show(s,cur); }
+function jumpTo(s){ if(s<=cur){ const old=cur; cur=s; show(old,s); } }
+
+function palette(){
+  const v = document.querySelector('input[name=pal]:checked').value;
+  const map = {
+    google: 'Kolorystyka Google: główny niebieski #4285F4, akcent czerwony #EA4335, highlight żółty #FBBC05, sukces zielony #34A853, tło białe #FFFFFF. Stosuj wg standardów Material Design.',
+    purple: 'Kolorystyka Fioletowa: główny #7C3AED (violet-600), akcent #A78BFA (violet-400), gradient #7C3AED→#4F46E5, tło białe z subtelnymi akcentami #F5F3FF. Nowoczesny, kreatywny charakter.',
+    dark:   'Kolorystyka Ciemna Premium: tło #111827, karty #1F2937, tekst #F9FAFB, akcent złoty #F59E0B. Dodaj efekty glow na hover. Elegancki dark mode.',
+    green:  'Kolorystyka Zielona (eco/health): główny #059669, akcent #10B981, tło #F0FDF4, CTA mocno zielone. Organiczny, naturalny charakter.',
+    navy:   'Kolorystyka Granatowa (B2B/korporacyjna): główny #1E3A5F, akcent #2563EB, tło #EFF6FF. Wzbudza zaufanie, profesjonalny wygląd.',
+  };
+  if(v==='custom'){
+    const p=document.getElementById('c1').value, a=document.getElementById('c2').value, b=document.getElementById('c3').value;
+    return `Kolorystyka własna: główny ${p}, akcent ${a}, tło ${b}. Zachowaj wysoki kontrast (WCAG AA min. 4.5:1). Stosuj konsekwentnie przez całą stronę.`;
+  }
+  return map[v]||map.google;
+}
+
+function sections(){
+  return Array.from(document.querySelectorAll('#secGrid input:checked')).map(c=>c.value).join(', ');
+}
+
+function buildImagePrompt(v){
+  const style = document.querySelector('input[name=pstyle]:checked')?.value;
+  if(!style || style==='none') return null;
+  const shot  = document.querySelector('input[name=pshot]:checked')?.value || 'portrait';
+
+  const styleDesc = {
+    pencil:   'hyperrealistic pencil sketch and charcoal drawing, black and white, fine crosshatching, detailed shading — photorealistic pencil art technique similar to the Umiejetnosci Jutra AI visual identity style (pencil portrait on soft pastel gradient background)',
+    artistic: 'painterly portrait, soft digital brushstrokes, warm artistic rendering, impressionistic details, smooth blending',
+    realistic:'professional photographic portrait style, clean studio lighting, sharp focus, high-end personal branding photography look',
+    digital:  'modern digital illustration, smooth gradients, clean lines, flat design with depth and subtle drop shadows, contemporary vector-art feel',
+  };
+
+  const shotDesc = {
+    portrait: 'close-up portrait framing — face and upper shoulders, centered composition, strong direct eye contact with the camera',
+    halfbody: 'half-body composition from waist up, slightly off-center, relaxed yet confident professional posture',
+    scene:    (()=>{
+      const persons = document.querySelector('input[name=scenepersons]:checked')?.value || 'solo';
+      if(persons==='group'){
+        return `Environmental scene with the MAIN SUBJECT from the reference photo clearly visible in the foreground (at least waist up, face sharp and recognizable), interacting with 1-2 other people — clients, students, or colleagues — in a natural, professional situation specific to the ${v.branza} industry. The interaction should look authentic: show the service or collaboration in progress (e.g. a lesson, consultation, hands-on work together). The other people support the scene but the reference person is the focal point. Background: ${v.branza} environment, slightly blurred. CRITICAL: the reference face must be clearly on the main person — not used as a texture or background element.`;
+      }
+      return `The person from the reference photo is the MAIN SUBJECT in the foreground — clearly visible, sharp, from at least waist up, face prominent and fully recognizable. They are performing a specific, realistic action typical for the ${v.branza} industry (e.g. using tools, equipment or technology related to their field). The person is ALONE but surrounded by clear visual cues of their profession. The ${v.branza} environment is the slightly blurred background. CRITICAL: do not use the face as a background texture or element — the person must appear as a solid foreground subject actively doing something.`;
+    })(),
+  };
+
+  const palVal = document.querySelector('input[name=pal]:checked')?.value || 'google';
+  const palColors = {
+    google: 'soft blue (#4285F4) and white pastel tones',
+    purple: 'soft violet (#7C3AED) and lavender (#A78BFA) pastel tones',
+    dark:   'deep charcoal (#111827) with subtle warm amber accents',
+    green:  'soft emerald (#059669) and mint pastel tones',
+    navy:   'deep navy (#1E3A5F) and soft sky blue tones',
+  };
+  let colorHint = palColors[palVal] || palColors.google;
+  if(palVal==='custom'){
+    colorHint = `${document.getElementById('c1').value} primary and ${document.getElementById('c2').value} accent, desaturated and pastel`;
+  }
+
+  return `The attached photo is a FACE REFERENCE. Take the face, facial features, hair, skin tone, and likeness from this reference photo and place them onto the person in the generated image. The generated person must look like the person in the reference photo.
+
+Rendering style: ${styleDesc[style]}
+
+Composition: ${shotDesc[shot]}
+
+Background: soft gradient using ${colorHint}. Airy, clean, slightly out of focus — never competing with website UI. Gentle desaturated color washes, no textures, no patterns.
+
+Mood: professional, approachable, confident, modern — personal brand website hero image
+
+Technical requirements:
+- FACE TRANSFER: the generated person must have the exact face, hair and appearance from the reference photo — this is the primary requirement
+- The reference photo provides the face only — generate the full body/scene around it
+- High resolution, sharp subject, vertical orientation (2:3 ratio)
+- Subject in foreground, sharp; background softly blurred (shallow DOF)
+- Color palette: ${colorHint}
+- Avoid: using the reference face as a background element, floating face composites, stock photo look, busy backgrounds
+
+Watermark: add a subtle text watermark at the very bottom of the image — "©2026 PromptJutra" — small font, semi-transparent (approximately 30% opacity), in a light desaturated tone from the palette ${colorHint}. The watermark should be barely noticeable, elegant, bottom-right or bottom-center aligned.
+
+Output: single image, web-ready`;
+}
+
+function getContact(){
+  if (!document.getElementById('sec9').checked) return null;
+  const phone = document.getElementById('f_phone').value.trim();
+  const email = document.getElementById('f_email').value.trim();
+  const mode  = document.querySelector('input[name="cmode"]:checked')?.value || 'both';
+  const parts = [];
+  if ((mode==='both'||mode==='phone') && phone)
+    parts.push(`telefon: ${phone} jako klikalny link HTML tel:${phone.replace(/\s/g,'')}`);
+  if ((mode==='both'||mode==='email') && email)
+    parts.push(`e-mail: ${email} jako klikalny link HTML mailto:${email}`);
+  if (!parts.length) return null;
+  return parts.join(', ') + '. Bez zadnego formularza kontaktowego.';
+}
+
+function buildPrompt(v){
+return `# MASTER PROMPT — Generator Strony WWW z AI
+
+## Twoja rola
+
+Jestes ekspertem laczacym cztery role: Strateg Biznesowy, Badacz UX, Copywriter Premium, Full-Stack Developer.
+
+## Dane wejsciowe
+
+Firma: ${v.firma}
+Branza: ${v.branza}
+Produkt lub usluga: ${v.usluga}
+Misja i wartosci: ${v.misja}
+Cel biznesowy: ${v.cel}
+Wstepna persona: ${v.persona}
+Struktura strony: ${v.sekcje}${v.kontakt ? '\nKontakt: ' + v.kontakt : ''}
+Kolorystyka: ${v.kolor}
+Styl strony: ${v.styl}
+Uklad hero: ${v.layout}${v.refurl ? '\nStrona referencyjna do inspiracji: ' + v.refurl : ''}
+
+## Instrukcja glowna
+
+Przeprowadz samodzielnie wszystkie etapy 1-4 bez przerwy i bez pytania o akceptacje. Wyswietl wyniki kazdego etapu jako czytelne sekcje. Po zakonczeniu etapu 4 automatycznie i bez zatrzymywania przejdz do etapu 5 i wygeneruj kompletna strone.
+
+## Etap 1: Innowacja oferty (SCAMPER)
+
+Cel: wyroznic oferte "${v.usluga}" na rynku tak, aby realizowala cel biznesowy: ${v.cel}.
+
+Dla kazdego kroku SCAMPER wygeneruj jeden konkretny pomysl modyfikacji oferty lub sposobu jej dostarczania:
+- Substitute: co zastapic w ofercie lub procesie?
+- Combine: co polaczyc z czyms innym, by stworzyc nowa wartosc?
+- Adapt: co zaadaptowac z innej branzy?
+- Modify lub Magnify: co wzmocnic, rozbudowac lub zredukowac?
+- Put to other use: inne zastosowanie tej samej oferty?
+- Eliminate: co usunac, by oferta byla czystsza i bardziej skupiona?
+- Reverse lub Rearrange: co odwrocic lub przeorganizowac w sposobie dzialania?
+
+Wybierz jeden najsilniejszy pomysl i oznacz go jako "Glowna Innowacja". Bedzie to os calej komunikacji strony.
+
+## Etap 2: Mapa argumentow (Kwiat Lotosu)
+
+Centrum: "${v.usluga}" wzbogacone o Glowna Innowacje z Etapu 1.
+
+Wygeneruj 8 obszarow komunikacji. Dla kazdego obszaru podaj 3 konkretne argumenty lub punkty sprzedazowe. Przykladowe obszary: unikalne cechy, pokonywanie obiekcji, korzysci funkcjonalne, korzysci tozsamosciowe, dowody spoleczne, pilnosc lub ograniczenia, wartosci marki, sciezka klienta.
+
+## Etap 3: Gleboka persona (5 Whys + 5W+H)
+
+Krok 1 - Technika 5 Whys:
+Zacznij od wstepnej potrzeby klienta. Zadaj 5 poziomow pytania "dlaczego?". Wyswietl jako lancuch: Potrzeba bazowa > Dlaczego 1 > Dlaczego 2 > Dlaczego 3 > Dlaczego 4 > Gleba potrzeba tozsamosciowa.
+
+Krok 2 - Profil 5W+H oparty na wynikach 5 Whys:
+- Who: kim jest i jak siebie okresla?
+- What: czego konkretnie chce, w swoim wlasnym jezyku?
+- When: jaki moment lub impuls uruchamia decyzje zakupu?
+- Where: w jakim kontekscie zyciowym korzysta z oferty?
+- Why: gleba motywacja odkryta przez 5 Whys
+- How: jakiego doswiadczenia od ${v.firma} oczekuje?
+
+Krok 3 - Slownik jezyka klienta:
+Lista 10-12 zdan lub zwrotow, ktorych sam klient by uzyl opisujac swoj problem lub potrzebe. Ta lista bedzie podstawa copywritingu w Etapie 4.
+
+## Etap 4: Teksty na strone (Framework SPICE)
+
+Materialy wejsciowe: Glowna Innowacja (Etap 1), 8 obszarow argumentow (Etap 2), profil persony i Slownik jezyka klienta (Etap 3).
+
+Napisz teksty dla kazdej z tych sekcji: ${v.sekcje}
+
+Dla kazdej sekcji zastosuj framework SPICE:
+- Situation: wprowadz kontekst nawiazujac do momentu "When" klienta z Etapu 3
+- Problem lub Purpose: pokaz ze rozumiesz gleboki bol odkryty przez 5 Whys
+- Information: przedstaw oferte ulepszona przez Glowna Innowacje i argumenty z Etapu 2
+- Constraints: pisz zwiezle, uzywaj Slownika jezyka klienta, zero lania wody
+- Examples lub CTA: wezwanie do dzialania nakierowane bezposrednio na cel: ${v.cel}
+
+Format kazdej sekcji: nazwa sekcji, naglowek H1 lub H2, podtytul, tresc, CTA.
+Zakaz: "profesjonalne uslugi", "wysoka jakosc", "doswiadczony zespol", "kompleksowe podejscie".
+
+## Etap 5: Generowanie kompletnej strony (bezposrednio po Etapie 4)
+
+Napisz "Otwieram Canvas" i wygeneruj caly kod w trybie Canvas.
+
+Wymagania techniczne:
+- Jeden plik HTML z wbudowanym CSS i JS, bez zewnetrznych frameworkow JS
+- Google Fonts przez CDN, maksymalnie dwie rodziny fontow
+- Mobile-first, w pelni responsywna strona oparta na CSS Grid i Flexbox
+- Gotowa do wdrozenia przez FTP bez potrzeby serwera aplikacji
+
+${v.refurl ? 'Strona referencyjna: odwiedz ' + v.refurl + ' i przeanalizuj jej design — kolorystyke, uklad sekcji, typografie, styl kart, ogolna estetyka i klimat. Uzyj tej strony jako glowna inspiracja wizualna. Nie kopiuj tekstow ani struktury — stworz cos oryginalnego w podobnym stylu.\n\n' : ''}Design i kolorystyka:
+${v.kolor}
+Kontrast zgodny z WCAG AA, minimum 4.5:1 dla tekstu. Gradient na elementach CTA i w sekcji hero. Zaokraglone rogi 8-20px i cienie box-shadow na kartach. Czytelne odstepy white-space miedzy sekcjami.
+
+Wymagania UX (standard 2024):
+- Sticky header z efektem blur po scrollu
+- Sekcja hero minimum 80vh z mocnym H1, podtytul, przycisk CTA
+- Hamburger menu na urzadzeniach mobilnych (CSS i JS bez bibliotek)
+- Animacje przy scrollowaniu przez Intersection Observer API: fade-in i slide-up
+- Smooth scroll na kotwice #hash
+- Hover effects na kartach, przyciskach i linkach nawigacyjnych
+
+Sekcje do wygenerowania: ${v.sekcje}
+
+Tresc i SEO:
+- Wstaw wszystkie teksty z Etapu 4 do odpowiednich sekcji HTML
+- Jezeli strona ma zawierac zdjecie osoby lub bohatera, uzyj <img src="zdjeciestrona.png"> — zawsze pod ta nazwa, uzytkownik dostarczy ten plik
+- Pozostale placeholdery obrazow jako gradient CSS z opisowym tekstem zamiast img
+- W testimonialach i portfolio wygeneruj wiarygodne, realistyczne dane (imiona, opinie, projekty) pasujace do branzy ${v.branza} — bez zadnych etykiet placeholder ani komentarzy "przyklad do zastapienia"
+${v.kontakt ? '- Sekcja Kontakt: ' + v.kontakt + '. Bez zadnego formularza HTML.' : ''}
+- Tytul strony: ${v.firma} plus slowo kluczowe z branzy
+- Meta description: 150-160 znakow zawierajacych Glowna Innowacje z Etapu 1
+- Open Graph tags: og:title, og:description, og:type
+- Semantyczne HTML5: header, main, section, article, footer
+
+Wynik: jeden kompletny blok kodu HTML w Canvas, gotowy do zapisania jako index.html i wgrania na serwer FTP.`;
+}
+
+function generate(){
+  if(!validate(4)) return;
+  const v = {
+    firma:   document.getElementById('f_name').value.trim(),
+    branza:  document.getElementById('f_ind').value.trim(),
+    usluga:  document.getElementById('f_srv').value.trim(),
+    misja:   document.getElementById('f_mis').value.trim(),
+    cel:     document.getElementById('f_goal').value.trim(),
+    persona: document.getElementById('f_per').value.trim(),
+    sekcje:  sections(),
+    kolor:   palette(),
+    kontakt: getContact(),
+    styl:    getStyleTheme(),
+    layout:  getHeroLayout(),
+    refurl:  document.getElementById('f_refurl').value.trim(),
+  };
+  const prompt = buildPrompt(v);
+  document.getElementById('pbox').textContent = prompt;
+
+  const imgPrompt = buildImagePrompt(v);
+  window._imgPrompt = imgPrompt;
+  const gp  = document.getElementById('geminiPanel');
+  const row = document.getElementById('promptsRow');
+  if(imgPrompt){
+    gp.style.display='block';
+    document.getElementById('imgpbox').textContent = imgPrompt;
+    row.classList.add('has-two');
+  } else {
+    gp.style.display='none';
+    row.classList.remove('has-two');
+  }
+
+  const wc = prompt.split(/\s+/).length;
+  const extra = imgPrompt ? ' · + Prompt do Gemini' : '';
+  document.getElementById('pmeta').innerHTML = `
+    <div class="pm-item"><span class="pm-dot"></span>${wc} słów</div>
+    <div class="pm-item"><span class="pm-dot"></span>${prompt.length} znaków</div>
+    <div class="pm-item"><span class="pm-dot"></span>5 etapów (4 strategia + generowanie kodu)${extra}</div>
+    <div class="pm-item"><span class="pm-dot"></span>${v.firma}</div>
+  `;
+
+  document.getElementById('s4').classList.remove('active');
+  document.getElementById('s5').classList.add('active');
+  document.getElementById('sLabel').textContent = 'Gotowe!';
+  document.getElementById('sName').textContent = 'Pobierz prompt';
+  document.getElementById('sBar').style.width = '100%';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function copyPrompt(){
+  const text = document.getElementById('pbox').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const b = document.getElementById('cpBtn');
+    b.textContent = '✓ Skopiowano!';
+    b.classList.add('copied');
+    setTimeout(()=>{ b.textContent='📋 Kopiuj prompt'; b.classList.remove('copied'); }, 2500);
+  });
+}
+
+function dlPrompt(){
+  const text = document.getElementById('pbox').textContent;
+  const name = document.getElementById('f_name').value.trim().replace(/\s+/g,'_') || 'firma';
+  const blob = new Blob([text],{type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=`prompt_WWW_${name}.txt`; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function copyImgPrompt(){
+  navigator.clipboard.writeText(window._imgPrompt||'').then(()=>{
+    const b = document.getElementById('cpImgBtn');
+    b.textContent='✓ Skopiowano!'; b.classList.add('copied');
+    setTimeout(()=>{ b.textContent='📋 Kopiuj'; b.classList.remove('copied'); }, 2500);
+  });
+}
+
+function dlImgPrompt(){
+  const name = document.getElementById('f_name').value.trim().replace(/\s+/g,'_')||'firma';
+  const blob = new Blob([window._imgPrompt||''],{type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=`prompt_zdjecie_${name}.txt`; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function reset(){
+  document.getElementById('s5').classList.remove('active');
+  document.getElementById('promptsRow').classList.remove('has-two');
+  document.getElementById('geminiPanel').style.display='none';
+  cur=1;
+  document.getElementById('s1').classList.add('active');
+  document.getElementById('sLabel').textContent='Krok 1 z 4';
+  document.getElementById('sName').textContent='O Twojej Firmie';
+  document.getElementById('sBar').style.width='25%';
+  document.querySelectorAll('.dot').forEach((d,i)=>{ d.classList.remove('active','done'); if(i===0) d.classList.add('active'); });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,2716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voxel World - Phase 9</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100%;
+    background: #87ceeb;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  canvas {
+    display: block;
+  }
+
+  /* --- Crosshair: simple "+" drawn with two divs --- */
+  #crosshair {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 22px;
+    height: 22px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 10;
+  }
+  #crosshair::before, #crosshair::after {
+    content: '';
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.9);
+  }
+  /* horizontal bar */
+  #crosshair::before {
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    transform: translateY(-50%);
+  }
+  /* vertical bar */
+  #crosshair::after {
+    left: 50%;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    transform: translateX(-50%);
+  }
+
+  /* --- Click-to-play overlay (required for Pointer Lock API) --- */
+  #instructions {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.55);
+    color: #ffffff;
+    text-align: center;
+    cursor: pointer;
+    z-index: 20;
+  }
+  #instructions h1 {
+    margin: 0 0 10px 0;
+    font-size: 2em;
+  }
+  #instructions p {
+    margin: 4px 0;
+    font-size: 1em;
+    opacity: 0.85;
+  }
+
+  /* --- Hotbar: block-selection slots at the bottom center of the screen --- */
+  #hotbar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 15;
+    pointer-events: none;
+  }
+  .hotbar-slot {
+    width: 56px;
+    height: 56px;
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .hotbar-slot.active {
+    border-color: #ffffff;
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.9);
+  }
+  .hotbar-slot .block-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 0, 0, 0.4);
+  }
+  /* Grass/Dirt icon: green top half, brown bottom half */
+  .block-icon.icon-dirt {
+    background: linear-gradient(to bottom, #4caf50 50%, #6b4a2b 50%);
+  }
+  .block-icon.icon-wood {
+    background: #5a3a1e;
+  }
+  .block-icon.icon-sand {
+    background: #e2d29b;
+  }
+  /* Wooden Pickaxe icon: gray head / brown handle, split diagonally */
+  .block-icon.icon-pickaxe {
+    background: linear-gradient(135deg, #9e9e9e 50%, #5a3a1e 50%);
+  }
+  .hotbar-slot .key-label {
+    position: absolute;
+    top: 2px;
+    left: 5px;
+    font-size: 11px;
+    color: #ffffff;
+    text-shadow: 0 0 2px #000000;
+  }
+  /* Item count badge - shows how many of a block/tool the player is holding */
+  .hotbar-slot .item-count {
+    position: absolute;
+    bottom: 2px;
+    right: 5px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #ffffff;
+    text-shadow: 0 0 2px #000000, 0 0 2px #000000;
+  }
+  /* Dim slots whose item count is zero (nothing to place/use) */
+  .hotbar-slot.empty .block-icon {
+    opacity: 0.35;
+  }
+
+  /* --- Crafting menu: centered overlay, hidden by default --- */
+  #craftingMenu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 30;
+  }
+  #craftingMenu.hidden {
+    display: none;
+  }
+  .crafting-panel {
+    background: #2b2b2b;
+    border: 2px solid #555555;
+    border-radius: 8px;
+    padding: 16px 20px;
+    min-width: 340px;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  .crafting-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #555555;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }
+  .crafting-header h2 {
+    margin: 0;
+    font-size: 1.2em;
+  }
+  #closeCraftingBtn {
+    background: #553333;
+    color: #ffffff;
+    border: 1px solid #888888;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    font-weight: bold;
+  }
+  #closeCraftingBtn:hover {
+    background: #774444;
+  }
+  .crafting-inventory {
+    margin-bottom: 12px;
+    font-size: 0.9em;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    padding: 6px 10px;
+  }
+  .crafting-inventory .inv-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 0;
+  }
+  .crafting-recipes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .recipe {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 8px 10px;
+    border-radius: 4px;
+  }
+  .recipe .recipe-label {
+    font-size: 0.9em;
+    margin-right: 12px;
+  }
+  .craft-btn {
+    background: #4caf50;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-weight: bold;
+    white-space: nowrap;
+  }
+  .craft-btn:disabled {
+    background: #777777;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  /* --- Health bar: above the hotbar, shows current HP / MAX_HEALTH --- */
+  #healthBarContainer {
+    position: fixed;
+    bottom: 86px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 240px;
+    height: 22px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 6px;
+    z-index: 15;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  #healthBarFill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(to right, #c62828, #ff6f60);
+    transition: width 0.15s ease-out;
+  }
+  #healthBarLabel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85em;
+    font-weight: bold;
+    color: #ffffff;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.9);
+  }
+
+  /* --- Save / Load buttons: top-right corner, always on top --- */
+  #saveLoadButtons {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    gap: 8px;
+    z-index: 50;
+  }
+  #saveLoadButtons button {
+    background: #2b2b2b;
+    color: #ffffff;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 0.9em;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  #saveLoadButtons button:hover {
+    background: #4a4a4a;
+    border-color: #ffffff;
+  }
+
+  /* --- Mobile touch controls: virtual joystick (left) + action buttons
+         (right). Hidden entirely on non-touch devices. --- */
+  #mobileControls {
+    position: fixed;
+    inset: 0;
+    z-index: 25;
+    pointer-events: none;
+  }
+  #mobileControls.hidden {
+    display: none;
+  }
+  #joystickBase {
+    position: absolute;
+    left: 28px;
+    bottom: 28px;
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    pointer-events: auto;
+    touch-action: none;
+  }
+  #joystickKnob {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 50px;
+    height: 50px;
+    margin-left: -25px;
+    margin-top: -25px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    pointer-events: none;
+  }
+  #mobileButtons {
+    position: absolute;
+    right: 24px;
+    bottom: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-end;
+    pointer-events: auto;
+  }
+  .mobile-btn {
+    width: 84px;
+    height: 56px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.45);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 0.9em;
+    font-weight: bold;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .mobile-btn:active {
+    background: rgba(255, 255, 255, 0.25);
+  }
+</style>
+</head>
+<body>
+
+  <!-- Crosshair overlay (always visible) -->
+  <div id="crosshair"></div>
+
+  <!-- Save / Load buttons (top-right corner, always clickable) -->
+  <div id="saveLoadButtons">
+    <button id="saveGameBtn">Save Game</button>
+    <button id="loadGameBtn">Load Game</button>
+  </div>
+
+  <!-- Hidden file input used by "Load Game" to open a world_save.json file -->
+  <input type="file" id="loadFileInput" accept=".json" style="display: none;">
+
+  <!-- Mobile touch controls: virtual joystick (move) + Jump/Mine/Place
+       buttons. Hidden on non-touch devices (see section 17). Dragging
+       anywhere else on the screen looks around. -->
+  <div id="mobileControls" class="hidden">
+    <div id="joystickBase">
+      <div id="joystickKnob"></div>
+    </div>
+    <div id="mobileButtons">
+      <button id="jumpBtn" class="mobile-btn">JUMP</button>
+      <button id="mineBtn" class="mobile-btn">MINE</button>
+      <button id="placeBtn" class="mobile-btn">PLACE</button>
+    </div>
+  </div>
+
+  <!-- Player health bar: shown above the hotbar -->
+  <div id="healthBarContainer">
+    <div id="healthBarFill"></div>
+    <div id="healthBarLabel">100 / 100</div>
+  </div>
+
+  <!-- Hotbar overlay: item selection (keys 1/2/3/4) -->
+  <div id="hotbar">
+    <div class="hotbar-slot active empty" data-block="1">
+      <div class="block-icon icon-dirt"></div>
+      <span class="key-label">1</span>
+      <span class="item-count">0</span>
+    </div>
+    <div class="hotbar-slot empty" data-block="2">
+      <div class="block-icon icon-wood"></div>
+      <span class="key-label">2</span>
+      <span class="item-count">0</span>
+    </div>
+    <div class="hotbar-slot empty" data-block="3">
+      <div class="block-icon icon-sand"></div>
+      <span class="key-label">3</span>
+      <span class="item-count">0</span>
+    </div>
+    <div class="hotbar-slot empty" data-block="4">
+      <div class="block-icon icon-pickaxe"></div>
+      <span class="key-label">4</span>
+      <span class="item-count">0</span>
+    </div>
+  </div>
+
+  <!-- Crafting menu overlay: hidden by default, toggled with 'E' -->
+  <div id="craftingMenu" class="hidden">
+    <div class="crafting-panel">
+      <div class="crafting-header">
+        <h2>Crafting</h2>
+        <button id="closeCraftingBtn" title="Close (E)">X</button>
+      </div>
+      <div class="crafting-inventory">
+        <div class="inv-row"><span>Dirt</span><span id="invDirt">0</span></div>
+        <div class="inv-row"><span>Wood</span><span id="invWood">0</span></div>
+        <div class="inv-row"><span>Sand</span><span id="invSand">0</span></div>
+        <div class="inv-row"><span>Planks</span><span id="invPlanks">0</span></div>
+        <div class="inv-row"><span>Sticks</span><span id="invSticks">0</span></div>
+        <div class="inv-row"><span>Wooden Pickaxe</span><span id="invWoodenPickaxe">0</span></div>
+      </div>
+      <div class="crafting-recipes">
+        <div class="recipe">
+          <span class="recipe-label">1 Wood Log &rarr; 4 Planks</span>
+          <button class="craft-btn" data-recipe="planks">Craft</button>
+        </div>
+        <div class="recipe">
+          <span class="recipe-label">2 Planks &rarr; 4 Sticks</span>
+          <button class="craft-btn" data-recipe="sticks">Craft</button>
+        </div>
+        <div class="recipe">
+          <span class="recipe-label">3 Planks + 2 Sticks &rarr; 1 Wooden Pickaxe</span>
+          <button class="craft-btn" data-recipe="woodenPickaxe">Craft</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pointer-lock instructions / start screen -->
+  <div id="instructions">
+    <div>
+      <h1>Click to Play</h1>
+      <p>WASD - Move &nbsp;|&nbsp; MOUSE - Look &nbsp;|&nbsp; SPACE - Jump</p>
+      <p>HOLD LEFT CLICK - Break Block &nbsp;|&nbsp; RIGHT CLICK - Place Block</p>
+      <p>1 / 2 / 3 / 4 - Select Item (Dirt / Wood / Sand / Wooden Pickaxe)</p>
+      <p>E - Open/Close Crafting Menu</p>
+      <p>ESC - Release mouse</p>
+    </div>
+  </div>
+
+  <!-- Import map: load Three.js + addons straight from a CDN (unpkg) -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+
+    /* =========================================================================
+       1. CONFIGURATION / CONSTANTS
+       =========================================================================
+       Centralizing these makes Phase 2 (raycasting, inventory, more block
+       types) much easier - new code can simply reference these values.
+    ========================================================================= */
+    const WORLD_SIZE   = 96;   // world is WORLD_SIZE x WORLD_SIZE blocks (X/Z)
+    const MAX_HEIGHT   = 16;   // maximum number of vertical block layers (Y)
+
+    // Fixed seed for the tree spawner's PRNG (see mulberry32 / generateTrees).
+    // Keeping tree placement deterministic lets generateWorld() be re-run on
+    // Load (section 13) and reproduce the exact same base world before the
+    // saved modifiedBlocks deltas are re-applied on top.
+    const WORLD_SEED = 1337;
+
+    // Sea level: water fills empty voxels up to (but not including) this Y
+    // layer wherever the terrain height is lower than it. The water surface
+    // sits at world-Y = SEA_LEVEL.
+    const SEA_LEVEL = 5;
+
+    // Block type IDs - stored in the voxelData 3D array.
+    // Add more entries here (and to BLOCK_COLORS below) for new block types.
+    const BLOCK = {
+      AIR:       0,
+      GRASS_DIRT: 1, // natural ground - green top / brown sides (terrainMesh)
+      WOOD:      2,  // wood log - dark brown
+      SAND:      3,  // sand - yellow, falls when unsupported / forms beaches
+      WATER:     4,  // translucent blue, non-solid (swimmable), own mesh
+      LEAVES:    5   // tree canopy - vibrant green
+    };
+
+    // Per-block-type colors used with InstancedMesh.setColorAt() for the
+    // generic `blockMesh` (everything except the multi-material terrain).
+    const BLOCK_COLORS = {
+      [BLOCK.WOOD]:   0x5a3a1e,
+      [BLOCK.SAND]:   0xe2d29b,
+      [BLOCK.LEAVES]: 0x3aa832
+    };
+
+    // Water is rendered as its own translucent InstancedMesh (uniform color,
+    // so no per-instance setColorAt is needed).
+    const WATER_COLOR   = 0x3f76e4;
+    const WATER_OPACITY = 0.6;
+
+    // Maps a placeable BLOCK ID to the inventory key it is collected/consumed
+    // as. Blocks without an entry here (none currently) cannot be collected.
+    const BLOCK_TO_INVENTORY_KEY = {
+      [BLOCK.GRASS_DIRT]: 'dirt',
+      [BLOCK.WOOD]: 'wood',
+      [BLOCK.SAND]: 'sand'
+    };
+
+    // Base time (in seconds) required to break a block of this type with no
+    // tool. Anything not listed defaults to 0.5s (soft material). Hard
+    // materials (Wood, and future Stone) take longer unless the player is
+    // wielding the appropriate tool - see PICKAXE_MINE_TIME / getMiningTime().
+    const BLOCK_HARDNESS = {
+      [BLOCK.GRASS_DIRT]: 0.5,
+      [BLOCK.SAND]: 0.5,
+      [BLOCK.WOOD]: 2.0
+    };
+
+    // Mining time (seconds) for "hard" blocks (hardness > 0.5) when the
+    // player has the Wooden Pickaxe selected.
+    const PICKAXE_MINE_TIME = 0.5;
+
+    // Crafting recipes: `cost` is consumed from inventory, `yield` is added,
+    // only if the player currently has enough of every `cost` ingredient.
+    const RECIPES = {
+      planks: {
+        cost: { wood: 1 },
+        yield: { planks: 4 }
+      },
+      sticks: {
+        cost: { planks: 2 },
+        yield: { sticks: 4 }
+      },
+      woodenPickaxe: {
+        cost: { planks: 3, sticks: 2 },
+        yield: { woodenPickaxe: 1 }
+      }
+    };
+
+    // Hotbar slot definitions (keys 1-4). Slots with a `blockType` place that
+    // block (consuming `invKey` from the inventory); slots with `isTool` are
+    // tools that cannot be placed but affect mining (see getMiningTime()).
+    const HOTBAR_SLOTS = [
+      { key: 'Digit1', blockType: BLOCK.GRASS_DIRT, invKey: 'dirt' },
+      { key: 'Digit2', blockType: BLOCK.WOOD,       invKey: 'wood' },
+      { key: 'Digit3', blockType: BLOCK.SAND,       invKey: 'sand' },
+      { key: 'Digit4', blockType: null, invKey: 'woodenPickaxe', isTool: true, tool: 'woodenPickaxe' }
+    ];
+
+    // Player / physics tuning
+    const PLAYER_HEIGHT = 1.6;   // height of the player's collision box
+    const PLAYER_RADIUS = 0.3;   // half-width (radius) of the player's collision box
+    const EYE_HEIGHT    = 1.6;   // camera offset above the player's feet
+    const GRAVITY       = 30;    // downward acceleration (units/s^2)
+    const JUMP_SPEED    = 9;     // initial upward velocity when jumping
+    const MOVE_SPEED    = 6;     // horizontal movement speed (units/s)
+    const TERMINAL_FALL = -50;   // max downward speed (avoids tunnelling)
+
+    // Swimming tuning - applied while the player's position is below
+    // SEA_LEVEL + 0.5 and inside a Water voxel (see isPlayerSwimming()).
+    const SWIM_GRAVITY_SCALE = 0.3; // gravity reduced by 70% while swimming
+    const SWIM_SPEED_SCALE   = 0.5; // horizontal movement slowed while swimming
+    const SWIM_UP_SPEED      = 4;   // upward speed while holding Space in water
+
+    // Maximum height difference (in world units) that horizontal movement
+    // will automatically "step up" over instead of being fully blocked. See
+    // moveAxis() in section 9.
+    const STEP_HEIGHT = 0.6;
+
+    // Block interaction tuning
+    const MAX_INSTANCES = 250000; // size of each InstancedMesh's instance buffer
+                                   // (generous for the larger 96x96 island world)
+    const RAY_DISTANCE  = 5;      // max reach distance for breaking/placing
+
+    // World simulation tuning
+    const SAND_TICK_INTERVAL = 0.1; // seconds between sand-falling updates
+
+    // Player health
+    const MAX_HEALTH = 100;
+
+    // Knockback decays towards zero at this rate (per second) once applied -
+    // see damagePlayer() (section 8) and updatePlayer() (section 9).
+    const KNOCKBACK_DECAY = 6;
+
+    // Cloud system tuning (section 15)
+    const CLOUD_COUNT  = 18;  // number of cloud meshes
+    const CLOUD_HEIGHT = 40;  // base Y altitude of the cloud layer
+    const CLOUD_SPEED  = 0.5; // drift speed along +X (units/sec)
+
+    // Zombie/Drowned enemy tuning (section 16)
+    const ENEMY_COUNT         = 3;   // number of zombies spawned on the island
+    const ENEMY_SPEED         = 1.2; // seek speed (units/sec) once aggro'd
+    const ENEMY_AGGRO_RADIUS  = 20;  // distance within which a zombie chases the player
+    const ENEMY_DAMAGE        = 10;  // HP lost per hit
+    const ENEMY_HIT_COOLDOWN  = 1.5; // seconds between hits from the same enemy
+    const ENEMY_KNOCKBACK     = 6;   // knockback speed applied to the player on hit
+    const ENEMY_MAX_HP        = 50;  // zombie hit points
+    const ENEMY_LIMB_SWING    = 0.6; // max walking-animation rotation (radians) for arms/legs
+
+    // Combat tuning (section 10/16)
+    const PLAYER_ATTACK_DAMAGE = 10;  // HP removed from a zombie per left-click hit
+    const ENEMY_HIT_KNOCKBACK  = 4;   // knockback speed applied to a zombie when hit
+    const ENEMY_FLASH_DURATION = 0.1; // seconds a hit zombie's parts flash red
+
+    // Day/night cycle tuning (section 15)
+    const DAY_LENGTH = 120; // seconds for one full day/night cycle
+    const SKY_COLOR_DAY    = new THREE.Color(0x1e90ff); // deep sky blue (noon)
+    const SKY_COLOR_SUNSET = new THREE.Color(0xff7e47); // orange/pink (sunrise & sunset)
+    const SKY_COLOR_NIGHT  = new THREE.Color(0x000011); // near-black (midnight)
+    const SUN_ORBIT_RADIUS = 150; // distance of the sun light from the island center
+
+    // Mining feedback tuning (section 10)
+    const MINE_TICK_INTERVAL = 0.3; // seconds between mining "tick" sounds while breaking a block
+
+    // Mobile touch control tuning (section 17)
+    const JOYSTICK_RADIUS        = 50;     // px - max knob travel distance from center
+    const JOYSTICK_DEADZONE      = 0.15;   // fraction of JOYSTICK_RADIUS before movement registers
+    const TOUCH_LOOK_SENSITIVITY = 0.0025; // radians of camera turn per pixel of touch-drag
+
+
+    /* =========================================================================
+       2. SCENE / CAMERA / RENDERER
+    ========================================================================= */
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x1e90ff);
+    scene.fog = new THREE.Fog(0x1e90ff, 50, 100);
+
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+    scene.add(camera);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    document.body.appendChild(renderer.domElement);
+
+
+    /* =========================================================================
+       3. LIGHTING
+    ========================================================================= */
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+
+    const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    sunLight.position.set(WORLD_SIZE * 0.6, 60, WORLD_SIZE * 0.3);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.set(2048, 2048);
+    sunLight.shadow.camera.left = -WORLD_SIZE;
+    sunLight.shadow.camera.right = WORLD_SIZE;
+    sunLight.shadow.camera.top = WORLD_SIZE;
+    sunLight.shadow.camera.bottom = -WORLD_SIZE;
+    sunLight.shadow.camera.near = 1;
+    sunLight.shadow.camera.far = 200;
+    scene.add(sunLight);
+
+    // The sun orbits around this fixed target (the island center) - see
+    // updateDayNightCycle() in section 15.
+    sunLight.target.position.set(WORLD_SIZE / 2, 0, WORLD_SIZE / 2);
+    scene.add(sunLight.target);
+
+
+    /* =========================================================================
+       4. TERRAIN GENERATION (lightweight value-noise heightmap)
+       =========================================================================
+       A small, dependency-free 2D value-noise function with smoothstep
+       interpolation. Two octaves are combined to produce gentle rolling hills.
+    ========================================================================= */
+
+    // Deterministic pseudo-random value in [0,1) for integer grid coordinates.
+    function randomGrid(x, y) {
+      const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
+      return n - Math.floor(n);
+    }
+
+    // Smooth (interpolated) noise at arbitrary (x, y).
+    function smoothNoise(x, y) {
+      const x0 = Math.floor(x), y0 = Math.floor(y);
+      const fx = x - x0, fy = y - y0;
+
+      const v00 = randomGrid(x0,     y0);
+      const v10 = randomGrid(x0 + 1, y0);
+      const v01 = randomGrid(x0,     y0 + 1);
+      const v11 = randomGrid(x0 + 1, y0 + 1);
+
+      // Smoothstep interpolation curves
+      const sx = fx * fx * (3 - 2 * fx);
+      const sy = fy * fy * (3 - 2 * fy);
+
+      const top = v00 + (v10 - v00) * sx;
+      const bottom = v01 + (v11 - v01) * sx;
+      return top + (bottom - top) * sy;
+    }
+
+    // Returns the terrain height (number of solid blocks) at a given (x, z).
+    // A radial falloff mask shapes the noise into an island: height is
+    // multiplied by a factor of 1 at the map center, fading to 0 at the
+    // edges. Combined with SEA_LEVEL (section 5), this produces hills in the
+    // center, sandy beaches near the shore, and deep water at the borders.
+    function getTerrainHeight(x, z) {
+      let h = 0;
+      h += smoothNoise(x * 0.08, z * 0.08) * 5; // broad rolling hills
+      h += smoothNoise(x * 0.2,  z * 0.2)  * 2; // smaller surface bumps
+      h += 4; // base offset so the island interior is never too thin
+
+      // Distance from the map center (32, 32), normalized so 0 = center and
+      // 1 = the edge of the map (clamped beyond that for the corners).
+      const center = WORLD_SIZE / 2;
+      const dx = x - center;
+      const dz = z - center;
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      const t = Math.min(dist / center, 1);
+
+      // Falloff: 1 at the center, dropping (faster near the edges) to 0.
+      const falloff = Math.max(0, 1 - t * t);
+
+      return Math.floor(h * falloff);
+    }
+
+
+    /* =========================================================================
+       5. WORLD DATA + INSTANCED MESH GENERATION
+       =========================================================================
+       voxelData[x][y][z] holds the BLOCK type at that position. This is the
+       single source of truth for the world - raycasting/inventory/physics
+       all read/write here when blocks are placed, destroyed, or simulated.
+    ========================================================================= */
+    const voxelData = [];
+    for (let x = 0; x < WORLD_SIZE; x++) {
+      voxelData[x] = [];
+      for (let y = 0; y < MAX_HEIGHT; y++) {
+        voxelData[x][y] = new Array(WORLD_SIZE).fill(BLOCK.AIR);
+      }
+    }
+
+    // Precompute the heightmap once so terrain generation below is simple.
+    // Purely a function of getTerrainHeight (deterministic), so it never
+    // needs to be recomputed even when generateWorld() re-runs on Load.
+    const heightMap = [];
+    for (let x = 0; x < WORLD_SIZE; x++) {
+      heightMap[x] = [];
+      for (let z = 0; z < WORLD_SIZE; z++) {
+        heightMap[x][z] = Math.min(getTerrainHeight(x, z), MAX_HEIGHT);
+      }
+    }
+
+    // Resets every voxel back to AIR so generateWorld() can be re-run (e.g.
+    // on Load) without leaking blocks from a previous generation pass.
+    function resetVoxelData() {
+      for (let x = 0; x < WORLD_SIZE; x++) {
+        for (let y = 0; y < MAX_HEIGHT; y++) {
+          voxelData[x][y].fill(BLOCK.AIR);
+        }
+      }
+    }
+
+    // Small, seedable PRNG (mulberry32) so the procedural tree spawner below
+    // produces the same layout every time generateWorld() runs - this lets
+    // Load (section 13) rebuild an identical base world before re-applying
+    // the saved modifiedBlocks deltas on top.
+    function mulberry32(seed) {
+      return function () {
+        seed |= 0;
+        seed = (seed + 0x6D2B79F5) | 0;
+        let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    // Shared geometry for every block (1x1x1 cube).
+    const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
+
+    // Terrain (Grass/Dirt) materials, one per BoxGeometry face group:
+    // [+x, -x, +y, -y, +z, -z]  ->  [side, side, top, bottom, side, side]
+    const terrainSideMat = new THREE.MeshLambertMaterial({ color: 0x8a6f4f });
+    const terrainTopMat  = new THREE.MeshLambertMaterial({ color: 0x4caf50 });
+    const terrainBotMat  = new THREE.MeshLambertMaterial({ color: 0x6b4a2b });
+    const terrainMaterials = [
+      terrainSideMat, terrainSideMat, // +x, -x
+      terrainTopMat,                  // +y (top)
+      terrainBotMat,                  // -y (bottom)
+      terrainSideMat, terrainSideMat  // +z, -z
+    ];
+
+    // Generic block material: plain white so that per-instance colors set via
+    // setColorAt() (Wood, Sand, Leaves, ...) show through unmodified.
+    const blockMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
+
+    // Water material: a single translucent blue, shared by every water
+    // instance (no per-instance setColorAt needed).
+    const waterMaterial = new THREE.MeshLambertMaterial({
+      color: WATER_COLOR,
+      transparent: true,
+      opacity: WATER_OPACITY
+    });
+
+    // Three InstancedMeshes total - this is the key performance choice:
+    // instead of WORLD_SIZE^2 * MAX_HEIGHT separate Mesh objects, we issue a
+    // single draw call per mesh. Each is allocated with a large MAX_INSTANCES
+    // buffer up front (for generation + block placing) but only `.count`
+    // instances are actually rendered/raycast.
+    //  - terrainMesh: BLOCK.GRASS_DIRT (multi-material, green top/brown sides)
+    //  - blockMesh:   everything else solid (WOOD, SAND, LEAVES, ...), tinted
+    //                 per-instance via setColorAt()
+    //  - waterMesh:   BLOCK.WATER, translucent and non-solid; excluded from
+    //                 raycasting (section 10) so it never blocks break/place
+    const terrainMesh = new THREE.InstancedMesh(boxGeometry, terrainMaterials, MAX_INSTANCES);
+    const blockMesh   = new THREE.InstancedMesh(boxGeometry, blockMaterial, MAX_INSTANCES);
+    const waterMesh   = new THREE.InstancedMesh(boxGeometry, waterMaterial, MAX_INSTANCES);
+    terrainMesh.castShadow = true;
+    terrainMesh.receiveShadow = true;
+    blockMesh.castShadow = true;
+    blockMesh.receiveShadow = true;
+    waterMesh.receiveShadow = true; // translucent water doesn't cast shadows
+
+    // InstancedMesh normally lazily computes (and caches) a bounding sphere
+    // from whatever instances exist the first time it's rendered/raycast.
+    // Since we add new instances later (block placing), that cached sphere
+    // would go stale and newly placed blocks near the world edges could fail
+    // to render or be raycast. Pre-set a sphere/box covering the whole world
+    // so it never needs to be recomputed.
+    const worldCenter = new THREE.Vector3(WORLD_SIZE / 2, MAX_HEIGHT / 2, WORLD_SIZE / 2);
+    const worldRadius = Math.sqrt(2 * (WORLD_SIZE / 2) ** 2 + (MAX_HEIGHT / 2) ** 2) + 1;
+    const worldBox = new THREE.Box3(
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(WORLD_SIZE, MAX_HEIGHT, WORLD_SIZE)
+    );
+    for (const mesh of [terrainMesh, blockMesh, waterMesh]) {
+      mesh.boundingSphere = new THREE.Sphere(worldCenter.clone(), worldRadius);
+      mesh.boundingBox = worldBox.clone();
+      mesh.frustumCulled = false;
+    }
+
+    // Per-instance position lookups, indexed by instanceId. Used to map a
+    // raycaster hit (mesh + instanceId) back to (x, y, z) voxel coordinates.
+    const terrainPositions = [];
+    const blockPositions = [];
+
+    // Reverse lookup for blockMesh: "x,y,z" -> instanceId. Needed so the sand
+    // physics tick can find and update a falling block's matrix in place.
+    const blockIndexMap = new Map();
+
+    // Reverse lookup for terrainMesh: "x,y,z" -> instanceId. Needed so Load
+    // (section 13) can remove a specific terrain instance by position.
+    const terrainIndexMap = new Map();
+
+    const dummyMatrix = new THREE.Matrix4();
+    let terrainInstanceCount = 0;
+    let blockInstanceCount = 0;
+    let waterInstanceCount = 0;
+
+    // Adds a non-terrain solid block (Sand, Wood, Leaves, ...) to blockMesh
+    // during world generation - used by both the beach pass below and the
+    // tree spawner. Mesh-level `.count`/needsUpdate flags are set once after
+    // all generation completes (see the bottom of this section).
+    function placeGeneratedBlock(x, y, z, blockType) {
+      voxelData[x][y][z] = blockType;
+
+      dummyMatrix.identity();
+      dummyMatrix.setPosition(x, y, z);
+      blockMesh.setMatrixAt(blockInstanceCount, dummyMatrix);
+      blockMesh.setColorAt(blockInstanceCount, new THREE.Color(BLOCK_COLORS[blockType]));
+      blockPositions.push({ x, y, z });
+      blockIndexMap.set(`${x},${y},${z}`, blockInstanceCount);
+      blockInstanceCount++;
+    }
+
+    // Tracks placed tree-trunk (x, z) positions during generateTrees(), so a
+    // minimum spacing can be enforced between trees. Reset on each call.
+    const treePositions = [];
+
+    /* -------------------------------------------------------------------
+       Procedural tree spawner - runs immediately after terrain + water.
+       Picks random (x, z) columns using a seeded PRNG (deterministic across
+       re-runs); if the highest block there is Grass/Dirt AND it's at least
+       MIN_TREE_DISTANCE blocks from every other tree trunk placed so far,
+       spawns a tree: a 4-block Wood Log trunk topped with a 3x3x3 Leaves
+       canopy around its top 2 logs (existing blocks, e.g. an overlapping
+       tree, are left untouched).
+    ------------------------------------------------------------------- */
+    function generateTrees() {
+      const treeRng = mulberry32(WORLD_SEED);
+      const treeCount = 30 + Math.floor(treeRng() * 11); // 30-40 inclusive
+      const TRUNK_HEIGHT = 4;
+      const MIN_TREE_DISTANCE = 4;
+      const MIN_TREE_DISTANCE_SQ = MIN_TREE_DISTANCE * MIN_TREE_DISTANCE;
+
+      treePositions.length = 0;
+
+      let placed = 0;
+      let attempts = 0;
+      const maxAttempts = treeCount * 40;
+
+      while (placed < treeCount && attempts < maxAttempts) {
+        attempts++;
+
+        const x = Math.floor(treeRng() * WORLD_SIZE);
+        const z = Math.floor(treeRng() * WORLD_SIZE);
+
+        // Enforce a minimum spacing between tree trunks.
+        let tooClose = false;
+        for (const t of treePositions) {
+          const ddx = x - t.x, ddz = z - t.z;
+          if (ddx * ddx + ddz * ddz < MIN_TREE_DISTANCE_SQ) { tooClose = true; break; }
+        }
+        if (tooClose) continue;
+
+        // Find the highest non-air block in this column.
+        let topY = -1;
+        for (let y = MAX_HEIGHT - 1; y >= 0; y--) {
+          if (voxelData[x][y][z] !== BLOCK.AIR) { topY = y; break; }
+        }
+        if (topY === -1 || voxelData[x][topY][z] !== BLOCK.GRASS_DIRT) continue;
+
+        const trunkBaseY = topY + 1;
+        const trunkTopY = trunkBaseY + TRUNK_HEIGHT - 1;
+
+        // Make sure the trunk + canopy fit inside the world bounds.
+        if (trunkTopY >= MAX_HEIGHT) continue;
+        if (x - 1 < 0 || x + 1 >= WORLD_SIZE || z - 1 < 0 || z + 1 >= WORLD_SIZE) continue;
+
+        // Trunk: a vertical pillar of 4 Wood Logs.
+        for (let i = 0; i < TRUNK_HEIGHT; i++) {
+          placeGeneratedBlock(x, trunkBaseY + i, z, BLOCK.WOOD);
+        }
+
+        // Canopy: a 3x3x3 cube of Leaves around the top 2 logs (plus the
+        // layer just below them), skipping cells already occupied by the
+        // trunk (or anything else already placed).
+        for (let ly = trunkBaseY + 1; ly <= trunkTopY; ly++) {
+          for (let lx = x - 1; lx <= x + 1; lx++) {
+            for (let lz = z - 1; lz <= z + 1; lz++) {
+              if (voxelData[lx][ly][lz] !== BLOCK.AIR) continue;
+              placeGeneratedBlock(lx, ly, lz, BLOCK.LEAVES);
+            }
+          }
+        }
+
+        treePositions.push({ x, z });
+        placed++;
+      }
+    }
+
+    // --- World generation entry point ---
+    // Resets all per-generation state then rebuilds terrain, water, and
+    // trees from scratch. Called once below for the initial world, and again
+    // by loadGame() (section 13) to rebuild a deterministic base world before
+    // re-applying the saved modifiedBlocks deltas on top.
+    //
+    // Strict height-based biome rule (Phase 7 fix): the topmost ground block
+    // of a column becomes Sand ONLY if it sits exactly one layer above sea
+    // level (y === BEACH_LEVEL) - a thin beach ring around the shoreline.
+    // Every other ground top stays Grass/Dirt: hill interiors (y >=
+    // SEA_LEVEL + 2) render as grass and can grow trees, while low columns
+    // (y <= SEA_LEVEL) are simply submerged by the Water pass below. The
+    // previous rule (`y <= SEA_LEVEL + 1`) covered almost the entire height
+    // range produced by the radial falloff, turning the whole island to Sand
+    // and starving the tree spawner (which only plants on Grass/Dirt).
+    const BEACH_LEVEL = SEA_LEVEL + 1; // y === BEACH_LEVEL -> Sand beach
+
+    function generateWorld() {
+      resetVoxelData();
+
+      terrainPositions.length = 0;
+      blockPositions.length = 0;
+      blockIndexMap.clear();
+      terrainIndexMap.clear();
+      terrainInstanceCount = 0;
+      blockInstanceCount = 0;
+      waterInstanceCount = 0;
+
+      // For each column: ground blocks (Grass/Dirt) up to the terrain height,
+      // with the topmost block becoming Sand only if it's exactly at the
+      // beach level, then Water blocks filling any remaining space up to
+      // SEA_LEVEL (forming the surrounding ocean).
+      for (let x = 0; x < WORLD_SIZE; x++) {
+        for (let z = 0; z < WORLD_SIZE; z++) {
+          const h = heightMap[x][z];
+
+          for (let y = 0; y < h; y++) {
+            if (y === h - 1 && y === BEACH_LEVEL) {
+              // Top layer exactly at the beach ring becomes sand.
+              placeGeneratedBlock(x, y, z, BLOCK.SAND);
+            } else {
+              voxelData[x][y][z] = BLOCK.GRASS_DIRT;
+              dummyMatrix.identity();
+              dummyMatrix.setPosition(x, y, z);
+              terrainMesh.setMatrixAt(terrainInstanceCount, dummyMatrix);
+              terrainPositions.push({ x, y, z });
+              terrainIndexMap.set(`${x},${y},${z}`, terrainInstanceCount);
+              terrainInstanceCount++;
+            }
+          }
+
+          for (let y = h; y < SEA_LEVEL; y++) {
+            voxelData[x][y][z] = BLOCK.WATER;
+            dummyMatrix.identity();
+            dummyMatrix.setPosition(x, y, z);
+            waterMesh.setMatrixAt(waterInstanceCount, dummyMatrix);
+            waterInstanceCount++;
+          }
+        }
+      }
+
+      generateTrees();
+
+      // Finalize instance counts and upload all buffers to the GPU.
+      terrainMesh.count = terrainInstanceCount;
+      blockMesh.count = blockInstanceCount;
+      waterMesh.count = waterInstanceCount;
+      terrainMesh.instanceMatrix.needsUpdate = true;
+      blockMesh.instanceMatrix.needsUpdate = true;
+      blockMesh.instanceColor.needsUpdate = true;
+      waterMesh.instanceMatrix.needsUpdate = true;
+
+      scene.add(terrainMesh);
+      scene.add(blockMesh);
+      scene.add(waterMesh);
+    }
+
+    generateWorld();
+
+    // --- Infinite ocean plane (Phase 8) ---
+    // A massive flat plane just above the water blocks' surface, using the
+    // same translucent water material, to act as a horizon-filling ocean
+    // beyond the edges of the finite voxel world. Purely visual - it has no
+    // collision and is never read by isSolid()/isWater().
+    const oceanGeometry = new THREE.PlaneGeometry(2000, 2000);
+    const oceanMesh = new THREE.Mesh(oceanGeometry, waterMaterial);
+    oceanMesh.rotation.x = -Math.PI / 2;
+    oceanMesh.position.set(WORLD_SIZE / 2, SEA_LEVEL + 0.4, WORLD_SIZE / 2);
+    oceanMesh.frustumCulled = false;
+    scene.add(oceanMesh);
+
+
+    /* =========================================================================
+       6. VOXEL / COLLISION HELPERS
+       =========================================================================
+       getBlock() / isSolid() are the bridge between the physics code below and
+       the world data above. Phase 2's raycasting should reuse getBlock(), and
+       block placement/removal should write to voxelData (then update the
+       relevant InstancedMesh).
+    ========================================================================= */
+    function getBlock(x, y, z) {
+      if (x < 0 || x >= WORLD_SIZE || z < 0 || z >= WORLD_SIZE || y < 0 || y >= MAX_HEIGHT) {
+        return BLOCK.AIR;
+      }
+      return voxelData[x][y][z];
+    }
+
+    // Is the block at integer coordinates (x, y, z) solid for collision?
+    // Water is intentionally non-solid so the player can swim through it.
+    function isSolid(x, y, z) {
+      if (y < 0) return true;                                   // bedrock floor
+      if (x < 0 || x >= WORLD_SIZE || z < 0 || z >= WORLD_SIZE) return true; // invisible world walls
+      if (y >= MAX_HEIGHT) return false;                          // open sky
+      const block = voxelData[x][y][z];
+      return block !== BLOCK.AIR && block !== BLOCK.WATER;
+    }
+
+    // Is the block at integer coordinates (x, y, z) Water?
+    function isWater(x, y, z) {
+      if (x < 0 || x >= WORLD_SIZE || z < 0 || z >= WORLD_SIZE || y < 0 || y >= MAX_HEIGHT) return false;
+      return voxelData[x][y][z] === BLOCK.WATER;
+    }
+
+    // Returns the Y coordinate the player should stand at in column (x, z):
+    // one block above the highest GRASS_DIRT voxel. Used to spawn the player
+    // (section 8) and to re-place them after Load (section 13), so they
+    // never end up inside a tree's trunk/leaves or floating over a beach.
+    function findSpawnHeight(x, z) {
+      for (let y = MAX_HEIGHT - 1; y >= 0; y--) {
+        if (voxelData[x][y][z] === BLOCK.GRASS_DIRT) return y + 1;
+      }
+      return SEA_LEVEL; // fallback - shouldn't happen near the island center
+    }
+
+
+    /* =========================================================================
+       7. POINTER LOCK CONTROLS
+       =========================================================================
+       `craftingOpen` tracks whether the crafting menu (section 12) is showing.
+       While it's open we deliberately leave the pointer unlocked but DON'T
+       show the "Click to Play" instructions overlay - the crafting menu's own
+       unlock is intentional, not the player pausing/quitting.
+    ========================================================================= */
+    const controls = new PointerLockControls(camera, renderer.domElement);
+    let craftingOpen = false;
+
+    const instructions = document.getElementById('instructions');
+    instructions.addEventListener('click', () => {
+      if (!craftingOpen) controls.lock();
+    });
+    controls.addEventListener('lock', () => { instructions.style.display = 'none'; });
+    controls.addEventListener('unlock', () => {
+      if (!craftingOpen) instructions.style.display = 'flex';
+    });
+
+
+    /* =========================================================================
+       8. PLAYER STATE + INPUT
+    ========================================================================= */
+    const player = {
+      position: new THREE.Vector3(WORLD_SIZE / 2, 0, WORLD_SIZE / 2),
+      velocity: new THREE.Vector3(0, 0, 0),
+      knockback: new THREE.Vector3(0, 0, 0), // horizontal impulse from enemy hits, decays over time
+      onGround: false
+    };
+    // Spawn the player standing on top of the highest Grass/Dirt block at the
+    // world center, computed AFTER terrain + trees have fully generated, so
+    // the player never spawns inside (or on top of) a tree's trunk/leaves.
+    const SPAWN_X = Math.floor(WORLD_SIZE / 2);
+    const SPAWN_Z = Math.floor(WORLD_SIZE / 2);
+    player.position.y = findSpawnHeight(SPAWN_X, SPAWN_Z);
+    camera.position.set(player.position.x, player.position.y + EYE_HEIGHT, player.position.z);
+
+    const keys = {};
+    document.addEventListener('keydown', (e) => { keys[e.code] = true; });
+    document.addEventListener('keyup',   (e) => { keys[e.code] = false; });
+
+    // --- Player health ---
+    let playerHealth = MAX_HEALTH;
+    const healthBarFill = document.getElementById('healthBarFill');
+    const healthBarLabel = document.getElementById('healthBarLabel');
+
+    // Refreshes the health bar's fill width and "X / MAX" label to match
+    // playerHealth. Call after any change to playerHealth.
+    function updateHealthUI() {
+      const pct = Math.max(0, Math.min(100, (playerHealth / MAX_HEALTH) * 100));
+      healthBarFill.style.width = `${pct}%`;
+      healthBarLabel.textContent = `${Math.max(0, Math.round(playerHealth))} / ${MAX_HEALTH}`;
+    }
+    updateHealthUI();
+
+    // Deducts `amount` HP and applies a horizontal knockback impulse pushing
+    // the player directly away from (sourceX, sourceZ), plus a small upward
+    // velocity bump (see updatePlayer()'s knockback handling, section 9).
+    // If health drops to 0 or below, the player respawns at full health at
+    // the world-center spawn point.
+    function damagePlayer(amount, sourceX, sourceZ) {
+      playerHealth -= amount;
+
+      const dx = player.position.x - sourceX;
+      const dz = player.position.z - sourceZ;
+      const dist = Math.hypot(dx, dz) || 1;
+      player.knockback.x = (dx / dist) * ENEMY_KNOCKBACK;
+      player.knockback.z = (dz / dist) * ENEMY_KNOCKBACK;
+      player.velocity.y = ENEMY_KNOCKBACK * 0.4;
+      player.onGround = false;
+
+      if (playerHealth <= 0) {
+        playerHealth = MAX_HEALTH;
+        player.position.set(SPAWN_X, findSpawnHeight(SPAWN_X, SPAWN_Z), SPAWN_Z);
+        player.velocity.set(0, 0, 0);
+        player.knockback.set(0, 0, 0);
+        player.onGround = false;
+      }
+
+      updateHealthUI();
+    }
+
+
+    /* =========================================================================
+       9. PHYSICS: GRAVITY, JUMPING, AND AABB COLLISION RESOLUTION
+       =========================================================================
+       The player is treated as an axis-aligned bounding box (AABB): a
+       PLAYER_RADIUS*2 wide, PLAYER_HEIGHT tall column anchored at the feet
+       (player.position). Movement is resolved one axis at a time (X, then Z,
+       then Y).
+
+       Anti-tunneling (Phase 9): after moving along an axis, aabbCollidesSolid()
+       samples all 8 corners of the player's AABB at the new position. If ANY
+       corner lands inside a solid voxel, the move is rejected: a binary
+       search along that axis finds the exact boundary between the last
+       known-clear position and the colliding one, the player is snapped
+       there, and any velocity/knockback on that axis is instantly zeroed -
+       the player can never end up partway inside a wall (no sliding through),
+       no matter how fast they're moving.
+
+       Horizontal axes (x/z) get one extra behavior: step-climbing. If lifting
+       the player up by STEP_HEIGHT clears the collision, they're smoothly
+       raised onto the ledge instead of being stopped (binary search again
+       finds the minimal lift).
+    ========================================================================= */
+
+    // The player's axis-aligned bounding box at `pos` (defaults to the
+    // player's current position).
+    function getPlayerAABB(pos = player.position) {
+      return {
+        minX: pos.x - PLAYER_RADIUS, maxX: pos.x + PLAYER_RADIUS,
+        minY: pos.y,                 maxY: pos.y + PLAYER_HEIGHT,
+        minZ: pos.z - PLAYER_RADIUS, maxZ: pos.z + PLAYER_RADIUS
+      };
+    }
+
+    // True if any of the 8 corners of the player's AABB at `pos` falls inside
+    // a solid voxel. Corners are inset by a tiny epsilon so a box resting
+    // exactly flush against a wall/floor (the common case) doesn't
+    // false-positive on the boundary itself. Given the player's box is
+    // narrower than one block on X/Z and taller than one block on Y, an
+    // 8-corner test is sufficient to detect any overlap with a 1x1x1 voxel.
+    const COLLISION_EPS = 1e-4;
+    function aabbCollidesSolid(pos) {
+      const b = getPlayerAABB(pos);
+      const xs = [b.minX + COLLISION_EPS, b.maxX - COLLISION_EPS];
+      const ys = [b.minY + COLLISION_EPS, b.maxY - COLLISION_EPS];
+      const zs = [b.minZ + COLLISION_EPS, b.maxZ - COLLISION_EPS];
+      for (const x of xs) {
+        for (const y of ys) {
+          for (const z of zs) {
+            if (isSolid(Math.floor(x), Math.floor(y), Math.floor(z))) return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    // Moves player.position[axis] by `delta`, then resolves any resulting
+    // collision: step-up (x/z only), or a binary-search snap to the exact
+    // boundary with the relevant velocity/knockback instantly zeroed.
+    function moveAxis(axis, delta) {
+      if (delta === 0) return;
+      const pos = player.position;
+      const startVal = pos[axis]; // assumed collision-free (invariant from the previous frame)
+      pos[axis] += delta;
+
+      if (!aabbCollidesSolid(pos)) {
+        if (axis === 'y' && delta < 0) player.onGround = false; // still falling through air
+        return;
+      }
+
+      // --- Step-climbing (horizontal axes only) ---
+      if (axis === 'x' || axis === 'z') {
+        const steppedPos = { x: pos.x, y: pos.y + STEP_HEIGHT, z: pos.z };
+        if (!aabbCollidesSolid(steppedPos)) {
+          // Binary search the minimal lift in (0, STEP_HEIGHT] that clears it.
+          let lo = 0, hi = STEP_HEIGHT;
+          for (let i = 0; i < 12; i++) {
+            const mid = (lo + hi) / 2;
+            if (aabbCollidesSolid({ x: pos.x, y: pos.y + mid, z: pos.z })) lo = mid;
+            else hi = mid;
+          }
+          pos.y += hi;
+          if (player.velocity.y < 0) player.velocity.y = 0;
+          return;
+        }
+      }
+
+      // --- No step possible: binary search the exact collision boundary ---
+      let lo = startVal, hi = pos[axis];
+      for (let i = 0; i < 24; i++) {
+        const mid = (lo + hi) / 2;
+        pos[axis] = mid;
+        if (aabbCollidesSolid(pos)) hi = mid; else lo = mid;
+      }
+      pos[axis] = lo; // last known-clear position - snapped flush to the obstruction
+
+      // --- Instantly zero out velocity/knockback on this axis: no sliding ---
+      if (axis === 'y') {
+        player.velocity.y = 0;
+        if (delta < 0) player.onGround = true; // landed on top of a block
+      } else if (axis === 'x') {
+        player.knockback.x = 0;
+      } else {
+        player.knockback.z = 0;
+      }
+    }
+
+    function moveAndCollide(dx, dy, dz) {
+      moveAxis('x', dx);
+      moveAxis('z', dz);
+      moveAxis('y', dy);
+    }
+
+    // True if the player's feet are below SEA_LEVEL + 0.5 AND the voxel at
+    // their feet is Water - i.e. they're wading/submerged and swimming
+    // physics (reduced gravity, slower movement, swim-up) should apply.
+    function isPlayerSwimming() {
+      if (player.position.y >= SEA_LEVEL + 0.5) return false;
+      return isWater(
+        Math.floor(player.position.x),
+        Math.floor(player.position.y),
+        Math.floor(player.position.z)
+      );
+    }
+
+    function updatePlayer(delta) {
+      // --- Build movement direction from camera orientation (XZ-plane only) ---
+      const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+      forward.y = 0;
+      forward.normalize();
+
+      const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+      right.y = 0;
+      right.normalize();
+
+      const moveDir = new THREE.Vector3();
+      if (keys['KeyW']) moveDir.add(forward);
+      if (keys['KeyS']) moveDir.sub(forward);
+      if (keys['KeyD']) moveDir.add(right);
+      if (keys['KeyA']) moveDir.sub(right);
+
+      // Mobile virtual joystick (section 17): mobileMoveVector.z is
+      // forward(-)/back(+), mobileMoveVector.x is strafe right(+)/left(-).
+      if (mobileMode) {
+        if (mobileMoveVector.z < -JOYSTICK_DEADZONE) moveDir.add(forward.clone().multiplyScalar(-mobileMoveVector.z));
+        if (mobileMoveVector.z >  JOYSTICK_DEADZONE) moveDir.sub(forward.clone().multiplyScalar(mobileMoveVector.z));
+        if (Math.abs(mobileMoveVector.x) > JOYSTICK_DEADZONE) moveDir.add(right.clone().multiplyScalar(mobileMoveVector.x));
+      }
+
+      const swimming = isPlayerSwimming();
+
+      if (moveDir.lengthSq() > 0) {
+        const speed = swimming ? MOVE_SPEED * SWIM_SPEED_SCALE : MOVE_SPEED;
+        moveDir.normalize().multiplyScalar(speed * delta);
+      }
+
+      // --- Gravity (reduced by 70% while swimming) ---
+      const gravity = swimming ? GRAVITY * SWIM_GRAVITY_SCALE : GRAVITY;
+      player.velocity.y -= gravity * delta;
+      const terminalFall = swimming ? TERMINAL_FALL * SWIM_GRAVITY_SCALE : TERMINAL_FALL;
+      if (player.velocity.y < terminalFall) player.velocity.y = terminalFall;
+
+      // --- Jump (on ground) / swim up (in water) ---
+      if (keys['Space']) {
+        if (swimming) {
+          player.velocity.y = SWIM_UP_SPEED;
+        } else if (player.onGround) {
+          player.velocity.y = JUMP_SPEED;
+          player.onGround = false;
+        }
+      }
+
+      // --- Apply knockback impulse (from enemy hits) and let it decay ---
+      const knockDx = player.knockback.x * delta;
+      const knockDz = player.knockback.z * delta;
+      const decay = Math.max(0, 1 - KNOCKBACK_DECAY * delta);
+      player.knockback.x *= decay;
+      player.knockback.z *= decay;
+      if (Math.abs(player.knockback.x) < 0.01) player.knockback.x = 0;
+      if (Math.abs(player.knockback.z) < 0.01) player.knockback.z = 0;
+
+      // --- Resolve movement against the world ---
+      moveAndCollide(moveDir.x + knockDx, player.velocity.y * delta, moveDir.z + knockDz);
+
+      // --- Sync camera to the player's eye position ---
+      camera.position.set(player.position.x, player.position.y + EYE_HEIGHT, player.position.z);
+    }
+
+
+    /* =========================================================================
+       10. RAYCASTING & BLOCK INTERACTION (break / place)
+       =========================================================================
+       Every frame we cast a ray from the center of the screen (the crosshair)
+       into the two world InstancedMeshes. The hit's `instanceId` tells us
+       exactly which cube was hit; terrainPositions/blockPositions map that
+       back to the (x, y, z) voxel coordinates stored in voxelData.
+    ========================================================================= */
+
+    // Currently selected hotbar slot (index into HOTBAR_SLOTS) - controlled
+    // by the hotbar (keys 1-4, see section 11).
+    let selectedSlotIndex = 0;
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.far = RAY_DISTANCE;
+    const screenCenter = new THREE.Vector2(0, 0); // NDC center == crosshair
+
+    // Wireframe box that snaps to whichever voxel the player is looking at.
+    const highlightHelper = new THREE.BoxHelper(
+      new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1)),
+      0x000000
+    );
+    highlightHelper.object.visible = false; // only the wireframe should be visible
+    highlightHelper.visible = false;
+    scene.add(highlightHelper.object);
+    scene.add(highlightHelper);
+
+    // Mining feedback colors (Phase 9): the highlight box lerps from white
+    // (just started) to bright red (about to break) as breakTimer progresses.
+    const HIGHLIGHT_COLOR_IDLE   = new THREE.Color(0xffffff);
+    const HIGHLIGHT_COLOR_MINING = new THREE.Color(0xff2020);
+
+    /* -------------------------------------------------------------------
+       Procedural audio (Phase 9) - native Web Audio API, no asset files.
+       The AudioContext is created lazily on first use (browsers block audio
+       until a user gesture, which Pointer Lock / touch controls provide).
+    ------------------------------------------------------------------- */
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioCtx();
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    // Plays a short procedural tone: a single oscillator through a gain node
+    // that exponentially decays to silence over `duration` seconds.
+    function playTone(frequency, duration, type, volume) {
+      const ctx = getAudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.value = frequency;
+      gain.gain.setValueAtTime(volume, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+    }
+
+    // Low "thud/tick" played every MINE_TICK_INTERVAL while mining a block.
+    function playMineTickSound() {
+      playTone(110, 0.08, 'square', 0.12);
+    }
+
+    // Higher "pop" played the moment a block finishes breaking.
+    function playBlockBreakSound() {
+      playTone(440, 0.12, 'triangle', 0.18);
+    }
+
+    // Returns { object, instanceId, position, normal } for the block under the
+    // crosshair, or null if nothing solid is within RAY_DISTANCE.
+    function getTargetedBlock() {
+      raycaster.setFromCamera(screenCenter, camera);
+      const intersects = raycaster.intersectObjects([terrainMesh, blockMesh], false);
+      if (intersects.length === 0) return null;
+
+      const hit = intersects[0];
+      if (hit.instanceId === undefined || !hit.face) return null;
+
+      const positions = (hit.object === terrainMesh) ? terrainPositions : blockPositions;
+      const position = positions[hit.instanceId];
+      if (!position) return null;
+
+      return { object: hit.object, instanceId: hit.instanceId, position, normal: hit.face.normal };
+    }
+
+    // Updates the wireframe highlight box to outline the targeted voxel.
+    // `progress` (0-1, how far along the current mining hold we are) tints
+    // the box from white towards red and adds a slight pulsing scale.
+    function updateHighlight(target, progress = 0) {
+      if (!target) {
+        highlightHelper.visible = false;
+        return;
+      }
+      highlightHelper.object.position.set(target.position.x, target.position.y, target.position.z);
+
+      const pulse = progress > 0 ? 1 + Math.sin(Date.now() * 0.02) * 0.04 * progress : 1;
+      highlightHelper.object.scale.setScalar(pulse);
+      highlightHelper.object.updateMatrixWorld(true);
+      highlightHelper.update();
+
+      highlightHelper.material.color.lerpColors(HIGHLIGHT_COLOR_IDLE, HIGHLIGHT_COLOR_MINING, progress);
+      highlightHelper.visible = true;
+    }
+
+    // A degenerate (zero-volume) matrix used to "delete" an instance without
+    // resizing or rebuilding the InstancedMesh.
+    const ZERO_SCALE_MATRIX = new THREE.Matrix4().makeScale(0, 0, 0);
+
+    function breakBlock(target) {
+      const { object, instanceId, position } = target;
+      const brokenType = voxelData[position.x][position.y][position.z];
+      const key = `${position.x},${position.y},${position.z}`;
+
+      object.setMatrixAt(instanceId, ZERO_SCALE_MATRIX);
+      object.instanceMatrix.needsUpdate = true;
+
+      if (object === blockMesh) {
+        blockIndexMap.delete(key);
+      } else if (object === terrainMesh) {
+        terrainIndexMap.delete(key);
+      }
+
+      voxelData[position.x][position.y][position.z] = BLOCK.AIR;
+      modifiedBlocks.set(key, BLOCK.AIR);
+
+      // Award the broken block to the player's inventory.
+      const invKey = BLOCK_TO_INVENTORY_KEY[brokenType];
+      if (invKey) {
+        inventory[invKey]++;
+        updateHotbarUI();
+      }
+
+      // Phase 7: simple flowing-water cellular automaton - if the newly
+      // emptied space is adjacent to water, flood it.
+      tryFlowWater(position.x, position.y, position.z);
+    }
+
+    // Simple flowing-water cellular automaton (Phase 7). Called right after
+    // (x, y, z) becomes AIR. If it's at or below sea level and at least one
+    // of its 4 horizontal neighbors is Water, the new air pocket immediately
+    // floods - it becomes Water and gains a new instance on waterMesh.
+    function tryFlowWater(x, y, z) {
+      if (y > SEA_LEVEL) return;
+      if (waterInstanceCount >= MAX_INSTANCES) return;
+
+      const flowsFromNeighbor =
+        isWater(x + 1, y, z) || isWater(x - 1, y, z) ||
+        isWater(x, y, z + 1) || isWater(x, y, z - 1);
+      if (!flowsFromNeighbor) return;
+
+      voxelData[x][y][z] = BLOCK.WATER;
+      modifiedBlocks.set(`${x},${y},${z}`, BLOCK.WATER);
+
+      dummyMatrix.identity();
+      dummyMatrix.setPosition(x, y, z);
+      waterMesh.setMatrixAt(waterInstanceCount, dummyMatrix);
+      waterInstanceCount++;
+      waterMesh.count = waterInstanceCount;
+      waterMesh.instanceMatrix.needsUpdate = true;
+    }
+
+    // True if the 1x1x1 block at (bx, by, bz) overlaps the player's AABB
+    // (matches the [x, x+1) cell convention used by isSolid/aabbCollidesSolid).
+    function blockIntersectsPlayer(bx, by, bz) {
+      const pMinX = player.position.x - PLAYER_RADIUS;
+      const pMaxX = player.position.x + PLAYER_RADIUS;
+      const pMinY = player.position.y;
+      const pMaxY = player.position.y + PLAYER_HEIGHT;
+      const pMinZ = player.position.z - PLAYER_RADIUS;
+      const pMaxZ = player.position.z + PLAYER_RADIUS;
+
+      return (bx < pMaxX && bx + 1 > pMinX) &&
+             (by < pMaxY && by + 1 > pMinY) &&
+             (bz < pMaxZ && bz + 1 > pMinZ);
+    }
+
+    function placeBlock() {
+      const slot = HOTBAR_SLOTS[selectedSlotIndex];
+
+      // Tools (Wooden Pickaxe) cannot be placed as blocks.
+      if (slot.isTool) return;
+
+      // Out of this block type - nothing to place.
+      if (inventory[slot.invKey] <= 0) return;
+
+      const target = getTargetedBlock();
+      if (!target) return;
+
+      // The new block sits on the face that was hit, offset along its normal.
+      const newX = target.position.x + Math.round(target.normal.x);
+      const newY = target.position.y + Math.round(target.normal.y);
+      const newZ = target.position.z + Math.round(target.normal.z);
+
+      if (newX < 0 || newX >= WORLD_SIZE || newZ < 0 || newZ >= WORLD_SIZE || newY < 0 || newY >= MAX_HEIGHT) return;
+      if (getBlock(newX, newY, newZ) !== BLOCK.AIR) return;
+      if (blockIntersectsPlayer(newX, newY, newZ)) return;
+
+      const selectedBlockType = slot.blockType;
+
+      dummyMatrix.identity();
+      dummyMatrix.setPosition(newX, newY, newZ);
+
+      if (selectedBlockType === BLOCK.GRASS_DIRT) {
+        if (terrainInstanceCount >= MAX_INSTANCES) {
+          console.warn('Instance buffer full - cannot place more terrain blocks.');
+          return;
+        }
+        terrainMesh.setMatrixAt(terrainInstanceCount, dummyMatrix);
+        terrainMesh.instanceMatrix.needsUpdate = true;
+        terrainPositions.push({ x: newX, y: newY, z: newZ });
+        terrainIndexMap.set(`${newX},${newY},${newZ}`, terrainInstanceCount);
+        terrainInstanceCount++;
+        terrainMesh.count = terrainInstanceCount;
+      } else {
+        if (blockInstanceCount >= MAX_INSTANCES) {
+          console.warn('Instance buffer full - cannot place more blocks.');
+          return;
+        }
+        const index = blockInstanceCount;
+        blockMesh.setMatrixAt(index, dummyMatrix);
+        blockMesh.setColorAt(index, new THREE.Color(BLOCK_COLORS[selectedBlockType]));
+        blockMesh.instanceMatrix.needsUpdate = true;
+        blockMesh.instanceColor.needsUpdate = true;
+        blockPositions.push({ x: newX, y: newY, z: newZ });
+        blockIndexMap.set(`${newX},${newY},${newZ}`, index);
+        blockInstanceCount++;
+        blockMesh.count = blockInstanceCount;
+      }
+
+      voxelData[newX][newY][newZ] = selectedBlockType;
+      modifiedBlocks.set(`${newX},${newY},${newZ}`, selectedBlockType);
+
+      // Consume one item from the inventory and refresh the hotbar display.
+      inventory[slot.invKey]--;
+      updateHotbarUI();
+    }
+
+    // Returns the enemy whose body part is under the crosshair (within
+    // RAY_DISTANCE), or null. Checked first on left-click (section 16's
+    // attackEnemy()) so attacking a zombie never also breaks a block.
+    function getTargetedEnemy() {
+      if (enemies.length === 0) return null;
+      raycaster.setFromCamera(screenCenter, camera);
+      const intersects = raycaster.intersectObjects(enemies.map((e) => e.group), true);
+      if (intersects.length === 0) return null;
+      return intersects[0].object.userData.enemyRef ?? null;
+    }
+
+    // --- Mouse input: left click to attack/break, right click to place ---
+    let isBreaking = false;
+    let breakTimer = 0;
+    let breakTargetKey = null; // tracks which voxel is being broken
+    let miningProgress = 0;    // 0-1, drives the highlight color/pulse (Phase 9)
+    let mineSoundTimer = 0;    // seconds since the last mining "tick" sound
+
+    document.addEventListener('mousedown', (e) => {
+      if (!controls.isLocked) return;
+      if (e.button === 0) {        // left click - attack a zombie, or start breaking a block
+        const targetEnemy = getTargetedEnemy();
+        if (targetEnemy) {
+          attackEnemy(targetEnemy);
+        } else {
+          isBreaking = true;
+          breakTimer = 0;
+          breakTargetKey = null;
+          mineSoundTimer = 0;
+        }
+      } else if (e.button === 2) { // right click - place a block
+        placeBlock();
+      }
+    });
+
+    document.addEventListener('mouseup', (e) => {
+      if (e.button === 0) {
+        isBreaking = false;
+        breakTimer = 0;
+        breakTargetKey = null;
+        miningProgress = 0;
+      }
+    });
+
+    // Suppress the browser's right-click context menu over the canvas.
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // Returns how long (seconds) it takes to break a block of `blockType`
+    // with the currently-selected hotbar item. Hard blocks (hardness > the
+    // default 0.5s, e.g. Wood/Stone) are mined in PICKAXE_MINE_TIME if the
+    // player has the Wooden Pickaxe selected and owns at least one.
+    function getMiningTime(blockType) {
+      const baseTime = BLOCK_HARDNESS[blockType] ?? 0.5;
+
+      const slot = HOTBAR_SLOTS[selectedSlotIndex];
+      const usingPickaxe = slot.isTool && slot.tool === 'woodenPickaxe' && inventory.woodenPickaxe > 0;
+      if (usingPickaxe && baseTime > 0.5) {
+        return PICKAXE_MINE_TIME;
+      }
+      return baseTime;
+    }
+
+    // Advances the break-hold timer and breaks the targeted block once the
+    // required mining time (see getMiningTime) has elapsed. Resets if the
+    // player looks away mid-hold. Also drives the mining feedback (Phase 9):
+    // updates `miningProgress` (read by updateHighlight) and plays a "tick"
+    // sound every MINE_TICK_INTERVAL plus a "pop" the moment the block breaks.
+    function updateBreaking(delta, target) {
+      if (!isBreaking) {
+        miningProgress = 0;
+        return;
+      }
+
+      if (!target) {
+        breakTimer = 0;
+        breakTargetKey = null;
+        miningProgress = 0;
+        return;
+      }
+
+      const key = `${target.position.x},${target.position.y},${target.position.z}`;
+      if (key !== breakTargetKey) {
+        breakTargetKey = key;
+        breakTimer = 0;
+        mineSoundTimer = 0;
+      }
+
+      const blockType = voxelData[target.position.x][target.position.y][target.position.z];
+      const requiredTime = getMiningTime(blockType);
+
+      breakTimer += delta;
+      miningProgress = Math.min(1, breakTimer / requiredTime);
+
+      mineSoundTimer += delta;
+      if (mineSoundTimer >= MINE_TICK_INTERVAL) {
+        mineSoundTimer -= MINE_TICK_INTERVAL;
+        playMineTickSound();
+      }
+
+      if (breakTimer >= requiredTime) {
+        breakBlock(target);
+        playBlockBreakSound();
+        isBreaking = false;
+        breakTimer = 0;
+        breakTargetKey = null;
+        miningProgress = 0;
+      }
+    }
+
+
+    /* =========================================================================
+       11. INVENTORY + HOTBAR UI
+       =========================================================================
+       `inventory` is the single source of truth for item counts. Breaking a
+       block (section 10) increments the matching count; placing one (also
+       section 10) decrements it and is blocked at 0. The hotbar overlay
+       mirrors `inventory` via updateHotbarUI() and lets the player switch the
+       active slot with keys 1-4 (HOTBAR_SLOTS, section 1).
+    ========================================================================= */
+    const inventory = {
+      dirt: 0,
+      wood: 0,
+      sand: 0,
+      planks: 0,
+      sticks: 0,
+      woodenPickaxe: 0
+    };
+
+    const hotbarSlotEls = document.querySelectorAll('#hotbar .hotbar-slot');
+
+    // Selects the hotbar slot at `index` (0-3) and refreshes the active
+    // highlight + item counts.
+    function selectHotbarSlot(index) {
+      selectedSlotIndex = index;
+      updateHotbarUI();
+    }
+
+    // Refreshes every hotbar slot's count badge, "empty" dimming, and which
+    // slot is highlighted as active. Call after any inventory change or
+    // selection change.
+    function updateHotbarUI() {
+      hotbarSlotEls.forEach((slotEl, index) => {
+        const slot = HOTBAR_SLOTS[index];
+        const count = inventory[slot.invKey];
+
+        slotEl.querySelector('.item-count').textContent = count;
+        slotEl.classList.toggle('empty', count <= 0);
+        slotEl.classList.toggle('active', index === selectedSlotIndex);
+      });
+    }
+
+    document.addEventListener('keydown', (e) => {
+      const index = HOTBAR_SLOTS.findIndex((slot) => slot.key === e.code);
+      if (index !== -1) selectHotbarSlot(index);
+    });
+
+    updateHotbarUI(); // initialize the hotbar display (all counts start at 0)
+
+
+    /* =========================================================================
+       12. CRAFTING MENU + POINTER LOCK TOGGLE
+       =========================================================================
+       Pressing 'E' (or clicking the X button) opens/closes a centered HTML
+       crafting menu. Opening it exits Pointer Lock so the mouse is free to
+       click buttons; closing it re-requests Pointer Lock so movement/looking
+       resume. `craftingOpen` (declared in section 7) suppresses the
+       "Click to Play" overlay while this menu owns the unlocked pointer.
+    ========================================================================= */
+    const craftingMenu = document.getElementById('craftingMenu');
+    const closeCraftingBtn = document.getElementById('closeCraftingBtn');
+
+    // Maps inventory keys to the <span> elements that display their counts
+    // inside the crafting menu.
+    const INVENTORY_DISPLAY_IDS = {
+      dirt: 'invDirt',
+      wood: 'invWood',
+      sand: 'invSand',
+      planks: 'invPlanks',
+      sticks: 'invSticks',
+      woodenPickaxe: 'invWoodenPickaxe'
+    };
+
+    function openCrafting() {
+      craftingOpen = true;
+      craftingMenu.classList.remove('hidden');
+      updateCraftingUI();
+      controls.unlock();
+    }
+
+    function closeCrafting() {
+      craftingOpen = false;
+      craftingMenu.classList.add('hidden');
+      controls.lock();
+    }
+
+    // Returns true if the player has enough of every ingredient for `recipe`.
+    function canCraft(recipe) {
+      return Object.entries(recipe.cost).every(([item, amount]) => inventory[item] >= amount);
+    }
+
+    // Refreshes the inventory readout and enables/disables each Craft button
+    // based on whether the player currently has enough ingredients.
+    function updateCraftingUI() {
+      for (const [key, elementId] of Object.entries(INVENTORY_DISPLAY_IDS)) {
+        document.getElementById(elementId).textContent = inventory[key];
+      }
+
+      document.querySelectorAll('.craft-btn').forEach((btn) => {
+        btn.disabled = !canCraft(RECIPES[btn.dataset.recipe]);
+      });
+    }
+
+    // Consumes a recipe's ingredients and adds its outputs to the inventory.
+    function craftItem(recipeKey) {
+      const recipe = RECIPES[recipeKey];
+      if (!canCraft(recipe)) return;
+
+      for (const [item, amount] of Object.entries(recipe.cost)) {
+        inventory[item] -= amount;
+      }
+      for (const [item, amount] of Object.entries(recipe.yield)) {
+        inventory[item] += amount;
+      }
+
+      updateCraftingUI();
+      updateHotbarUI();
+    }
+
+    document.querySelectorAll('.craft-btn').forEach((btn) => {
+      btn.addEventListener('click', () => craftItem(btn.dataset.recipe));
+    });
+
+    closeCraftingBtn.addEventListener('click', closeCrafting);
+
+    // 'E' toggles the crafting menu - only opens while the game is actively
+    // locked (not from the initial "Click to Play" screen).
+    document.addEventListener('keydown', (e) => {
+      if (e.code !== 'KeyE') return;
+      if (craftingOpen) {
+        closeCrafting();
+      } else if (controls.isLocked) {
+        openCrafting();
+      }
+    });
+
+
+    /* =========================================================================
+       13. SAVE / LOAD SYSTEM (file-based JSON)
+       =========================================================================
+       "Save Game" serializes the player's position, inventory, and a
+       `modifiedBlocks` map (every block placed/destroyed since the world was
+       generated, keyed by "x,y,z" -> BLOCK id, with BLOCK.AIR meaning
+       "destroyed") to JSON, then triggers a browser download of that JSON as
+       "world_save.json" - NOT the whole voxelData array, and NOT localStorage.
+
+       "Load Game" opens a hidden <input type="file"> file picker; once the
+       player selects a previously-downloaded world_save.json, it's read via
+       FileReader, parsed, and applySaveData() re-runs generateWorld()
+       (section 5) to rebuild the deterministic base island + trees, replays
+       the saved modifiedBlocks deltas on top via applyBlockChange(), and
+       finally restores the inventory and teleports the player.
+    ========================================================================= */
+
+    // "x,y,z" -> BLOCK id. Tracks every block the player has placed or broken
+    // since the world was generated (BLOCK.AIR = destroyed). Populated by
+    // breakBlock()/placeBlock() (section 10) and replayed by loadGame().
+    const modifiedBlocks = new Map();
+
+    // Removes whatever block currently occupies (x, y, z) from its
+    // InstancedMesh (zero-scale "delete") and clears voxelData/index maps.
+    // No-op if the voxel is already AIR or Water (Water isn't player-placed).
+    function removeBlockAt(x, y, z) {
+      const current = voxelData[x][y][z];
+      if (current === BLOCK.AIR || current === BLOCK.WATER) return;
+
+      const key = `${x},${y},${z}`;
+      if (current === BLOCK.GRASS_DIRT) {
+        const idx = terrainIndexMap.get(key);
+        if (idx !== undefined) {
+          terrainMesh.setMatrixAt(idx, ZERO_SCALE_MATRIX);
+          terrainIndexMap.delete(key);
+        }
+      } else {
+        const idx = blockIndexMap.get(key);
+        if (idx !== undefined) {
+          blockMesh.setMatrixAt(idx, ZERO_SCALE_MATRIX);
+          blockIndexMap.delete(key);
+        }
+      }
+      voxelData[x][y][z] = BLOCK.AIR;
+    }
+
+    // Adds a new instance of `blockType` at (x, y, z) - mirrors the
+    // placement branch of placeBlock() (section 10), but without touching
+    // the inventory (used to replay saved modifications on Load).
+    function addBlockAt(x, y, z, blockType) {
+      const key = `${x},${y},${z}`;
+      dummyMatrix.identity();
+      dummyMatrix.setPosition(x, y, z);
+
+      if (blockType === BLOCK.GRASS_DIRT) {
+        const idx = terrainInstanceCount++;
+        terrainMesh.setMatrixAt(idx, dummyMatrix);
+        terrainPositions[idx] = { x, y, z };
+        terrainIndexMap.set(key, idx);
+        terrainMesh.count = terrainInstanceCount;
+        terrainMesh.instanceMatrix.needsUpdate = true;
+      } else if (blockType === BLOCK.WATER) {
+        // Replays flowing-water tiles created at runtime (tryFlowWater,
+        // section 10) - water has no reverse index map since it's never
+        // removed by the player, just appended.
+        const idx = waterInstanceCount++;
+        waterMesh.setMatrixAt(idx, dummyMatrix);
+        waterMesh.count = waterInstanceCount;
+        waterMesh.instanceMatrix.needsUpdate = true;
+      } else {
+        const idx = blockInstanceCount++;
+        blockMesh.setMatrixAt(idx, dummyMatrix);
+        blockMesh.setColorAt(idx, new THREE.Color(BLOCK_COLORS[blockType]));
+        blockPositions[idx] = { x, y, z };
+        blockIndexMap.set(key, idx);
+        blockMesh.count = blockInstanceCount;
+        blockMesh.instanceColor.needsUpdate = true;
+        blockMesh.instanceMatrix.needsUpdate = true;
+      }
+
+      voxelData[x][y][z] = blockType;
+    }
+
+    // Replays a single saved modification: clear whatever is at (x, y, z),
+    // then place `blockType` there (unless it's BLOCK.AIR, i.e. "destroyed").
+    function applyBlockChange(x, y, z, blockType) {
+      removeBlockAt(x, y, z);
+      if (blockType !== BLOCK.AIR) {
+        addBlockAt(x, y, z, blockType);
+      }
+    }
+
+    // Serializes player position, inventory, and modifiedBlocks to JSON and
+    // triggers a browser download of "world_save.json".
+    function saveGame() {
+      const data = {
+        position: { x: player.position.x, y: player.position.y, z: player.position.z },
+        inventory: { ...inventory },
+        modifiedBlocks: Array.from(modifiedBlocks.entries())
+      };
+
+      const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'world_save.json';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    // Rebuilds the world from a fresh generateWorld() pass, replays the saved
+    // modifiedBlocks on top, restores the inventory/health, and teleports the
+    // player. `data` is a parsed world_save.json object.
+    function applySaveData(data) {
+      generateWorld();
+      modifiedBlocks.clear();
+
+      for (const [key, blockType] of data.modifiedBlocks) {
+        const [bx, by, bz] = key.split(',').map(Number);
+        applyBlockChange(bx, by, bz, blockType);
+        modifiedBlocks.set(key, blockType);
+      }
+
+      for (const itemKey of Object.keys(inventory)) {
+        inventory[itemKey] = data.inventory[itemKey] ?? 0;
+      }
+      updateHotbarUI();
+      updateCraftingUI();
+
+      player.position.set(data.position.x, data.position.y, data.position.z);
+      player.velocity.set(0, 0, 0);
+      player.knockback.set(0, 0, 0);
+      player.onGround = false;
+      playerHealth = MAX_HEALTH;
+      updateHealthUI();
+      camera.position.set(player.position.x, player.position.y + EYE_HEIGHT, player.position.z);
+    }
+
+    // "Load Game" opens the hidden file picker; the actual loading happens in
+    // the picker's 'change' handler below once a file is selected.
+    function loadGame() {
+      loadFileInput.click();
+    }
+
+    // Save/Load buttons (top-right). stopPropagation() keeps clicks from
+    // bubbling to #instructions (which would otherwise re-lock the pointer).
+    const saveGameBtn = document.getElementById('saveGameBtn');
+    const loadGameBtn = document.getElementById('loadGameBtn');
+    const loadFileInput = document.getElementById('loadFileInput');
+
+    saveGameBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      saveGame();
+    });
+
+    loadGameBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      loadGame();
+    });
+
+    // Reads the user-selected world_save.json file and applies it.
+    loadFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        let data;
+        try {
+          data = JSON.parse(reader.result);
+        } catch (err) {
+          console.warn('Voxel World: failed to parse save file.', err);
+          return;
+        }
+        applySaveData(data);
+      };
+      reader.readAsText(file);
+
+      // Reset the input so re-selecting the same file still fires 'change'.
+      loadFileInput.value = '';
+    });
+
+
+    /* =========================================================================
+       14. SAND PHYSICS (gravity tick)
+       =========================================================================
+       On a fixed interval (SAND_TICK_INTERVAL), scan the world for SAND
+       blocks with AIR directly beneath them and drop each one down by one
+       block. All falls for a tick are gathered from a snapshot of voxelData
+       *before* any are applied, so each sand block moves at most one cell per
+       tick (multi-block falls cascade naturally over successive ticks).
+    ========================================================================= */
+    function updateSandPhysics() {
+      const falls = [];
+      for (let x = 0; x < WORLD_SIZE; x++) {
+        for (let y = 1; y < MAX_HEIGHT; y++) {
+          for (let z = 0; z < WORLD_SIZE; z++) {
+            if (voxelData[x][y][z] === BLOCK.SAND && voxelData[x][y - 1][z] === BLOCK.AIR) {
+              falls.push({ x, y, z });
+            }
+          }
+        }
+      }
+      if (falls.length === 0) return;
+
+      for (const { x, y, z } of falls) {
+        const index = blockIndexMap.get(`${x},${y},${z}`);
+        if (index === undefined) continue; // safety - should always be tracked
+
+        voxelData[x][y][z] = BLOCK.AIR;
+        voxelData[x][y - 1][z] = BLOCK.SAND;
+
+        dummyMatrix.identity();
+        dummyMatrix.setPosition(x, y - 1, z);
+        blockMesh.setMatrixAt(index, dummyMatrix);
+
+        blockPositions[index] = { x, y: y - 1, z };
+        blockIndexMap.delete(`${x},${y},${z}`);
+        blockIndexMap.set(`${x},${y - 1},${z}`, index);
+      }
+
+      blockMesh.instanceMatrix.needsUpdate = true;
+    }
+
+
+    /* =========================================================================
+       15. SKY, CLOUDS & DAY/NIGHT CYCLE
+       =========================================================================
+       scene.background (section 2) is already a light sky-blue. On top of
+       that, a handful of large, flat, semi-transparent white boxes drift
+       slowly along the X-axis high above the island. When a cloud drifts
+       past the map's far edge (plus a small margin) it's teleported back to
+       the opposite edge, creating a continuous "wind" effect.
+
+       updateDayNightCycle() (below) animates the sun's position in an orbit
+       around the island over DAY_LENGTH seconds, and re-colors the sky/fog
+       and re-balances the ambient/sun light intensities to match.
+    ========================================================================= */
+    const cloudMaterial = new THREE.MeshLambertMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.8
+    });
+
+    const clouds = [];
+    const CLOUD_MARGIN = 10; // distance past the map edge before a cloud wraps
+
+    for (let i = 0; i < CLOUD_COUNT; i++) {
+      const width  = 6 + Math.random() * 10;
+      const depth  = 6 + Math.random() * 10;
+      const height = 1.5 + Math.random();
+
+      const cloud = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), cloudMaterial);
+      cloud.position.set(
+        Math.random() * (WORLD_SIZE + 2 * CLOUD_MARGIN) - CLOUD_MARGIN,
+        CLOUD_HEIGHT + Math.random() * 4,
+        Math.random() * WORLD_SIZE
+      );
+
+      scene.add(cloud);
+      clouds.push(cloud);
+    }
+
+    // Drifts every cloud along +X by CLOUD_SPEED * delta; once a cloud passes
+    // the far edge (plus margin) it wraps back around to the opposite side.
+    function updateClouds(delta) {
+      const wrapX = WORLD_SIZE + CLOUD_MARGIN;
+      for (const cloud of clouds) {
+        cloud.position.x += CLOUD_SPEED * delta;
+        if (cloud.position.x > wrapX) {
+          cloud.position.x = -CLOUD_MARGIN;
+        }
+      }
+    }
+
+    // --- Day/night cycle state ---
+    // Start at dayTime = DAY_LENGTH / 4 so the cycle begins at "noon"
+    // (sunHeight = 1), matching the bright initial lighting from earlier
+    // phases.
+    let dayTime = DAY_LENGTH / 4;
+    const skyColor = new THREE.Color();
+
+    // Advances the day/night clock and:
+    //  - orbits sunLight around the island in the Y-Z plane (rotation around
+    //    the world X-axis), so the sun rises, arcs overhead, and sets;
+    //  - interpolates scene.background/scene.fog between deep blue (day),
+    //    orange/pink (sunset/sunrise), and near-black (night) based on the
+    //    sun's height above the horizon;
+    //  - dims ambientLight/sunLight at night so it gets genuinely dark.
+    function updateDayNightCycle(delta) {
+      dayTime = (dayTime + delta) % DAY_LENGTH;
+      const angle = (dayTime / DAY_LENGTH) * Math.PI * 2;
+
+      // sunHeight: 1 = directly overhead (noon), 0 = horizon (sunrise/sunset),
+      // -1 = directly below (midnight).
+      const sunHeight = Math.sin(angle);
+
+      sunLight.position.set(
+        WORLD_SIZE / 2,
+        sunHeight * SUN_ORBIT_RADIUS,
+        WORLD_SIZE / 2 + Math.cos(angle) * SUN_ORBIT_RADIUS
+      );
+
+      // Sky color: day -> sunset as the sun dips towards the horizon, then
+      // sunset -> night as it sinks below.
+      if (sunHeight >= 0) {
+        skyColor.lerpColors(SKY_COLOR_SUNSET, SKY_COLOR_DAY, sunHeight);
+      } else {
+        skyColor.lerpColors(SKY_COLOR_NIGHT, SKY_COLOR_SUNSET, sunHeight + 1);
+      }
+      scene.background.copy(skyColor);
+      scene.fog.color.copy(skyColor);
+
+      // Light intensities: fade out as the sun sets, with a low nighttime
+      // floor on ambient light so the world is dim but not pitch black.
+      const dayFactor = Math.max(0, sunHeight); // 0 at/below horizon, 1 at noon
+      sunLight.intensity = dayFactor;
+      ambientLight.intensity = 0.05 + dayFactor * 0.55;
+    }
+
+
+    /* =========================================================================
+       16. ENEMIES: THE ZOMBIE / DROWNED (procedural humanoid, seek AI)
+       =========================================================================
+       Each zombie is a THREE.Group built from six BoxGeometry meshes (head,
+       torso, two arms, two legs) - no external models, so no CORS issues.
+       Limb meshes have their geometry shifted so the local origin sits at
+       the shoulder/hip joint, letting rotation.x swing them like pendulums
+       for the walking animation.
+
+       Each frame: the zombie turns to face the player and, if within
+       ENEMY_AGGRO_RADIUS, walks towards them (basic vector math, no
+       pathfinding) while swinging its arms/legs via Math.sin(Date.now() *
+       0.005). Its Y position is re-locked to the ground/water surface so it
+       never flies or sinks. Its world-space bounding box (enemy.boundingBox)
+       is recomputed every frame; if it intersects the player's AABB, the
+       player takes ENEMY_DAMAGE every ENEMY_HIT_COOLDOWN seconds (see
+       damagePlayer(), section 8).
+
+       Combat (section 10): a left-click raycast against these groups
+       (recursive, so any body part counts) deals PLAYER_ATTACK_DAMAGE,
+       flashes the hit zombie's parts red for ENEMY_FLASH_DURATION, and
+       applies a knockback impulse to the whole group. A zombie whose hp
+       reaches 0 is removed from both `enemies` and the scene.
+    ========================================================================= */
+
+    // Minecraft-ish zombie proportions (in world units / blocks).
+    const ZOMBIE_DIMENSIONS = {
+      legWidth: 0.2, legDepth: 0.2, legHeight: 0.7,
+      torsoWidth: 0.5, torsoDepth: 0.25, torsoHeight: 0.7,
+      armWidth: 0.2, armDepth: 0.2, armHeight: 0.7,
+      headSize: 0.45
+    };
+
+    // Distinct per-part colors for a Minecraft-style zombie/drowned.
+    const ZOMBIE_COLORS = {
+      head:  0x4f9a52, // green
+      torso: 0x2a4d8f, // blue
+      arm:   0x4f9a52, // green
+      leg:   0x4b2c6f  // purple
+    };
+
+    const enemies = [];
+
+    // Returns the world-Y a zombie should stand at in column (x, z): one
+    // block above the highest non-air voxel (ground or water surface).
+    function getSurfaceHeight(x, z) {
+      const ix = Math.floor(x), iz = Math.floor(z);
+      if (ix < 0 || ix >= WORLD_SIZE || iz < 0 || iz >= WORLD_SIZE) return SEA_LEVEL;
+      for (let y = MAX_HEIGHT - 1; y >= 0; y--) {
+        if (voxelData[ix][y][iz] !== BLOCK.AIR) return y + 1;
+      }
+      return SEA_LEVEL;
+    }
+
+    // Builds one zombie as a THREE.Group of six independently-colored boxes.
+    // The group's local origin (0,0,0) is at the zombie's feet. Limb meshes
+    // (arms/legs) have their geometry translated so the mesh origin sits at
+    // the joint (hip/shoulder), so rotation.x swings them like pendulums.
+    function createZombie() {
+      const d = ZOMBIE_DIMENSIONS;
+      const group = new THREE.Group();
+      const parts = {};
+
+      // Adds a pendulum limb: geometry is shifted up by `h/2` so the mesh's
+      // local origin is at its TOP (the joint), then positioned at the joint
+      // height in the group.
+      function addLimb(key, w, h, depth, color, x, jointY) {
+        const geometry = new THREE.BoxGeometry(w, h, depth);
+        geometry.translate(0, -h / 2, 0);
+        const material = new THREE.MeshLambertMaterial({ color });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(x, jointY, 0);
+        mesh.castShadow = true;
+        mesh.userData.originalColor = color;
+        group.add(mesh);
+        parts[key] = mesh;
+      }
+
+      // Adds a static (non-animated) part with centered geometry.
+      function addPart(key, w, h, depth, color, x, centerY) {
+        const geometry = new THREE.BoxGeometry(w, h, depth);
+        const material = new THREE.MeshLambertMaterial({ color });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(x, centerY, 0);
+        mesh.castShadow = true;
+        mesh.userData.originalColor = color;
+        group.add(mesh);
+        parts[key] = mesh;
+      }
+
+      const hipY = d.legHeight;                  // hip/joint height above the feet
+      const shoulderY = hipY + d.torsoHeight;     // shoulder/joint height above the feet
+      const legX = d.torsoWidth / 4;              // legs side-by-side under the torso
+      const armX = d.torsoWidth / 2 + d.armWidth / 2; // arms just outside the torso
+
+      addLimb('leftLeg',  d.legWidth, d.legHeight, d.legDepth, ZOMBIE_COLORS.leg, -legX, hipY);
+      addLimb('rightLeg', d.legWidth, d.legHeight, d.legDepth, ZOMBIE_COLORS.leg,  legX, hipY);
+
+      addPart('torso', d.torsoWidth, d.torsoHeight, d.torsoDepth, ZOMBIE_COLORS.torso, 0, hipY + d.torsoHeight / 2);
+      addPart('head', d.headSize, d.headSize, d.headSize, ZOMBIE_COLORS.head, 0, shoulderY + d.headSize / 2);
+
+      addLimb('leftArm',  d.armWidth, d.armHeight, d.armDepth, ZOMBIE_COLORS.arm, -armX, shoulderY);
+      addLimb('rightArm', d.armWidth, d.armHeight, d.armDepth, ZOMBIE_COLORS.arm,  armX, shoulderY);
+
+      return { group, parts };
+    }
+
+    // Finds a random Grass/Dirt-topped column on the island - used to scatter
+    // zombies across the island's surface at spawn time.
+    function findLandSpawn(rng) {
+      for (let attempt = 0; attempt < 200; attempt++) {
+        const x = Math.floor(rng() * WORLD_SIZE);
+        const z = Math.floor(rng() * WORLD_SIZE);
+
+        let topY = -1;
+        for (let y = MAX_HEIGHT - 1; y >= 0; y--) {
+          if (voxelData[x][y][z] !== BLOCK.AIR) { topY = y; break; }
+        }
+        if (topY !== -1 && voxelData[x][topY][z] === BLOCK.GRASS_DIRT) {
+          return { x: x + 0.5, z: z + 0.5 };
+        }
+      }
+      // Fallback - shouldn't normally be reached on the generated island.
+      return { x: SPAWN_X + 3.5, z: SPAWN_Z + 3.5 };
+    }
+
+    // Spawns ENEMY_COUNT zombies at deterministic on-island positions (a
+    // dedicated seeded PRNG keeps spawns reproducible without disturbing the
+    // tree spawner's WORLD_SEED sequence).
+    function spawnEnemies() {
+      const enemyRng = mulberry32(WORLD_SEED + 1);
+      for (let i = 0; i < ENEMY_COUNT; i++) {
+        const spawn = findLandSpawn(enemyRng);
+        const { group, parts } = createZombie();
+        group.position.set(spawn.x, getSurfaceHeight(spawn.x, spawn.z), spawn.z);
+        scene.add(group);
+
+        const enemy = {
+          group,
+          parts,
+          hp: ENEMY_MAX_HP,
+          maxHp: ENEMY_MAX_HP,
+          boundingBox: new THREE.Box3(),
+          hitCooldown: 0,
+          flashTimer: 0,
+          knockback: new THREE.Vector3(0, 0, 0)
+        };
+        // Let a raycast hit on ANY body part resolve back to this enemy.
+        group.traverse((obj) => { obj.userData.enemyRef = enemy; });
+        enemies.push(enemy);
+      }
+    }
+    spawnEnemies();
+
+    // Tick-based AI: face the player, seek towards them within
+    // ENEMY_AGGRO_RADIUS, re-lock Y to the surface, swing limbs while moving,
+    // apply/decay hit-knockback, and apply contact damage to the player.
+    function updateEnemies(delta) {
+      const playerBox = new THREE.Box3(
+        new THREE.Vector3(player.position.x - PLAYER_RADIUS, player.position.y, player.position.z - PLAYER_RADIUS),
+        new THREE.Vector3(player.position.x + PLAYER_RADIUS, player.position.y + PLAYER_HEIGHT, player.position.z + PLAYER_RADIUS)
+      );
+      const walkPhase = Date.now() * 0.005;
+
+      for (const enemy of enemies) {
+        const group = enemy.group;
+
+        const dx = player.position.x - group.position.x;
+        const dz = player.position.z - group.position.z;
+        const dist = Math.hypot(dx, dz);
+
+        // Face and seek the player if within aggro range.
+        let isMoving = false;
+        if (dist > 0.001 && dist < ENEMY_AGGRO_RADIUS) {
+          group.lookAt(player.position.x, group.position.y, player.position.z);
+          const step = Math.min(ENEMY_SPEED * delta, dist);
+          group.position.x += (dx / dist) * step;
+          group.position.z += (dz / dist) * step;
+          isMoving = true;
+        }
+
+        // Apply and decay hit-knockback (from the player attacking it).
+        group.position.x += enemy.knockback.x * delta;
+        group.position.z += enemy.knockback.z * delta;
+        const decay = Math.max(0, 1 - KNOCKBACK_DECAY * delta);
+        enemy.knockback.x *= decay;
+        enemy.knockback.z *= decay;
+        if (Math.abs(enemy.knockback.x) < 0.01) enemy.knockback.x = 0;
+        if (Math.abs(enemy.knockback.z) < 0.01) enemy.knockback.z = 0;
+
+        // Lock Y to the ground/water surface beneath the new position.
+        group.position.y = getSurfaceHeight(group.position.x, group.position.z);
+
+        // Walking animation: swing arms/legs in opposite phase pairs.
+        const swing = isMoving ? Math.sin(walkPhase) * ENEMY_LIMB_SWING : 0;
+        enemy.parts.leftArm.rotation.x = swing;
+        enemy.parts.rightArm.rotation.x = -swing;
+        enemy.parts.leftLeg.rotation.x = -swing;
+        enemy.parts.rightLeg.rotation.x = swing;
+
+        // Recompute the world-space bounding box and check player contact.
+        enemy.boundingBox.setFromObject(group);
+        enemy.hitCooldown = Math.max(0, enemy.hitCooldown - delta);
+        if (enemy.hitCooldown === 0 && enemy.boundingBox.intersectsBox(playerBox)) {
+          damagePlayer(ENEMY_DAMAGE, group.position.x, group.position.z);
+          enemy.hitCooldown = ENEMY_HIT_COOLDOWN;
+        }
+
+        // Count down the post-hit red flash, then restore original colors.
+        if (enemy.flashTimer > 0) {
+          enemy.flashTimer -= delta;
+          if (enemy.flashTimer <= 0) {
+            enemy.flashTimer = 0;
+            for (const key of Object.keys(enemy.parts)) {
+              const mesh = enemy.parts[key];
+              mesh.material.color.setHex(mesh.userData.originalColor);
+            }
+          }
+        }
+      }
+    }
+
+    // Combat: deals PLAYER_ATTACK_DAMAGE to `enemy`, flashes its parts red,
+    // and applies a knockback impulse pushing it directly away from the
+    // player. Removes the zombie from the scene once its hp reaches 0.
+    function attackEnemy(enemy) {
+      enemy.hp -= PLAYER_ATTACK_DAMAGE;
+
+      enemy.flashTimer = ENEMY_FLASH_DURATION;
+      for (const key of Object.keys(enemy.parts)) {
+        enemy.parts[key].material.color.setHex(0xff0000);
+      }
+
+      const dx = enemy.group.position.x - player.position.x;
+      const dz = enemy.group.position.z - player.position.z;
+      const dist = Math.hypot(dx, dz) || 1;
+      enemy.knockback.x = (dx / dist) * ENEMY_HIT_KNOCKBACK;
+      enemy.knockback.z = (dz / dist) * ENEMY_HIT_KNOCKBACK;
+
+      if (enemy.hp <= 0) {
+        scene.remove(enemy.group);
+        const idx = enemies.indexOf(enemy);
+        if (idx !== -1) enemies.splice(idx, 1);
+      }
+    }
+
+
+    /* =========================================================================
+       17. MOBILE TOUCH CONTROLS
+       =========================================================================
+       On touch devices, Pointer Lock is unavailable/unreliable, so the game
+       runs in `mobileMode`: the "Click to Play" overlay is hidden and
+       isGameActive() (used by the render loop) returns true without needing
+       controls.isLocked.
+
+        - Left side: a virtual joystick (#joystickBase/#joystickKnob). Its
+          offset from center maps to mobileMoveVector {x, z}, consumed by
+          updatePlayer() (section 9) the same way WASD is.
+        - Right side: JUMP (mirrors Space), MINE (mirrors holding left-click -
+          attacks a targeted enemy or starts breaking the targeted block), and
+          PLACE (mirrors right-click, places the selected hotbar block).
+        - Anywhere else on screen: dragging rotates the camera (look around)
+          by directly driving camera.rotation in 'YXZ' order, with pitch
+          clamped just short of straight up/down.
+    ========================================================================= */
+    const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+
+    let mobileMode = false;
+    const mobileMoveVector = { x: 0, z: 0 }; // joystick offset, each axis in [-1, 1]
+    let touchYaw = 0;
+    let touchPitch = 0;
+
+    // True while the player should be controllable and the world
+    // interactive - either Pointer Lock is active (desktop) or we're in
+    // mobile mode (touch device, no Pointer Lock needed).
+    function isGameActive() {
+      return controls.isLocked || mobileMode;
+    }
+
+    if (isTouchDevice) {
+      mobileMode = true;
+      document.getElementById('mobileControls').classList.remove('hidden');
+      instructions.style.display = 'none';
+
+      // Seed yaw/pitch from the camera's current orientation so look-drag
+      // continues smoothly from wherever the camera starts.
+      const startEuler = new THREE.Euler().setFromQuaternion(camera.quaternion, 'YXZ');
+      touchYaw = startEuler.y;
+      touchPitch = startEuler.x;
+    }
+
+    // --- Virtual joystick (movement) ---
+    const joystickBase = document.getElementById('joystickBase');
+    const joystickKnob = document.getElementById('joystickKnob');
+    let joystickTouchId = null;
+
+    function updateJoystick(touch) {
+      const rect = joystickBase.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      let dx = touch.clientX - centerX;
+      let dy = touch.clientY - centerY;
+      const dist = Math.hypot(dx, dy);
+      if (dist > JOYSTICK_RADIUS) {
+        dx = (dx / dist) * JOYSTICK_RADIUS;
+        dy = (dy / dist) * JOYSTICK_RADIUS;
+      }
+      joystickKnob.style.transform = `translate(${dx}px, ${dy}px)`;
+      mobileMoveVector.x = dx / JOYSTICK_RADIUS;
+      mobileMoveVector.z = dy / JOYSTICK_RADIUS;
+    }
+
+    function resetJoystick() {
+      joystickKnob.style.transform = 'translate(0px, 0px)';
+      mobileMoveVector.x = 0;
+      mobileMoveVector.z = 0;
+    }
+
+    joystickBase.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (joystickTouchId !== null) return;
+      const touch = e.changedTouches[0];
+      joystickTouchId = touch.identifier;
+      updateJoystick(touch);
+    }, { passive: false });
+
+    joystickBase.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      for (const touch of e.changedTouches) {
+        if (touch.identifier === joystickTouchId) updateJoystick(touch);
+      }
+    }, { passive: false });
+
+    function endJoystickTouch(e) {
+      for (const touch of e.changedTouches) {
+        if (touch.identifier === joystickTouchId) {
+          joystickTouchId = null;
+          resetJoystick();
+        }
+      }
+    }
+    joystickBase.addEventListener('touchend', endJoystickTouch);
+    joystickBase.addEventListener('touchcancel', endJoystickTouch);
+
+    // --- Action buttons: JUMP, MINE (hold to attack/break), PLACE (tap) ---
+    const jumpBtn = document.getElementById('jumpBtn');
+    const mineBtn = document.getElementById('mineBtn');
+    const placeBtn = document.getElementById('placeBtn');
+
+    jumpBtn.addEventListener('touchstart', (e) => { e.preventDefault(); keys['Space'] = true; }, { passive: false });
+    jumpBtn.addEventListener('touchend',    (e) => { e.preventDefault(); keys['Space'] = false; });
+    jumpBtn.addEventListener('touchcancel', (e) => { e.preventDefault(); keys['Space'] = false; });
+
+    mineBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const targetEnemy = getTargetedEnemy();
+      if (targetEnemy) {
+        attackEnemy(targetEnemy);
+      } else {
+        isBreaking = true;
+        breakTimer = 0;
+        breakTargetKey = null;
+        mineSoundTimer = 0;
+      }
+    }, { passive: false });
+
+    function endMineTouch(e) {
+      e.preventDefault();
+      isBreaking = false;
+      breakTimer = 0;
+      breakTargetKey = null;
+      miningProgress = 0;
+    }
+    mineBtn.addEventListener('touchend', endMineTouch, { passive: false });
+    mineBtn.addEventListener('touchcancel', endMineTouch, { passive: false });
+
+    placeBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      placeBlock();
+    }, { passive: false });
+
+    // --- Look-drag: any touch that doesn't start on the virtual controls
+    //     rotates the camera. ---
+    let lookTouchId = null;
+    let lastLookX = 0;
+    let lastLookY = 0;
+    const TOUCH_PITCH_LIMIT = Math.PI / 2 - 0.01;
+
+    document.addEventListener('touchstart', (e) => {
+      if (!mobileMode || lookTouchId !== null) return;
+      for (const touch of e.changedTouches) {
+        if (touch.target.closest && touch.target.closest('#mobileControls')) continue;
+        lookTouchId = touch.identifier;
+        lastLookX = touch.clientX;
+        lastLookY = touch.clientY;
+        break;
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+      if (!mobileMode) return;
+      for (const touch of e.changedTouches) {
+        if (touch.identifier !== lookTouchId) continue;
+        const dx = touch.clientX - lastLookX;
+        const dy = touch.clientY - lastLookY;
+        lastLookX = touch.clientX;
+        lastLookY = touch.clientY;
+
+        touchYaw -= dx * TOUCH_LOOK_SENSITIVITY;
+        touchPitch -= dy * TOUCH_LOOK_SENSITIVITY;
+        touchPitch = THREE.MathUtils.clamp(touchPitch, -TOUCH_PITCH_LIMIT, TOUCH_PITCH_LIMIT);
+        camera.rotation.set(touchPitch, touchYaw, 0, 'YXZ');
+      }
+    }, { passive: true });
+
+    function endLookTouch(e) {
+      for (const touch of e.changedTouches) {
+        if (touch.identifier === lookTouchId) lookTouchId = null;
+      }
+    }
+    document.addEventListener('touchend', endLookTouch);
+    document.addEventListener('touchcancel', endLookTouch);
+
+
+    /* =========================================================================
+       18. RENDER / ANIMATION LOOP
+    ========================================================================= */
+    const clock = new THREE.Clock();
+    let sandTickAccumulator = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // Cap delta to avoid huge jumps (e.g. when the tab loses focus).
+      const delta = Math.min(clock.getDelta(), 0.1);
+
+      if (isGameActive()) {
+        updatePlayer(delta);
+
+        const target = getTargetedBlock();
+        updateBreaking(delta, target);
+        updateHighlight(target, miningProgress);
+      } else {
+        updateHighlight(null);
+      }
+
+      // World simulation tick (runs independently of pointer lock).
+      sandTickAccumulator += delta;
+      if (sandTickAccumulator >= SAND_TICK_INTERVAL) {
+        sandTickAccumulator -= SAND_TICK_INTERVAL;
+        updateSandPhysics();
+      }
+
+      // Clouds drift, the day/night cycle advances, and the zombies' AI ticks
+      // regardless of pointer lock, same as the sand simulation above.
+      updateClouds(delta);
+      updateDayNightCycle(delta);
+      updateEnemies(delta);
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+
+    /* =========================================================================
+       19. WINDOW RESIZE
+    ========================================================================= */
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    /* =========================================================================
+       PHASE 10 NOTES (for future iterations):
+       - More block types (e.g. Stone): add entries to BLOCK{}/BLOCK_COLORS{}/
+         BLOCK_HARDNESS{}/BLOCK_TO_INVENTORY_KEY{}, plus a hotbar slot in
+         HOTBAR_SLOTS + the #hotbar HTML, and they'll work with blockMesh,
+         mining/inventory, and placeBlock().
+       - More tools/recipes: add entries to RECIPES{} and a .recipe block in
+         #craftingMenu's HTML; canCraft()/craftItem() are fully data-driven.
+       - Other falling blocks (gravel, etc.): generalize updateSandPhysics()
+         to check a small set of "falls when unsupported" block IDs.
+       - Leaves: currently uncollectible (no BLOCK_TO_INVENTORY_KEY entry) and
+         use the default 0.5s mining time - add a 'leaves'/sapling drop here.
+       - Water interaction: placing blocks into/replacing water is still
+         unsupported (water excluded from raycasting/placement) - flowing
+         water (section 10) only ever fills AIR adjacent to an existing
+         Water voxel.
+       - Persistence: Save/Load (section 13) is file-based (JSON download /
+         upload via world_save.json) and covers position, inventory, and
+         placed/broken/flowed blocks via modifiedBlocks. Zombie state (hp,
+         position) is NOT currently saved - zombies always respawn fresh at
+         their deterministic spawn points on Load. A "New Game" button
+         (re-running generateWorld() and clearing modifiedBlocks) would also
+         be a natural follow-up.
+       - Enemy collision: zombies ignore isSolid() when seeking - they can
+         currently walk through trees/walls/water. Routing their movement
+         through moveAndCollide()/aabbCollidesSolid()-style checks would fix
+         this if it becomes visible.
+       - Combat feedback: attacks are instant/melee with no swing animation,
+         sound, or particle effect, and zombies don't fight back beyond
+         contact damage (no attack animation/lunge). A first-person weapon
+         model + swing animation would be a natural next step.
+       - Zombie respawning: defeated zombies are gone for the rest of the
+         session - a respawn timer or wave system could replace them.
+       - Mobile (section 17): hotbar slot selection (1-4) and the crafting
+         menu ('E') have no touch equivalents yet - mobile players are stuck
+         on slot 1 (Dirt) and can't craft. A simple on-screen slot selector
+         and a "Craft" button would close this gap.
+       - Night visibility: at night, ambientLight dims to 0.05 and sunLight to
+         0 - a handheld light source / torch placement would help mobile and
+         desktop players see in the dark.
+    ========================================================================= */
+  </script>
+</body>
+</html>

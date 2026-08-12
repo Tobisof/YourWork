@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MineJS — Voxel Engine (Three.js)</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Celownik na środku ekranu -->
+  <div id="crosshair"></div>
+
+  <!-- Czerwona winieta przy obrażeniach -->
+  <div id="damage-flash"></div>
+
+  <!-- Niebieska nakładka pod wodą -->
+  <div id="water-overlay"></div>
+
+  <!-- HUD: tlen, zdrowie/głód, hotbar -->
+  <div id="hud">
+    <div id="air-row" class="hidden">
+      <div class="bar air"><div id="air-fill"></div></div>
+    </div>
+    <div id="stats">
+      <div class="bar health" title="Zdrowie"><div id="health-fill"></div></div>
+      <div class="bar food" title="Głód"><div id="food-fill"></div></div>
+    </div>
+    <div id="hotbar"></div>
+  </div>
+
+  <!-- Pasek postępu jedzenia -->
+  <div id="eat-row" class="hidden">
+    <span>Jedzenie...</span>
+    <div class="bar eat"><div id="eat-fill"></div></div>
+  </div>
+
+  <!-- Debug: FPS / pozycja / pora dnia -->
+  <div id="debug"></div>
+
+  <!-- Ekran startowy / pauzy -->
+  <div id="overlay">
+    <h1>MineJS</h1>
+    <p class="subtitle">Voxel survival w przeglądarce &mdash; Three.js</p>
+    <button id="play-btn">Kliknij, aby grać</button>
+    <div class="help">
+      WASD &mdash; ruch &nbsp;&middot;&nbsp; Spacja &mdash; skok / pływanie &nbsp;&middot;&nbsp; Shift &mdash; sprint<br>
+      LPM &mdash; niszcz blok / atakuj moba &nbsp;&middot;&nbsp; PPM &mdash; postaw blok / zjedz<br>
+      1&ndash;5 lub kółko myszy &mdash; wybór slotu &nbsp;&middot;&nbsp; ESC &mdash; pauza
+    </div>
+  </div>
+
+  <!-- Ekran śmierci -->
+  <div id="death-screen" class="hidden">
+    <h1>Zginąłeś!</h1>
+    <button id="respawn-btn">Odrodź się</button>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="main.js"></script>
+</body>
+</html>

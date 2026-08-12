@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stunt Racing – 2 Poziomy</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+<style>
+html,body{margin:0;padding:0;overflow:hidden;width:100%;height:100%;font-family:'Trebuchet MS',Arial,sans-serif;}
+canvas{display:block;}
+
+/* === GŁÓWNY HUD (środek góra) === */
+#mainHud{
+  position:fixed;left:50%;top:18px;transform:translateX(-50%);
+  padding:12px 28px;background:rgba(255,255,255,.72);
+  border:2px solid rgba(120,120,120,.22);border-radius:18px;
+  text-align:center;user-select:none;pointer-events:none;
+  box-shadow:0 4px 14px rgba(0,0,0,.12);min-width:200px;
+}
+#hudLabel{font-size:11px;opacity:.65;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px;}
+#hudValue{font-size:40px;font-weight:bold;line-height:1;color:#444;}
+#hudSub  {font-size:13px;margin-top:4px;opacity:.75;color:#555;}
+#hudExtra{font-size:13px;font-weight:bold;color:#c8920a;margin-top:3px;min-height:18px;}
+
+/* === PRĘDKOŚĆ === */
+#speedHud{
+  position:fixed;right:24px;bottom:24px;padding:12px 20px;
+  background:rgba(255,255,255,.65);border:2px solid rgba(120,120,120,.22);
+  border-radius:14px;text-align:center;user-select:none;pointer-events:none;
+  box-shadow:0 4px 14px rgba(0,0,0,.1);
+}
+#speedValue{font-size:32px;font-weight:bold;color:#444;line-height:1;}
+#speedUnit{font-size:12px;opacity:.7;letter-spacing:1px;}
+
+/* === STEROWANIE === */
+#ctrlHint{
+  position:fixed;left:18px;top:18px;padding:10px 16px;
+  background:rgba(255,255,255,.65);border:2px solid rgba(120,120,120,.22);
+  border-radius:14px;color:#555;font-size:13px;line-height:1.7;
+  user-select:none;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.1);
+}
+#ctrlHint b{color:#333;}
+
+/* === PRZEWRÓCENIE === */
+#flipHint{
+  position:fixed;left:50%;top:28%;transform:translate(-50%,-50%);
+  padding:14px 26px;background:rgba(255,255,255,.85);
+  border:2px solid rgba(200,80,80,.5);border-radius:16px;
+  color:#a03030;font-size:17px;font-weight:bold;text-align:center;
+  user-select:none;pointer-events:none;display:none;
+}
+#flipHint.visible{display:block;}
+
+/* === OVERLAY PRZEJŚCIA MIĘDZY POZIOMAMI === */
+#levelOverlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.82);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  color:#fff;text-align:center;opacity:0;transition:opacity .45s;
+  pointer-events:none;z-index:99;
+}
+#levelOverlay.show{opacity:1;pointer-events:all;}
+#overlayTitle{font-size:52px;font-weight:bold;margin-bottom:10px;}
+#overlaySub  {font-size:22px;opacity:.8;}
+
+/* === WYBÓR MAPY (góra prawo) === */
+#mapSelector{
+  position:fixed;right:18px;top:18px;user-select:none;z-index:50;
+}
+#mapBtn{
+  padding:10px 16px;background:rgba(255,255,255,.75);
+  border:2px solid rgba(120,120,120,.22);border-radius:14px;
+  color:#444;font-size:14px;font-weight:bold;font-family:inherit;
+  cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.1);
+}
+#mapBtn:hover{background:rgba(255,255,255,.95);}
+#mapMenu{
+  display:none;margin-top:6px;background:rgba(255,255,255,.92);
+  border:2px solid rgba(120,120,120,.22);border-radius:14px;
+  overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.12);
+}
+#mapMenu.open{display:block;}
+.mapOpt{
+  padding:10px 18px;font-size:13px;color:#444;cursor:pointer;white-space:nowrap;
+}
+.mapOpt:hover{background:rgba(90,130,192,.15);}
+
+/* === NITRO === */
+#nitroHud{
+  position:fixed;right:24px;bottom:96px;width:170px;padding:10px 16px;
+  background:rgba(255,255,255,.65);border:2px solid rgba(120,120,120,.22);
+  border-radius:14px;user-select:none;pointer-events:none;
+  box-shadow:0 4px 14px rgba(0,0,0,.1);
+}
+#nitroLabel{font-size:11px;letter-spacing:2px;opacity:.65;margin-bottom:5px;color:#555;}
+#nitroBarBg{width:100%;height:11px;background:rgba(0,0,0,.12);border-radius:6px;overflow:hidden;}
+#nitroBarFill{height:100%;width:50%;border-radius:6px;background:linear-gradient(90deg,#66ddff,#3399ff);transition:width .1s,background .15s;}
+</style>
+</head>
+<body>
+
+<div id="mainHud">
+  <div id="hudLabel">Przejedź przez START</div>
+  <div id="hudValue">--</div>
+  <div id="hudSub">Rekord: --</div>
+  <div id="hudExtra"></div>
+</div>
+
+<div id="speedHud">
+  <div id="speedValue">0</div>
+  <div id="speedUnit">km/h</div>
+</div>
+
+<div id="ctrlHint">
+  <b>W / ↑</b> gaz &nbsp; <b>S / ↓</b> wstecz<br>
+  <b>A / D</b> skręt &nbsp; <b>Spacja</b> hamulec<br>
+  <b>Shift</b> nitro &nbsp; <b>R</b> reset<br>
+  <b>Mysz/dotyk (przeciągnij)</b> obrót kamery &nbsp; <b>C</b> wyśrodkuj
+</div>
+
+<div id="nitroHud">
+  <div id="nitroLabel">NITRO</div>
+  <div id="nitroBarBg"><div id="nitroBarFill"></div></div>
+</div>
+
+<div id="flipHint">Auto na dachu – samo się prostuje... (lub <b>R</b>)</div>
+
+<div id="mapSelector">
+  <button id="mapBtn">🗺 Mapa <span id="mapBtnNum">1</span> ▾</button>
+  <div id="mapMenu">
+    <div class="mapOpt" data-lvl="1">Mapa 1 – Wyścig</div>
+    <div class="mapOpt" data-lvl="2">Mapa 2 – Kręgle</div>
+  </div>
+</div>
+
+<div id="levelOverlay">
+  <div id="overlayTitle"></div>
+  <div id="overlaySub"></div>
+</div>
+
+<script>
+"use strict";
+/* =========================================================================
+   RENDERER / SCENA / KAMERA  (trwałe – nie kasowane przy zmianie poziomu)
+   ========================================================================= */
+const scene    = new THREE.Scene();
+const CLEAR    = 0xf0ebd8;
+scene.background = new THREE.Color(CLEAR);
+scene.fog        = new THREE.Fog(CLEAR, 85, 300);
+
+const camera = new THREE.PerspectiveCamera(62, innerWidth/innerHeight, 0.1, 800);
+camera.position.set(0,6,20);
+
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+window.addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+
+/* =========================================================================
+   OŚWIETLENIE  (trwałe)
+   ========================================================================= */
+scene.add(new THREE.AmbientLight(0xffffff,.6));
+const sun = new THREE.DirectionalLight(0xffffff,.8);
+sun.position.set(20,40,20); sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.left=sun.shadow.camera.bottom=-65;
+sun.shadow.camera.right=sun.shadow.camera.top=65;
+sun.shadow.camera.near=1; sun.shadow.camera.far=250;
+sun.shadow.bias=-0.0005;
+scene.add(sun,sun.target);
+
+/* =========================================================================
+   FIZYCZNY ŚWIAT  (trwały, ale ciała kasowane przy zmianie poziomu)
+   ========================================================================= */
+const world = new CANNON.World();
+world.gravity.set(0,-9.82,0);
+world.broadphase = new CANNON.SAPBroadphase(world);
+world.solver.iterations = 12;
+world.defaultContactMaterial.friction = 0.4;
+
+const gndMat  = new CANNON.Material('gnd');
+const whlMat  = new CANNON.Material('whl');
+world.addContactMaterial(new CANNON.ContactMaterial(gndMat,whlMat,{
+  friction:.3, restitution:0, contactEquationStiffness:1000
+}));
+
+/* =========================================================================
+   POJAZD  (trwały)
+   ========================================================================= */
+const CHASSIS_W=1.5, CHASSIS_H=0.8, CHASSIS_L=3.0, WHEEL_R=0.40;
+
+const carGroup = new THREE.Group();
+scene.add(carGroup);
+
+// pomocnik – pojedyncza bryła karoserii (z opcjonalnym obrotem)
+function carPart(geo,mat,px,py,pz,rx,ry,rz){
+  const m=new THREE.Mesh(geo,mat);
+  m.position.set(px,py,pz);
+  if(rx||ry||rz) m.rotation.set(rx||0,ry||0,rz||0);
+  m.castShadow=m.receiveShadow=true; carGroup.add(m);
+  return m;
+}
+
+const carBodyMat  = new THREE.MeshStandardMaterial({color:0xff6f6f,roughness:.4,metalness:.3});
+const carCabinMat = new THREE.MeshStandardMaterial({color:0xfff1cf,roughness:.4});
+const carDarkMat  = new THREE.MeshStandardMaterial({color:0x2b2b2b,roughness:.6});
+const carGlassMat = new THREE.MeshStandardMaterial({color:0x6a8ca8,roughness:.15,metalness:.6,transparent:true,opacity:.7});
+const carLightF   = new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xffffaa,emissiveIntensity:.9});
+const carLightR   = new THREE.MeshStandardMaterial({color:0xff3333,emissive:0xff2222,emissiveIntensity:.9});
+
+// główny korpus
+carPart(new THREE.BoxGeometry(1.5,0.55,2.6), carBodyMat, 0,-0.05,0);
+// kabina
+carPart(new THREE.BoxGeometry(1.1,0.45,1.3), carCabinMat, 0,0.45,0.05);
+// maska – lekko opadająca ku przodowi
+carPart(new THREE.BoxGeometry(1.35,0.12,0.75), carBodyMat, 0,0.18,-1.0, -0.18);
+// pokrywa bagażnika – lekko opadająca ku tyłowi
+carPart(new THREE.BoxGeometry(1.35,0.12,0.65), carBodyMat, 0,0.18,1.0, 0.15);
+// przednia szyba
+carPart(new THREE.BoxGeometry(1.0,0.4,0.06), carGlassMat, 0,0.45,-0.58, -0.55);
+// tylna szyba
+carPart(new THREE.BoxGeometry(1.0,0.35,0.06), carGlassMat, 0,0.42,0.72, 0.5);
+// zderzaki
+carPart(new THREE.BoxGeometry(1.55,0.3,0.25), carDarkMat, 0,-0.2,-1.4);
+carPart(new THREE.BoxGeometry(1.55,0.3,0.25), carDarkMat, 0,-0.2, 1.4);
+// grill
+carPart(new THREE.BoxGeometry(0.6,0.15,0.06), carDarkMat, 0,-0.05,-1.53);
+// lusterka
+[-0.78,0.78].forEach(sx=>carPart(new THREE.BoxGeometry(0.08,0.1,0.22), carDarkMat, sx,0.45,-0.35));
+// spojler
+carPart(new THREE.BoxGeometry(1.2,0.06,0.28), carDarkMat, 0,0.7,1.35);
+[-0.5,0.5].forEach(sx=>carPart(new THREE.BoxGeometry(0.06,0.25,0.06), carDarkMat, sx,0.55,1.35));
+// nadkola
+[[-0.7,-1.05],[0.7,-1.05],[-0.7,1.05],[0.7,1.05]].forEach(([wx,wz])=>
+  carPart(new THREE.BoxGeometry(0.4,0.32,0.55), carDarkMat, wx,-0.18,wz));
+// reflektory
+[-0.5,0.5].forEach(sx=>carPart(new THREE.SphereGeometry(.11,10,10), carLightF, sx,-0.05,-1.45));
+// tylne światła
+[-0.5,0.5].forEach(sx=>carPart(new THREE.SphereGeometry(.10,10,10), carLightR, sx,-0.05,1.45));
+
+function makeWheel(){
+  const g=new THREE.CylinderGeometry(WHEEL_R,WHEEL_R,.34,24);
+  g.rotateZ(Math.PI/2);
+  const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:0x222222,roughness:.8}));
+  m.castShadow=m.receiveShadow=true; scene.add(m); return m;
+}
+const wheelMeshes=[makeWheel(),makeWheel(),makeWheel(),makeWheel()];
+
+const chassisBody = new CANNON.Body({mass:150});
+chassisBody.addShape(new CANNON.Box(new CANNON.Vec3(CHASSIS_W/2,CHASSIS_H/2,CHASSIS_L/2)));
+chassisBody.linearDamping=.05; chassisBody.angularDamping=.85;
+
+const vehicle = new CANNON.RaycastVehicle({
+  chassisBody, indexRightAxis:0, indexUpAxis:1, indexForwardAxis:2
+});
+const wBase={
+  radius:WHEEL_R, directionLocal:new CANNON.Vec3(0,-1,0),
+  suspensionStiffness:34, suspensionRestLength:.4, frictionSlip:5,
+  dampingRelaxation:2.5, dampingCompression:4.6, maxSuspensionForce:100000,
+  rollInfluence:.05, axleLocal:new CANNON.Vec3(-1,0,0),
+  chassisConnectionPointLocal:new CANNON.Vec3(),
+  maxSuspensionTravel:.3, customSlidingRotationalSpeed:-30,
+  useCustomSlidingRotationalSpeed:true
+};
+[new CANNON.Vec3(-.7,0,-1.05),new CANNON.Vec3(.7,0,-1.05),
+ new CANNON.Vec3(-.7,0,1.05), new CANNON.Vec3(.7,0,1.05)].forEach(p=>{
+  wBase.chassisConnectionPointLocal.copy(p); vehicle.addWheel(wBase);
+});
+vehicle.addToWorld(world);
+
+/* =========================================================================
+   ZARZĄDZANIE POZIOMAMI – wszystkie obiekty sceny/fizyki trzymamy w levelGroup
+   ========================================================================= */
+let levelGroup      = new THREE.Group();  // siatki Three.js bieżącego poziomu
+let levelBodies     = [];                 // ciała Cannon.js bieżącego poziomu
+let dynBlocks       = [];                 // pary {mesh,body} - bloki z fizyką
+let pins            = [];                 // kregle poziomu 2
+let movingObstacles = [];                 // przeszkody ruchome (kinematic)
+let nitroPickups    = [];                 // zbieralne ładunki nitro
+
+scene.add(levelGroup);
+
+/* === EFEKTY CZĄSTECZKOWE (wybuchy / odłamki) – trwałe, poza levelGroup === */
+const fxGroup=new THREE.Group();
+scene.add(fxGroup);
+let particles=[];
+function spawnBurst(pos,count,colors,opts){
+  opts=opts||{};
+  const speed=opts.speed||6, life=opts.life||0.9, size=opts.size||0.35, glow=!!opts.emissive;
+  for(let i=0;i<count;i++){
+    const s=size*(0.6+Math.random()*0.8);
+    const col=colors[Math.floor(Math.random()*colors.length)];
+    const mesh=new THREE.Mesh(new THREE.BoxGeometry(s,s,s),
+      new THREE.MeshStandardMaterial({color:col,roughness:.5,transparent:true,
+        emissive:glow?col:0x000000, emissiveIntensity:glow?.8:0}));
+    mesh.position.copy(pos);
+    fxGroup.add(mesh);
+    const ang=Math.random()*Math.PI*2, elev=0.2+Math.random()*0.8, sp=speed*(0.5+Math.random());
+    particles.push({
+      mesh,
+      vx:Math.cos(ang)*Math.cos(elev*Math.PI/2)*sp,
+      vy:Math.sin(elev*Math.PI/2)*sp+1.5,
+      vz:Math.sin(ang)*Math.cos(elev*Math.PI/2)*sp,
+      rx:(Math.random()-.5)*8, ry:(Math.random()-.5)*8,
+      life, maxLife:life
+    });
+  }
+}
+function updateParticles(dt){
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.life-=dt;
+    if(p.life<=0){
+      fxGroup.remove(p.mesh); p.mesh.geometry.dispose(); p.mesh.material.dispose();
+      particles.splice(i,1); continue;
+    }
+    p.vy-=9.82*dt;
+    p.mesh.position.x+=p.vx*dt;
+    p.mesh.position.y+=p.vy*dt;
+    p.mesh.position.z+=p.vz*dt;
+    if(p.mesh.position.y<0.05){ p.mesh.position.y=0.05; p.vy=0; p.vx*=.9; p.vz*=.9; }
+    p.mesh.rotation.x+=p.rx*dt; p.mesh.rotation.y+=p.ry*dt;
+    const t=p.life/p.maxLife;
+    p.mesh.material.opacity=t; p.mesh.scale.setScalar(0.4+0.6*t);
+  }
+}
+function clearParticles(){
+  particles.forEach(p=>{ fxGroup.remove(p.mesh); p.mesh.geometry.dispose(); p.mesh.material.dispose(); });
+  particles=[];
+}
+
+function addMesh(m){ levelGroup.add(m); return m; }
+function addBody(b){ levelBodies.push(b); world.addBody(b); return b; }
+function addDyn(mesh,body){ levelGroup.add(mesh); addBody(body); dynBlocks.push({mesh,body}); }
+
+function clearLevel(){
+  scene.remove(levelGroup);
+  levelGroup.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose(); });
+  levelGroup = new THREE.Group();
+  scene.add(levelGroup);
+  levelBodies.forEach(b=>{ try{ world.remove(b); }catch(e){} });
+  levelBodies=[]; dynBlocks=[]; pins=[]; movingObstacles=[]; nitroPickups=[];
+  clearParticles();
+}
+
+/* =========================================================================
+   NARZĘDZIA BUDOWY ŚWIATA
+   ========================================================================= */
+
+// statyczny box z cieniem (opcjonalnie półprzezroczysty - bariera)
+function mkBox(w,h,d,col,cx,cy,cz,rx,ry,rz,opacity){
+  const matParams={color:col,roughness:.7,metalness:.05};
+  if(opacity!==undefined){ matParams.transparent=true; matParams.opacity=opacity; }
+  const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),
+    new THREE.MeshStandardMaterial(matParams));
+  mesh.position.set(cx,cy,cz);
+  if(rx||ry||rz) mesh.rotation.set(rx||0,ry||0,rz||0);
+  mesh.castShadow=mesh.receiveShadow=true;
+  addMesh(mesh);
+
+  const body=new CANNON.Body({mass:0,material:gndMat});
+  body.addShape(new CANNON.Box(new CANNON.Vec3(w/2,h/2,d/2)));
+  body.position.set(cx,cy,cz);
+  if(rx||ry||rz){
+    const q=new CANNON.Quaternion();
+    const euler=new CANNON.Vec3(rx||0,ry||0,rz||0);
+    body.quaternion.setFromEuler(euler.x,euler.y,euler.z);
+  }
+  addBody(body);
+  return {mesh,body};
+}
+
+// niewidzialna ściana kolizyjna (sama fizyka, bez mesha) – niewidoczna "siatka"
+// uniemożliwiająca wyjazd/wyskoczenie poza tor, bez psucia wyglądu niskich płotków
+function mkWall(w,h,d,cx,cy,cz,rx,ry,rz){
+  const body=new CANNON.Body({mass:0,material:gndMat});
+  body.addShape(new CANNON.Box(new CANNON.Vec3(w/2,h/2,d/2)));
+  body.position.set(cx,cy,cz);
+  if(rx||ry||rz){
+    const euler=new CANNON.Vec3(rx||0,ry||0,rz||0);
+    body.quaternion.setFromEuler(euler.x,euler.y,euler.z);
+  }
+  addBody(body);
+  return {body};
+}
+
+// rampa: krzywa złożona z N segmentów o rosnącym kącie nachylenia.
+// Pierwszy segment wchodzi z gruntu pod bardzo małym kątem (płynne najechanie,
+// bez "krawędzi" o którą zaczepia przód auta), kolejne segmenty stopniowo
+// stromieją aż do "maxAngle" przy wybiciu.
+function mkRamp(x,z,width,height,length,rotY,segments){
+  const N=segments||4;
+  const maxAngle=Math.atan2(height,length);
+  const slTotal=Math.sqrt(length*length+height*height);
+  const segLen=slTotal/N;
+  const thick=0.6;
+
+  const pivot=new THREE.Group();
+  pivot.position.set(x,0,z); pivot.rotation.y=rotY;
+  levelGroup.add(pivot);
+
+  const qY=new CANNON.Quaternion(); qY.setFromAxisAngle(new CANNON.Vec3(0,1,0),rotY);
+
+  let yE=0, zE=0; // punkt "wejścia" bieżącego segmentu (lokalnie, względem pivotu)
+  for(let i=0;i<N;i++){
+    const theta=maxAngle*(i+1)/N;
+    const cy=yE-(thick/2)*Math.cos(theta)+(segLen/2)*Math.sin(theta);
+    const cz=zE-(thick/2)*Math.sin(theta)-(segLen/2)*Math.cos(theta);
+
+    const mesh=new THREE.Mesh(new THREE.BoxGeometry(width,thick,segLen),
+      new THREE.MeshStandardMaterial({color:0xe3c9a8,roughness:.75,metalness:.05}));
+    mesh.position.set(0,cy,cz); mesh.rotation.x=theta;
+    mesh.castShadow=mesh.receiveShadow=true; pivot.add(mesh);
+
+    const body=new CANNON.Body({mass:0,material:gndMat});
+    body.addShape(new CANNON.Box(new CANNON.Vec3(width/2,thick/2,segLen/2)));
+    const local=new CANNON.Vec3(0,cy,cz), worldOff=new CANNON.Vec3();
+    qY.vmult(local,worldOff);
+    body.position.set(x+worldOff.x, worldOff.y, z+worldOff.z);
+    const qT=new CANNON.Quaternion(); qT.setFromAxisAngle(new CANNON.Vec3(1,0,0),theta);
+    body.quaternion.copy(qY.mult(qT));
+    addBody(body);
+
+    yE+=segLen*Math.sin(theta);
+    zE-=segLen*Math.cos(theta);
+  }
+}
+
+// tekstura napisu na canvasie
+function bannerTex(text,bg){
+  const c=document.createElement('canvas'); c.width=512; c.height=128;
+  const ctx=c.getContext('2d');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,512,128);
+  ctx.fillStyle='#fff'; ctx.font='bold 62px "Trebuchet MS",Arial';
+  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(text,256,64);
+  return new THREE.CanvasTexture(c);
+}
+
+// brama z fizycznymi słupami
+function mkGate(x,z,iW,clearH,label,col,bannerCol){
+  const pt=.6, bh=.9;
+  const pMat=new THREE.MeshStandardMaterial({color:col,roughness:.7});
+  [-1,1].forEach(s=>{
+    const px=x+s*(iW/2+pt/2);
+    const m=new THREE.Mesh(new THREE.BoxGeometry(pt,clearH,pt),pMat);
+    m.position.set(px,clearH/2,z); m.castShadow=m.receiveShadow=true; addMesh(m);
+    const b=new CANNON.Body({mass:0,material:gndMat});
+    b.addShape(new CANNON.Box(new CANNON.Vec3(pt/2,clearH/2,pt/2)));
+    b.position.copy(m.position); addBody(b);
+  });
+  const bw=iW+pt*2;
+  const bm=new THREE.Mesh(new THREE.BoxGeometry(bw,bh,.5),
+    new THREE.MeshStandardMaterial({map:bannerTex(label,bannerCol),roughness:.6}));
+  bm.position.set(x,clearH+bh/2,z); bm.castShadow=bm.receiveShadow=true; addMesh(bm);
+  const bb=new CANNON.Body({mass:0,material:gndMat});
+  bb.addShape(new CANNON.Box(new CANNON.Vec3(bw/2,bh/2,.25)));
+  bb.position.copy(bm.position); addBody(bb);
+}
+
+// stos klocków
+const TC_BLOCKS=[0xffb37a,0xff7a7a,0xffd27a];
+function mkBlock(x,y,z,s,col){
+  const mesh=new THREE.Mesh(new THREE.BoxGeometry(s,s,s),
+    new THREE.MeshStandardMaterial({color:col,roughness:.6}));
+  mesh.position.set(x,y,z); mesh.castShadow=mesh.receiveShadow=true;
+  const body=new CANNON.Body({mass:2});
+  body.addShape(new CANNON.Box(new CANNON.Vec3(s/2,s/2,s/2)));
+  body.position.set(x,y,z);
+  addDyn(mesh,body);
+}
+function mkStack(cx,cz,rows){
+  const s=.65,g=.04;
+  for(let r=0;r<rows;r++){
+    const n=rows-r, py=s/2+r*(s+g)+.04;
+    for(let i=0;i<n;i++)
+      mkBlock(cx+(i-(n-1)/2)*(s+g),py,cz,s,TC_BLOCKS[(r+i)%3]);
+  }
+}
+
+// drzewko
+const TC_TREES=[0x8bbc6e,0x6daa7d,0x5e9e74,0xa3c97d,0x4a9460,0x7bbf7b];
+function mkTree(x,z,scale,colIdx){
+  const col=TC_TREES[colIdx%6], tr=.22*scale, th=1.2*scale;
+  const trunk=new THREE.Mesh(new THREE.CylinderGeometry(tr*.6,tr,th,8),
+    new THREE.MeshStandardMaterial({color:0x8b5e3c,roughness:.95}));
+  trunk.position.set(x,th/2,z); trunk.castShadow=trunk.receiveShadow=true; addMesh(trunk);
+  const br=1.1*scale, ch=1.6*scale;
+  for(let i=0;i<3;i++){
+    const r=br*(1-i*.22), h=ch*(1-i*.1);
+    const cone=new THREE.Mesh(new THREE.ConeGeometry(r,h,8),
+      new THREE.MeshStandardMaterial({color:col,roughness:.8}));
+    cone.position.set(x,th+i*ch*.55+h/2,z);
+    cone.castShadow=cone.receiveShadow=true; addMesh(cone);
+  }
+  const cb=new CANNON.Body({mass:0,material:gndMat});
+  cb.addShape(new CANNON.Box(new CANNON.Vec3(tr*1.6,th,tr*1.6)));
+  cb.position.set(x,th,z); addBody(cb);
+}
+
+// ścianka-szykana – kawałek muru wymuszający przejazd przez środek toru
+function mkChicane(cx,cz,width,h){
+  const hh=h||1.6;
+  mkBox(width,hh,1.0, 0xd9a066, cx,hh/2,cz);
+}
+
+// zbieralny ładunek nitro – świecący pierścień, odradza się po chwili
+function mkNitroPickup(x,z){
+  const grp=new THREE.Group();
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(.5,.16,10,20),
+    new THREE.MeshStandardMaterial({color:0x66ddff,emissive:0x2299ff,emissiveIntensity:1.0,roughness:.25,metalness:.3}));
+  ring.rotation.x=Math.PI/2; ring.castShadow=true; grp.add(ring);
+  const core=new THREE.Mesh(new THREE.SphereGeometry(.22,12,12),
+    new THREE.MeshStandardMaterial({color:0xffffff,emissive:0x66ccff,emissiveIntensity:1.3}));
+  grp.add(core);
+  grp.position.set(x,1.0,z);
+  addMesh(grp);
+  nitroPickups.push({grp,x,z,collected:false,respawnT:0});
+}
+
+/* =========================================================================
+   TŁO ŚWIATA (trwałe, poza levelGroup) – niebo, słońce, woda, wyspy
+   ========================================================================= */
+function buildEnvironment(){
+  const env=new THREE.Group();
+
+  // NIEBO – wielka kula z gradientem góra/dół
+  const skyC=document.createElement('canvas'); skyC.width=2; skyC.height=256;
+  const sctx=skyC.getContext('2d');
+  const grad=sctx.createLinearGradient(0,0,0,256);
+  grad.addColorStop(0,   '#7ec6f2');
+  grad.addColorStop(.55, '#cdeaf7');
+  grad.addColorStop(1,   '#f6efd9');
+  sctx.fillStyle=grad; sctx.fillRect(0,0,2,256);
+  const sky=new THREE.Mesh(new THREE.SphereGeometry(700,24,16),
+    new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(skyC),side:THREE.BackSide,fog:false}));
+  env.add(sky);
+
+  // SŁOŃCE
+  const sunMesh=new THREE.Mesh(new THREE.SphereGeometry(18,20,20),
+    new THREE.MeshBasicMaterial({color:0xfff4d0,fog:false}));
+  sunMesh.position.set(220,170,-160); env.add(sunMesh);
+  const sunGlow=new THREE.Mesh(new THREE.SphereGeometry(34,20,20),
+    new THREE.MeshBasicMaterial({color:0xfff7e0,transparent:true,opacity:.35,fog:false}));
+  sunGlow.position.copy(sunMesh.position); env.add(sunGlow);
+
+  // WODA – wielka tafla otaczająca obie mapy (głębszy, nasycony kolor,
+  // odporny na mgłę sceny, żeby nie zlewał się z bladym niebem na horyzoncie)
+  const water=new THREE.Mesh(new THREE.PlaneGeometry(2000,2000),
+    new THREE.MeshStandardMaterial({color:0x1f6f9c,roughness:.15,metalness:.2,
+      transparent:true,opacity:.92,fog:false}));
+  water.rotation.x=-Math.PI/2; water.position.set(0,-1.85,-150);
+  water.receiveShadow=true; env.add(water);
+
+  // drzewko bez fizyki – do dekoracji wysp
+  function decoTree(x,y,z,scale,colIdx){
+    const col=TC_TREES[colIdx%6], tr=.22*scale, th=1.2*scale;
+    const trunk=new THREE.Mesh(new THREE.CylinderGeometry(tr*.6,tr,th,8),
+      new THREE.MeshStandardMaterial({color:0x8b5e3c,roughness:.95}));
+    trunk.position.set(x,y+th/2,z); trunk.receiveShadow=true; env.add(trunk);
+    const br=1.1*scale, ch=1.6*scale;
+    for(let i=0;i<3;i++){
+      const r=br*(1-i*.22), h=ch*(1-i*.1);
+      const cone=new THREE.Mesh(new THREE.ConeGeometry(r,h,8),
+        new THREE.MeshStandardMaterial({color:col,roughness:.8}));
+      cone.position.set(x,y+th+i*ch*.55+h/2,z);
+      cone.receiveShadow=true; env.add(cone);
+    }
+  }
+  // domek bez fizyki – do dekoracji wysp
+  function decoHouse(x,y,z,scale,roofCol){
+    const body=new THREE.Mesh(new THREE.BoxGeometry(2*scale,1.6*scale,2*scale),
+      new THREE.MeshStandardMaterial({color:0xf3e6d8,roughness:.85}));
+    body.position.set(x,y+0.8*scale,z); body.receiveShadow=true; env.add(body);
+    const roof=new THREE.Mesh(new THREE.ConeGeometry(1.6*scale,1.2*scale,4),
+      new THREE.MeshStandardMaterial({color:roofCol,roughness:.7}));
+    roof.position.set(x,y+1.6*scale+0.6*scale,z); roof.rotation.y=Math.PI/4;
+    roof.receiveShadow=true; env.add(roof);
+  }
+  // wyspa – cokół + zielony wierzch + drzewka (+ czasem domek)
+  function island(x,z,r,withHouse,seed){
+    const base=new THREE.Mesh(new THREE.CylinderGeometry(r,r*1.15,1.6,16),
+      new THREE.MeshStandardMaterial({color:0xd8c08a,roughness:.9}));
+    base.position.set(x,-1.0,z); base.receiveShadow=true; env.add(base);
+    const top=new THREE.Mesh(new THREE.CylinderGeometry(r*0.92,r*0.98,0.4,16),
+      new THREE.MeshStandardMaterial({color:0x8bbc6e,roughness:.85}));
+    top.position.set(x,0.0,z); top.receiveShadow=true; env.add(top);
+    decoTree(x-r*.35,0.0,z+r*.2, .9+(seed%5)*.1, seed%6);
+    decoTree(x+r*.3, 0.0,z-r*.3, .8+(seed%4)*.1, (seed+3)%6);
+    if(withHouse) decoHouse(x+r*.1,0.0,z+r*.45, .9+(seed%3)*.12,
+      [0xc0524a,0x6a8caf,0x9a6a4a][seed%3]);
+  }
+
+  // wyspy rozsiane wzdłuż obu map (poza ich granicami)
+  for(let i=0;i<12;i++){
+    const z = 90 - i*40;
+    island( 34+(i%3)*9,  z+(i%2)*12, 4.5+(i%3)*1.2, i%2===0, i*7+1);
+    island(-(36+(i%4)*8), z-(i%3)*10, 4+(i%3),      i%3===1, i*5+2);
+  }
+
+  scene.add(env);
+}
+
+// belka przesuwająca się w lewo/prawo na wysokości zderzaka
+function mkSlidingBeam(cx,z,travel,len,speed,phase){
+  const h=1.2,d=.8;
+  const mesh=new THREE.Mesh(new THREE.BoxGeometry(len,h,d),
+    new THREE.MeshStandardMaterial({color:0xe07a5f,roughness:.6}));
+  mesh.castShadow=mesh.receiveShadow=true; addMesh(mesh);
+
+  const body=new CANNON.Body({mass:0});
+  body.type=CANNON.Body.KINEMATIC;
+  body.addShape(new CANNON.Box(new CANNON.Vec3(len/2,h/2,d/2)));
+  body.position.set(cx,h/2+.3,z);
+  addBody(body);
+
+  movingObstacles.push({mesh,body,update(t,dt){
+    const nx=cx+Math.sin(t*speed+phase)*travel;
+    body.velocity.set((nx-body.position.x)/dt,0,0);
+    body.position.x=nx;
+  }});
+}
+
+// obracające się ramię na słupku – do omijania w locie po rampie
+function mkRotatingBar(x,z,armLen,height,speed,phase){
+  const mesh=new THREE.Mesh(new THREE.BoxGeometry(armLen*2,.5,.5),
+    new THREE.MeshStandardMaterial({color:0x6a8caf,roughness:.6}));
+  mesh.castShadow=mesh.receiveShadow=true; addMesh(mesh);
+
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,height,10),
+    new THREE.MeshStandardMaterial({color:0x999999,roughness:.7}));
+  pole.position.set(x,height/2,z); pole.castShadow=pole.receiveShadow=true; addMesh(pole);
+
+  const body=new CANNON.Body({mass:0});
+  body.type=CANNON.Body.KINEMATIC;
+  body.addShape(new CANNON.Box(new CANNON.Vec3(armLen,.25,.25)));
+  body.position.set(x,height,z);
+  addBody(body);
+
+  movingObstacles.push({mesh,body,update(t,dt){
+    const ang=t*speed+phase;
+    const q=new CANNON.Quaternion(); q.setFromAxisAngle(new CANNON.Vec3(0,1,0),ang);
+    body.quaternion.copy(q);
+    body.angularVelocity.set(0,speed,0);
+    body.position.set(x,height,z);
+  }});
+}
+
+/* =========================================================================
+   POZIOM 1 – Time Trial z ogrodzonym torem
+   ========================================================================= */
+const L1_SPAWN    = new CANNON.Vec3(0,2.5,14);
+const L1_START_Z  =  8;
+const L1_FINISH_Z = -304;
+
+function loadLevel1(){
+  clearLevel();
+  currentLevel=1;
+  document.getElementById('mapBtnNum').textContent='1';
+
+  // tło / atmosfera poziomu 1
+  scene.background=new THREE.Color(CLEAR);
+  scene.fog=new THREE.Fog(CLEAR,85,300);
+
+  // PODŁOŻE – wąski, "korytarzowy" tor: nie da się objechać przeszkód bokiem.
+  // Wizualnie podłoże jest szersze niż jezdnia (GW), żeby drzewka za ogrodzeniem
+  // miały na czym stać, a nie "wisiały" nad pustką.
+  const GW=16, GW_GROUND=40, GL=400, GCZ=-172;
+  mkBox(GW_GROUND,2,GL, 0xb5c99a, 0,-1,GCZ);
+
+  // OGRODZENIE – niskie, kolorowe płotki (jak wcześniej)
+  const fH=1.3;
+  mkBox(1,fH,GL, 0xa8e0f0, -(GW/2+.5),fH/2,GCZ);              // lewa
+  mkBox(1,fH,GL, 0xa8e0f0,  (GW/2+.5),fH/2,GCZ);              // prawa
+  mkBox(GW,fH,1, 0xa8e0f0, 0,fH/2, GCZ+GL/2-1);               // tył (za startem)
+  mkBox(GW,fH,1, 0xc0392b, 0,fH/2, GCZ-GL/2+2);               // koniec trasy (czerwona)
+
+  // NIEWIDZIALNE WYSOKIE ŚCIANY KOLIZYJNE – nie da się wyskoczyć poza tor,
+  // przy zachowaniu wyglądu niskich płotków
+  const wallH=8;
+  mkWall(1,wallH,GL, -(GW/2+.5),wallH/2,GCZ);
+  mkWall(1,wallH,GL,  (GW/2+.5),wallH/2,GCZ);
+  mkWall(GW,wallH,1, 0,wallH/2, GCZ+GL/2-1);
+  mkWall(GW,wallH,1, 0,wallH/2, GCZ-GL/2+2);
+
+  // RAMPY – szerokie niemal na całą szerokość toru (wjazd = wtopiony w grunt, wybicie na końcu)
+  mkRamp(0, -22, 13,4.0,12, 0);
+  mkRamp(0,-110, 13,4.5,11, 0);
+  mkRamp(0,-230, 13,5.0,11, 0);
+
+  // BRAMKI Z KLOCKAMI – ścianki zwężają tor do wąskiej szczeliny wypełnionej
+  // klockami do rozwalenia, więc nie da się ich ominąć z boku
+  function mkBlockGate(cz,gap,rows){
+    const half=GW/2;
+    const wallW=half+0.5-gap/2, wallC=gap/2+wallW/2;
+    mkChicane(-wallC,cz,wallW,1.6);
+    mkChicane( wallC,cz,wallW,1.6);
+    mkStack(0,cz-0.3,rows||3);
+  }
+  mkBlockGate(-70,4,3);
+  mkBlockGate(-158,4,3);
+  mkBlockGate(-278,4,3);
+
+  // SZYKANY – wymuszają przejazd "esem" przez środek toru
+  mkChicane(-4.5,-200,8,1.6);
+  mkChicane( 4.5,-220,8,1.6);
+
+  // PRZESZKODY RUCHOME – do omijania (rozmiary dopasowane do wąskiego toru)
+  mkRotatingBar(0, -46,6.0,3.2, 1.1,0);          // wirujące ramię tuż za rampą 1 (omijanie w locie)
+  mkSlidingBeam(0,-134,2.5,10,1.0,0);            // przesuwająca się belka na ziemi
+  mkRotatingBar(0,-254,6.0,3.4,-1.0,Math.PI/2);  // wirujące ramię za rampą 3
+
+  // BRAMY
+  mkGate(0, L1_START_Z, 9,4.5,'START','#5a82c0','#5a82c0');
+  mkGate(0, -90,         7,2.3,'TUNEL','#5e9466','#5e9466');
+  mkGate(0,-180,         7,2.3,'TUNEL 2','#5e9466','#5e9466');
+  mkGate(0, L1_FINISH_Z, 9,4.5,'META', '#c66a5a','#c66a5a');
+
+  // NITRO – zbieralne ładunki rozsiane wzdłuż trasy
+  mkNitroPickup( 0,-10);  mkNitroPickup( 3,-58);
+  mkNitroPickup(-3,-100); mkNitroPickup(0,-145);
+  mkNitroPickup(-3,-195); mkNitroPickup(3,-245);
+  mkNitroPickup( 0,-296);
+
+  // DRZEWKA – posadzone tuż za ogrodzeniem, wzdłuż całej trasy
+  for(let i=0;i<24;i++){
+    const z = 4 - i*13;
+    mkTree(-13+((i%3)-1)*1.6, z+((i%2)*3-1.5), .9+((i*37)%5)*.08, i%6);
+    mkTree( 13-((i%3)-1)*1.6, z-((i%2)*3-1.5), .9+((i*53)%5)*.08, (i+3)%6);
+  }
+
+  // RESET AUTA
+  resetCar(L1_SPAWN, new CANNON.Quaternion(0,0,0,1));
+  initL1State();
+}
+
+/* =========================================================================
+   POZIOM 2 – Bowling (wyskocz z rampy i obal kregle)
+   ========================================================================= */
+const L2_SPAWN      = new CANNON.Vec3(0,2.5,48);
+const PIN_SCALE     = 1.4; // kręgle większe -> łatwiej o efekt domina
+const L2_PIN_HEIGHT = 0.65*PIN_SCALE; // odsunięcie osi ciała od podstawy kregla
+
+function loadLevel2(){
+  clearLevel();
+  currentLevel=2;
+  document.getElementById('mapBtnNum').textContent='2';
+
+  // tło / atmosfera poziomu 2 – cieplejsza, "kręgielniowa"
+  scene.background=new THREE.Color(0xf7e9d2);
+  scene.fog=new THREE.Fog(0xf7e9d2,70,260);
+
+  // PODŁOŻE – jedna płaska, fizyczna powierzchnia (top = y=0, bez progów!)
+  mkBox(60,2,140, 0xb0a070, 0,-1,-4);
+
+  // WIZUALNY PAS TORU – ciepłe drewno kręgielni (czysto wizualny dekal, bez fizyki,
+  // dzięki czemu rampa pozostaje idealnie wtopiona w podłoże na całej szerokości)
+  const laneMesh=new THREE.Mesh(new THREE.PlaneGeometry(20,130),
+    new THREE.MeshStandardMaterial({color:0xd4b483,roughness:.55}));
+  laneMesh.rotation.x=-Math.PI/2; laneMesh.position.set(0,0.01,-4);
+  laneMesh.receiveShadow=true; addMesh(laneMesh);
+
+  // POLE KRĘGLI – jaśniejszy odcień ("pin deck")
+  const deckMesh=new THREE.Mesh(new THREE.PlaneGeometry(22,20),
+    new THREE.MeshStandardMaterial({color:0xf3dfb8,roughness:.5}));
+  deckMesh.rotation.x=-Math.PI/2; deckMesh.position.set(0,0.02,-48);
+  deckMesh.receiveShadow=true; addMesh(deckMesh);
+
+  // OGRODZENIE TORU – ściany prowadzące (rynny), jak wcześniej
+  const fH=1.2, fLen=130;
+  mkBox(1,fH,fLen,0x8b6544,  -12,fH/2,-4);
+  mkBox(1,fH,fLen,0x8b6544,   12,fH/2,-4);
+  mkBox(24,fH,1,  0x8b6544,    0,fH/2,-70); // backstop za kręglami
+  mkBox(24,fH,1,  0x8b6544,    0,fH/2, 62); // ściana za startem
+
+  // NIEWIDZIALNE WYSOKIE ŚCIANY KOLIZYJNE – nie da się wyskoczyć poza tor
+  const wallH=6;
+  mkWall(1,wallH,fLen, -12,wallH/2,-4);
+  mkWall(1,wallH,fLen,  12,wallH/2,-4);
+  mkWall(24,wallH,1,    0,wallH/2,-70);
+  mkWall(24,wallH,1,    0,wallH/2, 62);
+
+  // WIELKA RAMPA – szeroka na całą szerokość toru, gładki wjazd na poziomie gruntu
+  mkRamp(0,0, 18,8,12, 0, 5);
+
+  // DEKORACJE – latarnie kręgielni wzdłuż toru
+  for(let zz=40; zz>=-50; zz-=18){
+    [-1,1].forEach(s=>{
+      const pole=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,3,8),
+        new THREE.MeshStandardMaterial({color:0x999999,roughness:.6}));
+      pole.position.set(s*11,1.5,zz); pole.castShadow=true; addMesh(pole);
+      const bulb=new THREE.Mesh(new THREE.SphereGeometry(.35,12,12),
+        new THREE.MeshStandardMaterial({color:0xfff4cc,emissive:0xffe9a8,emissiveIntensity:.8}));
+      bulb.position.set(s*11,3.1,zz); addMesh(bulb);
+    });
+  }
+
+  // BANNER ZA KRĘGLAMI
+  const backBanner=new THREE.Mesh(new THREE.PlaneGeometry(20,5),
+    new THREE.MeshStandardMaterial({map:bannerTex('STRIKE!','#a0522d')}));
+  backBanner.position.set(0,3.3,-69.4); addMesh(backBanner);
+
+  // KROPKI USTAWIENIA KREGLA (wizualne, statyczne)
+  const dotGeo=new THREE.CylinderGeometry(.18,.18,.05,16);
+  const dotMat=new THREE.MeshStandardMaterial({color:0xfff0d0,roughness:.5});
+  const pinLayout=[
+    [[0,-46]],
+    [[-0.75,-47.6],[0.75,-47.6]],
+    [[-1.5,-49.2],[0,-49.2],[1.5,-49.2]],
+    [[-2.25,-50.8],[-0.75,-50.8],[0.75,-50.8],[2.25,-50.8]]
+  ];
+  pinLayout.forEach(row=>row.forEach(([px,pz])=>{
+    const dot=new THREE.Mesh(dotGeo,dotMat);
+    dot.position.set(px,0.02,pz); addMesh(dot);
+  }));
+
+  // KREGLE  – 10 sztuk w układzie trójkąta
+  pinLayout.forEach(row=>row.forEach(([px,pz])=>mkPin(px,pz)));
+
+  // BRAMA START na poziomie 2
+  mkGate(0,55, 10,4.5,'BOWLING','#a06a2a','#a06a2a');
+
+  // NITRO – ładunek na rozbiegu przed rampą
+  mkNitroPickup(0,28);
+
+  resetCar(L2_SPAWN, new CANNON.Quaternion(0,0,0,1));
+  initL2State();
+}
+
+/* =========================================================================
+   KREGIEL – wizualne + fizyczne
+   ========================================================================= */
+function mkPin(x,z){
+  const matW=new THREE.MeshStandardMaterial({color:0xf5f5f5,roughness:.35});
+  const matR=new THREE.MeshStandardMaterial({color:0xe63030,roughness:.4});
+
+  const grp=new THREE.Group();
+  const S=PIN_SCALE;
+
+  // podstawa walcowa
+  const base=new THREE.Mesh(new THREE.CylinderGeometry(.30*S,.30*S,.40*S,12),matW);
+  base.position.y=.20*S; grp.add(base);
+  // zwężenie ku szyi
+  const mid=new THREE.Mesh(new THREE.CylinderGeometry(.12*S,.30*S,.36*S,12),matR);
+  mid.position.y=.58*S; grp.add(mid);
+  // szyja
+  const neck=new THREE.Mesh(new THREE.CylinderGeometry(.12*S,.12*S,.22*S,12),matW);
+  neck.position.y=.88*S; grp.add(neck);
+  // głowa
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.22*S,12,12),matW);
+  head.position.y=1.20*S; grp.add(head);
+
+  grp.traverse(m=>{ if(m.isMesh){ m.castShadow=true; m.receiveShadow=true; } });
+  levelGroup.add(grp);
+
+  const body=new CANNON.Body({mass:4, linearDamping:.05, angularDamping:.05});
+  body.addShape(new CANNON.Box(new CANNON.Vec3(.22*S,L2_PIN_HEIGHT,.22*S)));
+  body.position.set(x, L2_PIN_HEIGHT, z);
+  addBody(body);
+
+  // zapamiętujemy pozycję startową do resetu
+  body._spawnX=x; body._spawnZ=z;
+  pins.push({grp,body});
+}
+
+/* =========================================================================
+   RESET AUTA
+   ========================================================================= */
+function resetCar(spawnPos, spawnQ){
+  chassisBody.position.copy(spawnPos);
+  chassisBody.quaternion.copy(spawnQ);
+  chassisBody.velocity.set(0,0,0);
+  chassisBody.angularVelocity.set(0,0,0);
+  chassisBody.force.set(0,0,0);
+  chassisBody.torque.set(0,0,0);
+  curForce=0;
+  for(let i=0;i<4;i++){
+    vehicle.wheelInfos[i].steering=0;
+    vehicle.applyEngineForce(0,i);
+    vehicle.setBrake(0,i);
+  }
+}
+function resetPins(){
+  const idQ=new CANNON.Quaternion(0,0,0,1);
+  pins.forEach(({body})=>{
+    body.position.set(body._spawnX, L2_PIN_HEIGHT, body._spawnZ);
+    body.quaternion.copy(idQ);
+    body.velocity.set(0,0,0);
+    body.angularVelocity.set(0,0,0);
+  });
+}
+
+/* =========================================================================
+   STEROWANIE
+   ========================================================================= */
+const keys={};
+window.addEventListener('keydown',e=>{
+  keys[e.key.toLowerCase()]=true;
+  if(e.key.toLowerCase()==='r') doReset();
+  if(e.key.toLowerCase()==='c'){ camYaw=0; camPitch=0; } // wyśrodkuj kamerę za autem
+});
+window.addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; });
+
+const MAX_STEER=.5, MAX_FORCE=600, STEER_LERP=.12, FORCE_LERP=.06, HANDBRAKE=36;
+let curForce=0;
+
+// === NITRO ===
+const NITRO_MAX=100, NITRO_DRAIN=45, NITRO_BOOST_MULT=1.7;
+let nitro=50, boosting=false;
+
+function applyControls(dt){
+  let tS=0;
+  if(keys['a']||keys['arrowleft'])  tS= MAX_STEER;
+  if(keys['d']||keys['arrowright']) tS=-MAX_STEER;
+  const ns=vehicle.wheelInfos[0].steering+(tS-vehicle.wheelInfos[0].steering)*STEER_LERP;
+  vehicle.setSteeringValue(ns,0); vehicle.setSteeringValue(ns,1);
+
+  let tF=0;
+  if(keys['w']||keys['arrowup'])   tF= MAX_FORCE;
+  if(keys['s']||keys['arrowdown']) tF=-MAX_FORCE*.5;
+
+  boosting = !!(keys['shift'] && nitro>0 && tF>0);
+  if(boosting){
+    tF*=NITRO_BOOST_MULT;
+    nitro=Math.max(0,nitro-NITRO_DRAIN*dt);
+  }
+
+  curForce+=(tF-curForce)*FORCE_LERP;
+  vehicle.applyEngineForce(curForce,2); vehicle.applyEngineForce(curForce,3);
+
+  const brk=keys[' ']?HANDBRAKE:0;
+  vehicle.setBrake(brk,2); vehicle.setBrake(brk,3);
+}
+
+// === AUTOMATYCZNE PROSTOWANIE AUTA NA DACHU ===
+let selfRightT=0;
+function applySelfRighting(dt){
+  const wUp=new CANNON.Vec3();
+  chassisBody.quaternion.vmult(new CANNON.Vec3(0,1,0),wUp);
+  const stationary=chassisBody.velocity.length()<2.5;
+  if(wUp.y<0.4 && stationary){
+    selfRightT+=dt;
+    if(selfRightT>0.7){
+      const axis=new CANNON.Vec3();
+      wUp.cross(new CANNON.Vec3(0,1,0),axis);
+      if(axis.lengthSquared()<0.02){
+        // auto leży niemal idealnie dachem w dół - obróć wokół jego osi wzdłużnej
+        chassisBody.quaternion.vmult(new CANNON.Vec3(0,0,1),axis);
+      } else {
+        axis.normalize();
+      }
+      const T=600;
+      chassisBody.torque.x+=axis.x*T;
+      chassisBody.torque.y+=axis.y*T;
+      chassisBody.torque.z+=axis.z*T;
+      chassisBody.velocity.y=Math.max(chassisBody.velocity.y,1.0);
+    }
+  } else {
+    selfRightT=0;
+  }
+}
+
+function doReset(){
+  if(currentLevel===1){
+    resetCar(L1_SPAWN,new CANNON.Quaternion(0,0,0,1));
+    initL1State();
+  } else {
+    resetCar(L2_SPAWN,new CANNON.Quaternion(0,0,0,1));
+    resetPins();
+    initL2State();
+  }
+}
+
+/* =========================================================================
+   LOGIKA POZIOMU 1 – licznik czasu
+   ========================================================================= */
+let l1State='idle', l1Start=0, l1LastLap=0, l1Best=Infinity;
+let l1IsNewRec=false, prevZ=L1_SPAWN.z;
+
+function initL1State(){
+  l1State='idle'; l1IsNewRec=false; prevZ=L1_SPAWN.z;
+  updateL1Hud();
+}
+
+function updateL1(dt){
+  const cz=chassisBody.position.z;
+  if(l1State==='idle'){
+    if(prevZ>L1_START_Z && cz<=L1_START_Z){
+      l1State='running'; l1Start=performance.now();
+    }
+  } else if(l1State==='running'){
+    if(prevZ>L1_FINISH_Z && cz<=L1_FINISH_Z){
+      l1LastLap=(performance.now()-l1Start)/1000;
+      l1State='finished';
+      l1IsNewRec=l1LastLap<l1Best;
+      if(l1IsNewRec) l1Best=l1LastLap;
+      // PRZEJŚCIE DO POZIOMU 2
+      setTimeout(()=>showOverlay('POZIOM 1 UKOŃCZONY!',
+        l1LastLap.toFixed(2)+'s  →  Jedź na rampę z kręglami!'), 300);
+      setTimeout(loadLevel2, 2800);
+    }
+  } else if(l1State==='finished'){
+    if(cz>L1_START_Z+2) l1State='idle';
+  }
+  prevZ=cz;
+  updateL1Hud();
+}
+
+function updateL1Hud(){
+  const el=document.getElementById;
+  if(l1State==='idle'){
+    setHud('Przejedź przez START','--',
+      l1Best<Infinity?'Rekord: '+l1Best.toFixed(2)+'s':'Rekord: --','#888','');
+  } else if(l1State==='running'){
+    const t=((performance.now()-l1Start)/1000).toFixed(2);
+    setHud('CZAS',t+'s',
+      l1Best<Infinity?'Rekord: '+l1Best.toFixed(2)+'s':'Rekord: --','#2a7a3d','');
+  } else {
+    setHud('WYNIK',l1LastLap.toFixed(2)+'s',
+      'Rekord: '+l1Best.toFixed(2)+'s',
+      l1IsNewRec?'#d4900a':'#b03d3d',
+      l1IsNewRec?'NOWY REKORD!':'');
+  }
+}
+
+/* =========================================================================
+   LOGIKA POZIOMU 2 – kręgle i punkty
+   ========================================================================= */
+let l2State='racing'; // 'racing' | 'settling'
+let l2Timer=0, l2Score=0, l2BestScore=0;
+let l2LastScore=-1, l2FlashTimer=0;
+let l2PrevVy=0, l2Launched=false;
+const SETTLE_TIME=5.0;
+const FLASH_TIME=3.5;
+
+function initL2State(){
+  l2State='racing'; l2Timer=0; l2Score=0; l2FlashTimer=0;
+  l2PrevVy=0; l2Launched=false;
+  updateL2Hud();
+}
+
+function countKnockedPins(){
+  const localUp=new CANNON.Vec3(0,1,0);
+  const worldUp=new CANNON.Vec3();
+  let n=0;
+  pins.forEach(({body})=>{
+    body.quaternion.vmult(localUp,worldUp);
+    if(worldUp.y<0.6) n++;
+  });
+  return n;
+}
+
+// wykrywa, czy którykolwiek kręgiel został poruszony (pierwsze trafienie)
+function pinsDisturbed(){
+  return pins.some(({body})=>{
+    const v=body.velocity;
+    const speed2=v.x*v.x+v.y*v.y+v.z*v.z;
+    const dx=body.position.x-body._spawnX, dz=body.position.z-body._spawnZ;
+    return speed2>0.04 || (dx*dx+dz*dz)>0.01 || Math.abs(body.position.y-L2_PIN_HEIGHT)>0.05;
+  });
+}
+
+function updateL2(dt){
+  // wykrywanie odbicia od rampy (gwałtowny wzrost prędkości pionowej w górę) -> wybuch
+  const vy=chassisBody.velocity.y;
+  if(vy>6 && l2PrevVy<=6 && !l2Launched){
+    l2Launched=true;
+    spawnBurst(chassisBody.position,18,[0xffcc33,0xff8844,0xff5522,0xffee99],
+      {speed:7,life:0.7,size:0.3,emissive:true});
+  }
+  if(vy<1) l2Launched=false;
+  l2PrevVy=vy;
+
+  if(l2State==='racing'){
+    // pierwsze trafienie kregla – start odliczania punktów
+    if(pinsDisturbed()){
+      l2State='settling'; l2Timer=0;
+      // auto "rozpada się" na kawałki po uderzeniu w kręgle
+      spawnBurst(chassisBody.position,24,[0xff6f6f,0xfff1cf,0x2b2b2b,0x6a8ca8],
+        {speed:9,life:1.1,size:0.35});
+    }
+  } else if(l2State==='settling'){
+    l2Timer+=dt;
+    l2Score=countKnockedPins(); // live update
+    if(l2Timer>=SETTLE_TIME){
+      l2Score=countKnockedPins();
+      const pts=l2Score*100 + (l2Score===10?500:0);
+      if(pts>l2BestScore) l2BestScore=pts;
+      l2LastScore=pts; l2FlashTimer=FLASH_TIME;
+      // reset rundy: auto + kręgle wracają na start, zliczanie startuje od nowa
+      resetCar(L2_SPAWN,new CANNON.Quaternion(0,0,0,1));
+      resetPins();
+      l2State='racing'; l2Timer=0; l2Score=0;
+    }
+  }
+  if(l2FlashTimer>0) l2FlashTimer-=dt;
+  updateL2Hud();
+}
+
+function updateL2Hud(){
+  if(l2State==='racing'){
+    let extra='';
+    if(l2FlashTimer>0){
+      extra = l2LastScore>=1500 ? 'STRAJK! +500 BONUS = '+l2LastScore+' PKT'
+                                 : 'Ostatni wynik: '+l2LastScore+' PKT';
+    }
+    setHud('BOWLING','GOTOWY','Rekord: '+l2BestScore+' PKT','#444',extra);
+  } else {
+    const rem=Math.max(0,SETTLE_TIME-l2Timer).toFixed(1);
+    setHud('KRĘGLE',l2Score+' / 10',
+      'Zliczam... '+rem+'s','#2a7a3d','');
+  }
+  document.getElementById('ctrlHint').innerHTML=
+    '<b>W/↑</b> gaz &nbsp; <b>S/↓</b> wstecz<br><b>A/D</b> skręt &nbsp; <b>Spacja</b> hamulec<br><b>R</b> reset';
+}
+
+function setHud(label,value,sub,valCol,extra){
+  document.getElementById('hudLabel').textContent=label;
+  document.getElementById('hudValue').textContent=value;
+  document.getElementById('hudValue').style.color=valCol||'#444';
+  document.getElementById('hudSub').textContent=sub;
+  document.getElementById('hudExtra').textContent=extra;
+}
+
+/* =========================================================================
+   OVERLAY (przejście poziomu)
+   ========================================================================= */
+function showOverlay(title,sub){
+  const o=document.getElementById('levelOverlay');
+  document.getElementById('overlayTitle').textContent=title;
+  document.getElementById('overlaySub').textContent=sub;
+  o.classList.add('show');
+  setTimeout(()=>o.classList.remove('show'),2400);
+}
+
+/* =========================================================================
+   KAMERA TPP – obracanie myszką/dotykiem (orbit wokół auta)
+   ========================================================================= */
+const CAM_OFF =new THREE.Vector3(0,3,6.5);
+const CAM_LOOK=new THREE.Vector3(0,.6,-3);
+const _tmpP=new THREE.Vector3(), _tmpL=new THREE.Vector3(), _carWP=new THREE.Vector3();
+const _camExtra=new THREE.Quaternion();
+
+let camYaw=0, camPitch=0, camDragging=false, camLastX=0, camLastY=0;
+const CAM_PITCH_MIN=-0.9, CAM_PITCH_MAX=0.85;
+
+function camDragStart(x,y){ camDragging=true; camLastX=x; camLastY=y; }
+function camDragMove(x,y){
+  if(!camDragging) return;
+  const dx=x-camLastX, dy=y-camLastY;
+  camLastX=x; camLastY=y;
+  camYaw  -= dx*0.005;
+  camPitch=Math.max(CAM_PITCH_MIN,Math.min(CAM_PITCH_MAX,camPitch-dy*0.005));
+}
+function camDragEnd(){ camDragging=false; }
+
+renderer.domElement.addEventListener('mousedown',e=>camDragStart(e.clientX,e.clientY));
+window.addEventListener('mousemove',e=>camDragMove(e.clientX,e.clientY));
+window.addEventListener('mouseup',camDragEnd);
+renderer.domElement.addEventListener('touchstart',e=>{
+  if(e.touches.length===1) camDragStart(e.touches[0].clientX,e.touches[0].clientY);
+},{passive:true});
+window.addEventListener('touchmove',e=>{
+  if(e.touches.length===1) camDragMove(e.touches[0].clientX,e.touches[0].clientY);
+},{passive:true});
+window.addEventListener('touchend',camDragEnd);
+
+function updateCamera(){
+  carGroup.getWorldPosition(_carWP);
+  _camExtra.setFromEuler(new THREE.Euler(camPitch,camYaw,0,'YXZ'));
+  _tmpP.copy(CAM_OFF).applyQuaternion(_camExtra).applyQuaternion(carGroup.quaternion).add(_carWP);
+  camera.position.lerp(_tmpP,.07);
+  _tmpL.copy(CAM_LOOK).applyQuaternion(_camExtra).applyQuaternion(carGroup.quaternion).add(_carWP);
+  camera.lookAt(_tmpL);
+  sun.position.set(_carWP.x+20,_carWP.y+40,_carWP.z+20);
+  sun.target.position.copy(_carWP);
+}
+
+/* =========================================================================
+   HUD – prędkość + wywrotka
+   ========================================================================= */
+const elSpeed=document.getElementById('speedValue');
+const elFlip =document.getElementById('flipHint');
+const elNitroFill=document.getElementById('nitroBarFill');
+const _lUp=new CANNON.Vec3(0,1,0), _wUp=new CANNON.Vec3();
+let flipT=0;
+
+function updateHud(dt){
+  elSpeed.textContent=Math.round(chassisBody.velocity.length()*3.6);
+  chassisBody.quaternion.vmult(_lUp,_wUp);
+  const flipped=_wUp.y<.25 && chassisBody.velocity.length()<1;
+  flipT=flipped?flipT+dt:0;
+  elFlip.classList.toggle('visible',flipT>1.2);
+}
+
+/* =========================================================================
+   PĘTLA ANIMACJI
+   ========================================================================= */
+let currentLevel=1;
+
+const FTS=1/60; let lastT=performance.now();
+let simTime=0;
+
+function animate(){
+  requestAnimationFrame(animate);
+  const now=performance.now(), dt=Math.min((now-lastT)/1000,.1); lastT=now;
+  simTime+=dt;
+
+  applyControls(dt||FTS);
+  applySelfRighting(dt||FTS);
+  movingObstacles.forEach(o=>o.update(simTime,dt||FTS));
+  world.step(FTS,dt,5);
+
+  // sync auto
+  carGroup.position.copy(chassisBody.position);
+  carGroup.quaternion.copy(chassisBody.quaternion);
+  for(let i=0;i<4;i++){
+    vehicle.updateWheelTransform(i);
+    const t=vehicle.wheelInfos[i].worldTransform;
+    wheelMeshes[i].position.copy(t.position);
+    wheelMeshes[i].quaternion.copy(t.quaternion);
+  }
+
+  // sync bloki dynamiczne
+  dynBlocks.forEach(({mesh,body})=>{
+    mesh.position.copy(body.position);
+    mesh.quaternion.copy(body.quaternion);
+  });
+
+  // sync kregle (pozycja + orientacja z fizyki)
+  pins.forEach(({grp,body})=>{
+    grp.position.set(body.position.x, body.position.y-L2_PIN_HEIGHT, body.position.z);
+    grp.quaternion.copy(body.quaternion);
+  });
+
+  // sync przeszkód ruchomych
+  movingObstacles.forEach(({mesh,body})=>{
+    mesh.position.copy(body.position);
+    mesh.quaternion.copy(body.quaternion);
+  });
+
+  // animacja + zbieranie ładunków nitro
+  nitroPickups.forEach(p=>{
+    if(p.collected){
+      p.respawnT-=dt;
+      if(p.respawnT<=0){ p.collected=false; p.grp.visible=true; }
+      return;
+    }
+    p.grp.rotation.y+=dt*1.6;
+    p.grp.position.y=1.0+Math.sin(simTime*2+p.x)*.15;
+    const dx=chassisBody.position.x-p.x, dz=chassisBody.position.z-p.z;
+    if(dx*dx+dz*dz<2.4){
+      p.collected=true; p.respawnT=10; p.grp.visible=false;
+      nitro=Math.min(NITRO_MAX,nitro+50);
+    }
+  });
+  elNitroFill.style.width=nitro+'%';
+  elNitroFill.style.background=boosting
+    ? 'linear-gradient(90deg,#ff9966,#ff5e3a)'
+    : 'linear-gradient(90deg,#66ddff,#3399ff)';
+
+  if(currentLevel===1) updateL1(dt);
+  else                 updateL2(dt);
+
+  updateParticles(dt||FTS);
+
+  updateCamera();
+  updateHud(dt);
+  renderer.render(scene,camera);
+}
+
+/* =========================================================================
+   WYBÓR MAPY (przycisk góra-prawo)
+   ========================================================================= */
+document.getElementById('mapBtn').addEventListener('click',e=>{
+  e.stopPropagation();
+  document.getElementById('mapMenu').classList.toggle('open');
+});
+document.querySelectorAll('.mapOpt').forEach(el=>{
+  el.addEventListener('click',()=>{
+    document.getElementById('mapMenu').classList.remove('open');
+    if(el.dataset.lvl==='1') loadLevel1(); else loadLevel2();
+  });
+});
+window.addEventListener('click',()=>document.getElementById('mapMenu').classList.remove('open'));
+
+/* =========================================================================
+   START
+   ========================================================================= */
+buildEnvironment();
+loadLevel1();
+animate();
+</script>
+</body>
+</html>

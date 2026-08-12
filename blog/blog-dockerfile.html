@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dockerfile like a cake recipe — Blog — Tobiasz Lubowski</title>
+  <meta name="description" content="Understand Dockerfiles through a cake analogy, from single-stage basics to multi-stage builds for lean images." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%238b5cf6'/><stop offset='1' stop-color='%236ee7ff'/></linearGradient></defs><rect width='64' height='64' rx='14' fill='url(%23g)'/><circle cx='32' cy='34' r='14' fill='%23fde68a'/><path d='M18 28c3-6 10-10 14-10s10 4 14 10c-6-4-13-5-28 0z' fill='%23facc15'/><circle cx='27' cy='35' r='2.2' fill='%23000' opacity='0.9'/><circle cx='37' cy='35' r='2.2' fill='%23000' opacity='0.9'/><path d='M25 41c2.5 2 11.5 2 14 0' stroke='%23000' stroke-width='2' stroke-linecap='round' fill='none'/></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="nav" aria-label="Main">
+    <div class="row">
+      <div class="brand">Tobiasz Lubowski <small style="color:#9aa3af;font-weight:500" data-i18n="brand.subtitle">DevOps in progress</small></div>
+      <div class="spacer"></div>
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu" aria-expanded="false" data-i18n-attr="aria-label:nav.menuToggle">☰</button>
+      <div class="menu">
+        <a href="../index.html" data-i18n="nav.home">Home</a>
+        <a href="blog.html" class="active" data-i18n="nav.blog">Blog</a>
+        <a href="../index.html#contact" class="btn" data-i18n="nav.contact">Contact & CV</a>
+        <button type="button" class="lang-toggle" id="languageToggle" aria-pressed="false" data-i18n="nav.langButton">Polski</button>
+      </div>
+    </div>
+  </nav>
+
+  <article class="blog-post">
+    <header>
+      <h1 data-i18n="article.title">Dockerfile like a cake recipe</h1>
+      <div class="blog-post-meta">
+        <span><time datetime="2025-09-29" data-i18n="article.meta.date">September 29, 2025</time></span>
+        <span data-i18n="article.meta.tags">Docker • Containers • Best practices</span>
+      </div>
+    </header>
+
+    <div class="blog-post-hero">
+      <img src="assets/vlogs/dockerfile-main.png" alt="Illustration of a Dockerfile prepared like a cake recipe" data-i18n-attr="alt:article.hero.alt" />
+    </div>
+
+    <section class="blog-post-content">
+      <h2 data-i18n="article.docker.heading">What Docker is all about</h2>
+      <p data-i18n="article.docker.intro">Docker packages an application with everything it needs so it can run identically on any machine. Instead of configuring servers by hand, we ship a container image that contains the app, dependencies, and runtime.</p>
+
+      <p data-i18n="article.intro">A Dockerfile is the recipe for your container image. Every instruction documents how to build the final dish so you can recreate the same environment on any host without guesswork.</p>
+
+      <h2 data-i18n="article.recipe.heading">Dockerfile as a cake recipe</h2>
+      <p data-i18n="article.recipe.body">Picture yourself baking a cake: you gather ingredients, follow the steps, and finish with a reliable dessert. Dockerfiles follow the same pattern.</p>
+      <ul data-i18n="article.recipe.list">
+        <li>The Dockerfile is the recipe you trust</li>
+        <li>The base image and files you copy are your ingredients</li>
+        <li>RUN, COPY, and ENV are the preparation steps</li>
+        <li>The finished cake is the image you can run anywhere</li>
+      </ul>
+
+      <h2 data-i18n="article.example.heading">Breaking down a simple Dockerfile</h2>
+      <p data-i18n="article.example.body">Here is a lightweight Node.js image that loads an app and starts it immediately. Each line mirrors a kitchen move.</p>
+
+      <pre><code>FROM node:13-alpine
+
+ENV MONGO_DB_USERNAME=admin \
+    MONGO_DB_PWD=password
+
+RUN mkdir -p /home/app
+COPY . /home/app
+
+CMD ["node", "/home/app/server.js"]</code></pre>
+
+      <ul data-i18n="article.example.steps">
+        <li><code>FROM node:13-alpine</code> selects the base sponge for the cake</li>
+        <li><code>ENV</code> sets credentials and knobs, just like preheating the oven</li>
+        <li><code>RUN mkdir -p /home/app</code> prepares the mixing bowl</li>
+        <li><code>COPY . /home/app</code> pours the batter in</li>
+        <li><code>CMD [&quot;node&quot;, &quot;/home/app/server.js&quot;]</code> is the bake and serve moment</li>
+      </ul>
+
+      <figure>
+        <img src="assets/vlogs/dockerfile_example.png" alt="Example Dockerfile highlighted line by line" data-i18n-attr="alt:article.example.figure" />
+        <figcaption data-i18n="article.example.caption">Every instruction documents one chore in the kitchen so that nothing is forgotten.</figcaption>
+      </figure>
+
+      <h2 data-i18n="article.importance.heading">Why the recipe matters</h2>
+      <p data-i18n="article.importance.body">With a Dockerfile, you capture the full build process. Colleagues and automation pipelines can rebuild the same artifact, whether they use macOS, Linux, or a CI runner in the cloud.</p>
+      <ul data-i18n="article.importance.list">
+        <li>Recreate the environment on demand</li>
+        <li>Keep builds repeatable and auditable</li>
+        <li>Ship an application that behaves identically everywhere</li>
+      </ul>
+
+      <h2 data-i18n="article.multi.heading">Multi-stage builds: mixing versus plating</h2>
+      <p data-i18n="article.multi.body1">Sometimes the kitchen gets messy. You compile dependencies, transpile assets, and install tooling that is not needed in production. Multi-stage builds split those phases so the final image stays clean.</p>
+      <p data-i18n="article.multi.body2">The first stage gathers heavy equipment to mix the dough. The second stage copies just the ready-to-serve cake into a smaller box.</p>
+
+      <pre><code># Stage 1 - build
+FROM node:13-alpine AS build
+WORKDIR /home/app
+COPY . .
+RUN npm install
+
+# Stage 2 - final image
+FROM node:13-alpine
+WORKDIR /home/app
+COPY --from=build /home/app .
+CMD ["node", "/home/app/server.js"]</code></pre>
+
+      <p data-i18n="article.multi.body3">By copying only the compiled application from <code>build</code>, the final container avoids dev tools and leftover caches.</p>
+      <ul data-i18n="article.multi.list">
+        <li>Stage 1 is the noisy prep kitchen</li>
+        <li>Stage 2 is the elegant plate you serve</li>
+        <li>The result is lighter, faster, and easier to ship</li>
+      </ul>
+
+      <p data-i18n="article.closing">Treat Dockerfiles like family recipes: document every step, keep the kitchen tidy with multi-stage builds, and you will dish out containers that delight every environment.</p>
+      <p data-i18n="article.signoff">Bon appétit and happy container cooking!</p>
+    </section>
+
+    <div class="blog-back">
+      <a href="blog.html" data-i18n="article.back">&larr; Back to all posts</a>
+    </div>
+  </article>
+
+  <div class="sep"></div>
+  <footer aria-label="Footer">
+    <section class="site-footer">
+      <p data-i18n="footer.note">Yes — this site was also created by <b>Tobiasz Lubowski</b>.</p>
+    </section>
+  </footer>
+
+  <script>
+    const translations = {
+      en: {
+        'page.title': 'Dockerfile like a cake recipe — Blog — Tobiasz Lubowski',
+        'page.description': 'Understand Dockerfiles through a cake analogy, from single-stage basics to multi-stage builds for lean images.',
+        'brand.subtitle': 'DevOps in progress',
+        'nav.home': 'Home',
+        'nav.blog': 'Blog',
+        'nav.contact': 'Contact & CV',
+        'nav.langButton': 'Polski',
+        'nav.langAria': 'Switch language to Polish',
+        'nav.menuToggle': 'Toggle menu',
+        'article.docker.heading': 'What Docker is all about',
+        'article.docker.intro': 'Docker packages an application with everything it needs so it can run identically on any machine. Instead of configuring servers by hand, we ship a container image that contains the app, dependencies, and runtime.',
+        'article.title': 'Dockerfile like a cake recipe',
+        'article.meta.date': 'September 29, 2025',
+        'article.meta.tags': 'Docker • Containers • Best practices',
+        'article.hero.alt': 'Illustration of a Dockerfile prepared like a cake recipe',
+        'article.intro': 'A Dockerfile is the recipe for your container image. Every instruction documents how to build the final dish so you can recreate the same environment on any host without guesswork.',
+        'article.recipe.heading': 'Dockerfile as a cake recipe',
+        'article.recipe.body': 'Picture yourself baking a cake: you gather ingredients, follow the steps, and finish with a reliable dessert. Dockerfiles follow the same pattern.',
+        'article.recipe.list': '<li>The Dockerfile is the recipe you trust</li><li>The base image and files you copy are your ingredients</li><li>RUN, COPY, and ENV are the preparation steps</li><li>The finished cake is the image you can run anywhere</li>',
+        'article.example.heading': 'Breaking down a simple Dockerfile',
+        'article.example.body': 'Here is a lightweight Node.js image that loads an app and starts it immediately. Each line mirrors a kitchen move.',
+        'article.example.steps': '<li><code>FROM node:13-alpine</code> selects the base sponge for the cake</li><li><code>ENV</code> sets credentials and knobs, just like preheating the oven</li><li><code>RUN mkdir -p /home/app</code> prepares the mixing bowl</li><li><code>COPY . /home/app</code> pours the batter in</li><li><code>CMD [&quot;node&quot;, &quot;/home/app/server.js&quot;]</code> is the bake and serve moment</li>',
+        'article.example.figure': 'Example Dockerfile highlighted line by line',
+        'article.example.caption': 'Every instruction documents one chore in the kitchen so that nothing is forgotten.',
+        'article.importance.heading': 'Why the recipe matters',
+        'article.importance.body': 'With a Dockerfile, you capture the full build process. Colleagues and automation pipelines can rebuild the same artifact, whether they use macOS, Linux, or a CI runner in the cloud.',
+        'article.importance.list': '<li>Recreate the environment on demand</li><li>Keep builds repeatable and auditable</li><li>Ship an application that behaves identically everywhere</li>',
+        'article.multi.heading': 'Multi-stage builds: mixing versus plating',
+        'article.multi.body1': 'Sometimes the kitchen gets messy. You compile dependencies, transpile assets, and install tooling that is not needed in production. Multi-stage builds split those phases so the final image stays clean.',
+        'article.multi.body2': 'The first stage gathers heavy equipment to mix the dough. The second stage copies just the ready-to-serve cake into a smaller box.',
+        'article.multi.body3': 'By copying only the compiled application from <code>build</code>, the final container avoids dev tools and leftover caches.',
+        'article.multi.list': '<li>Stage 1 is the noisy prep kitchen</li><li>Stage 2 is the elegant plate you serve</li><li>The result is lighter, faster, and easier to ship</li>',
+        'article.closing': 'Treat Dockerfiles like family recipes: document every step, keep the kitchen tidy with multi-stage builds, and you will dish out containers that delight every environment.',
+        'article.signoff': 'Bon appétit and happy container cooking!',
+        'article.back': '&larr; Back to all posts',
+        'footer.note': 'Yes — this site was also created by <b>Tobiasz Lubowski</b>.'
+      },
+      pl: {
+        'page.title': 'Dockerfile jak przepis na ciasto — Blog — Tobiasz Lubowski',
+        'page.description': 'Poznaj Dockerfile przez analogie do kuchni: od podstawowego przepisu po multistage build, dzieki ktoremu obrazy sa lzejsze.',
+        'brand.subtitle': 'DevOps w drodze',
+        'nav.home': 'Strona główna',
+        'nav.blog': 'Blog',
+        'nav.contact': 'Kontakt i CV',
+        'nav.langButton': 'English',
+        'nav.langAria': 'Zmień język na angielski',
+        'nav.menuToggle': 'Przełącz menu',
+        'article.docker.heading': 'O co chodzi w Dockerze',
+        'article.docker.intro': 'Docker pakuje aplikację ze wszystkimi zależnościami, aby działała identycznie na każdej maszynie. Zamiast ręcznie konfigurować serwery, dostarczamy obraz kontenera z aplikacją, bibliotekami i środowiskiem uruchomieniowym.',
+        'article.title': 'Dockerfile jak przepis na ciasto',
+        'article.meta.date': '29 września 2025',
+        'article.meta.tags': 'Docker • Kontenery • Dobre praktyki',
+        'article.hero.alt': 'Ilustracja Dockerfile przygotowywanego jak przepis na ciasto',
+        'article.intro': 'Dockerfile to przepis na obraz kontenera. Każda instrukcja opisuje krok, dzięki któremu odtworzysz identyczne środowisko na dowolnym hoście bez zgadywania.',
+        'article.recipe.heading': 'Dockerfile jako przepis na ciasto',
+        'article.recipe.body': 'Wyobraź sobie pieczenie ciasta: kompletujesz składniki, realizujesz kroki i kończysz z pewnym deserem. Dockerfile działa identycznie.',
+        'article.recipe.list': '<li>Dockerfile to przepis, któremu ufasz</li><li>Obraz bazowy i pliki, które kopiujesz, to składniki</li><li>RUN, COPY i ENV to kroki przygotowania</li><li>Gotowe ciasto to obraz, który uruchomisz wszędzie</li>',
+        'article.example.heading': 'Rozkładamy prosty Dockerfile na części',
+        'article.example.body': 'Poniższy, lekki obraz Node.js ładuje aplikację i natychmiast ją uruchamia. Każdy wiersz odpowiada ruchowi w kuchni.',
+        'article.example.steps': '<li><code>FROM node:13-alpine</code> wybiera bazę biszkoptową</li><li><code>ENV</code> ustawia parametry niczym nagrzanie piekarnika</li><li><code>RUN mkdir -p /home/app</code> przygotowuje miskę do mieszania</li><li><code>COPY . /home/app</code> przelewa masę do formy</li><li><code>CMD [&quot;node&quot;, &quot;/home/app/server.js&quot;]</code> to moment pieczenia i podania</li>',
+        'article.example.figure': 'Przykładowy Dockerfile podświetlony linia po linii',
+        'article.example.caption': 'Każda instrukcja zapisuje jedną czynność w kuchni, dzięki czemu nic ci nie umknie.',
+        'article.importance.heading': 'Dlaczego przepis ma znaczenie',
+        'article.importance.body': 'Dockerfile zapisuje pełen proces budowy. Zespół i pipeline CI odtworzą ten sam artefakt, niezależnie czy pracują na macOS, Linuksie czy w chmurze.',
+        'article.importance.list': '<li>Odtwarzasz środowisko na żądanie</li><li>Zachowujesz powtarzalność i audytowalność budowy</li><li>Dostarczasz aplikację działającą identycznie w każdym miejscu</li>',
+        'article.multi.heading': 'Multistage: kuchnia kontra serwowanie',
+        'article.multi.body1': 'Czasem kuchnia robi się chaotyczna. Kompilujesz zależności, budujesz statyczne zasoby, instalujesz narzędzia zbyteczne w produkcji. Multistage rozdziela te fazy, by finalny obraz pozostał czysty.',
+        'article.multi.body2': 'Pierwszy etap zbiera ciężki sprzęt do mieszania ciasta. Drugi kopiuje tylko gotowe ciasto do mniejszego pudełka.',
+        'article.multi.body3': 'Kopiując jedynie skompilowaną aplikację ze stage <code>build</code>, finalny kontener unika narzędzi deweloperskich i pozostawionych cache.',
+        'article.multi.list': '<li>Etap 1 to głośna kuchnia przygotowawcza</li><li>Etap 2 to elegancki talerz, który podajesz gościom</li><li>Efekt jest lżejszy, szybszy i łatwiejszy w dystrybucji</li>',
+        'article.closing': 'Traktuj Dockerfile jak rodzinne przepisy: notuj każdy krok, utrzymuj porządek dzięki multistage i serwuj kontenery, które cieszą każde środowisko.',
+        'article.signoff': 'Smacznego i powodzenia w kontenerowym gotowaniu!',
+        'article.back': '&larr; Wróć do wszystkich wpisów',
+        'footer.note': 'Tak — tę stronę również stworzył <b>Tobiasz Lubowski</b>.'
+      }
+    };
+
+    function readStoredLanguage() {
+      try {
+        const stored = localStorage.getItem('preferredLanguage');
+        if (stored === 'pl' || stored === 'en') {
+          return stored;
+        }
+      } catch (err) {}
+      return 'en';
+    }
+
+    let currentLang = readStoredLanguage();
+    const languageToggle = document.getElementById('languageToggle');
+
+    function t(key) {
+      return (translations[currentLang] && translations[currentLang][key]) || translations.en[key] || key;
+    }
+
+    function applyTranslations(lang) {
+      currentLang = lang;
+      try {
+        localStorage.setItem('preferredLanguage', currentLang);
+      } catch (err) {}
+      document.documentElement.lang = lang === 'pl' ? 'pl' : 'en';
+      document.body.setAttribute('data-lang', currentLang);
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        const value = (translations[currentLang] || {})[key];
+        if (typeof value === 'undefined') return;
+        el.innerHTML = value;
+      });
+
+      document.querySelectorAll('[data-i18n-attr]').forEach(el => {
+        const entries = el.getAttribute('data-i18n-attr').split(';');
+        entries.forEach(entry => {
+          const [attr, key] = entry.split(':').map(part => part && part.trim());
+          if (!attr || !key) return;
+          const val = (translations[currentLang] || {})[key];
+          if (typeof val === 'undefined') return;
+          el.setAttribute(attr, val);
+        });
+      });
+
+      if (languageToggle) {
+        const buttonText = (translations[currentLang] || {})['nav.langButton'];
+        if (typeof buttonText !== 'undefined') languageToggle.textContent = buttonText;
+        const ariaText = (translations[currentLang] || {})['nav.langAria'];
+        if (typeof ariaText !== 'undefined') languageToggle.setAttribute('aria-label', ariaText);
+        languageToggle.setAttribute('aria-pressed', currentLang === 'pl' ? 'true' : 'false');
+      }
+
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) {
+        const desc = (translations[currentLang] || {})['page.description'];
+        if (typeof desc !== 'undefined') metaDesc.setAttribute('content', desc);
+      }
+      const title = (translations[currentLang] || {})['page.title'];
+      if (typeof title !== 'undefined') document.title = title;
+    }
+
+    applyTranslations(currentLang);
+
+    if (languageToggle) {
+      languageToggle.addEventListener('click', () => {
+        const nextLang = currentLang === 'en' ? 'pl' : 'en';
+        applyTranslations(nextLang);
+      });
+    }
+
+    const menu = document.querySelector('.menu');
+    const menuToggle = document.getElementById('menuToggle');
+    if(menu && menuToggle){
+      menuToggle.addEventListener('click', ()=>{
+        const open = menu.classList.toggle('show');
+        menuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      menu.querySelectorAll('a, button').forEach(link=>link.addEventListener('click', ()=>{
+        if(menu.classList.contains('show')){
+          menu.classList.remove('show');
+          menuToggle.setAttribute('aria-expanded','false');
+        }
+      }));
+    }
+  </script>
+
+</body>
+</html>
