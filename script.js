@@ -642,7 +642,14 @@
     const nearestIdx = Math.round(segF);
     navItems.forEach((btn, i) => btn.classList.toggle("current", i === nearestIdx));
 
-    root.style.setProperty("--bg", lerpColor(a.bg, b.bg, localT));
+    // while a section is open, opening, or still closing (overlayInst.section stays
+    // set for the whole close animation, not just until the click), match the page
+    // background to the head color instead of the section's own bg color — otherwise
+    // the area not yet covered by the growing/shrinking overlay flashes a mismatched color
+    root.style.setProperty(
+      "--bg",
+      overlayInst.section ? overlayInst.section.head : lerpColor(a.bg, b.bg, localT)
+    );
     const headColor = lerpColor(a.head, b.head, localT);
     root.style.setProperty("--head", headColor);
     root.style.setProperty("--halo", headColor);
@@ -749,9 +756,12 @@
       scheduleQuip(2000); // a section is open, try again shortly
       return;
     }
+    // left/right bubbles need more side clearance than a narrow phone screen has
+    // room for (the head sits close to both edges) — stick to top-only there
+    const sides = window.innerWidth < 640 ? ["bubble-top"] : BUBBLE_SIDES;
     speechText.textContent = QUIPS[Math.floor(Math.random() * QUIPS.length)];
     speechBubble.classList.remove(...BUBBLE_SIDES);
-    speechBubble.classList.add(BUBBLE_SIDES[Math.floor(Math.random() * BUBBLE_SIDES.length)], "visible");
+    speechBubble.classList.add(sides[Math.floor(Math.random() * sides.length)], "visible");
     setTimeout(() => {
       speechBubble.classList.remove("visible");
       scheduleQuip(8000 + Math.random() * 6000);

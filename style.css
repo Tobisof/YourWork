@@ -83,7 +83,7 @@ body.section-open .head-wrap {
 .speech-bubble {
   position: absolute;
   width: max-content;
-  max-width: 220px;
+  max-width: min(220px, 78vw);
   padding: 0.6rem 0.9rem;
   background: #ffffff;
   color: #14141a;
@@ -106,36 +106,44 @@ body.section-open .head-wrap {
 }
 .speech-bubble::after { border-width: 7px; }
 
+/* Centering uses inset + margin:auto rather than left:50%/translateX(-50%) —
+   percentage-based translate combined with the show/hide transform (scale + a
+   second translate) was resolving against the wrong box and pushing the whole
+   bubble off toward one edge instead of centering it. inset+auto-margin
+   centers reliably regardless of the bubble's own (text-dependent) width. */
+
 /* above the head, tail pointing down */
 .speech-bubble.bubble-top {
   bottom: 100%;
-  left: 50%;
-  margin-bottom: 16px;
-  transform: translateX(-50%) translateY(8px) scale(0.92);
+  left: 0;
+  right: 0;
+  margin: 0 auto 16px;
+  transform: translateY(8px) scale(0.92);
 }
-.speech-bubble.bubble-top.visible { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+.speech-bubble.bubble-top.visible { opacity: 1; transform: translateY(0) scale(1); }
 .speech-bubble.bubble-top::before { top: 100%; left: 50%; transform: translateX(-50%); border-top-color: var(--ink); margin-top: 1px; }
 .speech-bubble.bubble-top::after { top: 100%; left: 50%; transform: translateX(-50%); border-top-color: #ffffff; }
 
-/* to the left of the head, tail pointing right */
+/* to the left of the head, tail pointing right — fixed % top instead of
+   vertical auto-margin centering, which stretched the bubble full-height */
 .speech-bubble.bubble-left {
   right: 100%;
-  top: 50%;
+  top: 30%;
   margin-right: 16px;
-  transform: translateY(-50%) translateX(8px) scale(0.92);
+  transform: translateX(8px) scale(0.92);
 }
-.speech-bubble.bubble-left.visible { opacity: 1; transform: translateY(-50%) translateX(0) scale(1); }
+.speech-bubble.bubble-left.visible { opacity: 1; transform: translateX(0) scale(1); }
 .speech-bubble.bubble-left::before { top: 50%; left: 100%; transform: translateY(-50%); border-left-color: var(--ink); margin-left: 1px; }
 .speech-bubble.bubble-left::after { top: 50%; left: 100%; transform: translateY(-50%); border-left-color: #ffffff; }
 
 /* to the right of the head, tail pointing left */
 .speech-bubble.bubble-right {
   left: 100%;
-  top: 50%;
+  top: 30%;
   margin-left: 16px;
-  transform: translateY(-50%) translateX(-8px) scale(0.92);
+  transform: translateX(-8px) scale(0.92);
 }
-.speech-bubble.bubble-right.visible { opacity: 1; transform: translateY(-50%) translateX(0) scale(1); }
+.speech-bubble.bubble-right.visible { opacity: 1; transform: translateX(0) scale(1); }
 .speech-bubble.bubble-right::before { top: 50%; right: 100%; transform: translateY(-50%); border-right-color: var(--ink); margin-right: 1px; }
 .speech-bubble.bubble-right::after { top: 50%; right: 100%; transform: translateY(-50%); border-right-color: #ffffff; }
 
@@ -403,6 +411,8 @@ body.section-open .head-wrap {
   transform: translateX(-50%);
   text-align: center;
   overflow-y: auto;
+  overflow-x: hidden;
+  overflow-wrap: break-word;
   opacity: 0;
   pointer-events: none;
   /* soft fade at the bottom edge: a visual hint that the list scrolls when it overflows */
@@ -632,7 +642,7 @@ body.section-open .head-wrap {
 
 @media (max-width: 640px) {
   .close-btn { width: 38px; height: 38px; font-size: 1.3rem; }
-  .panel-content { width: 90%; top: 20%; max-height: 72%; }
+  .panel-content { width: 90%; top: 31%; max-height: 62%; }
   .project-item { flex-direction: column; }
   .project-thumb { flex: none; width: 100%; height: 140px; }
   .cert-grid { grid-template-columns: repeat(2, 1fr); gap: 0.8rem; }
