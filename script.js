@@ -1,107 +1,138 @@
 (() => {
   "use strict";
 
-  // Each keyframe is one section (About / Projects / Certificates). The single
-  // head morphs shape + color between these as you scroll (unchanged behavior).
-  // `expandedRadii` is the shape it grows into when clicked open.
-  // expandedRadii is intentionally larger than the viewBox itself (half-size 200,
-  // corner distance ~283): the blob overflows the SVG in every direction and gets
-  // clipped clean by the viewport edge, so the head color fills the entire screen
-  // with no rounded corners peeking the page background through.
+  // Each keyframe is one section (About / Projects / Certificates), each now
+  // themed as a DevOps tool mascot (Docker whale / GitLab fox / Kubernetes
+  // wheel). The single head morphs shape + color between these as you scroll.
+  // `expandedRadii` is the shape it grows into when clicked open — intentionally
+  // larger than the viewBox itself (half-size 200, corner distance ~283) so it
+  // overflows and gets clipped clean by the viewport edge, full-bleed color with
+  // no rounded corners peeking through. That wash hides any silhouette anyway,
+  // so it stays the same oversized values across all three — only the small
+  // scrolling head's `radii` need to read as whale / fox / wheel.
+  // `eyeMix` is the opacity weight (0-1) of each eye slot for this mascot:
+  // Docker = one eye (left slot), GitLab = two eyes, Kubernetes = one eye
+  // centered in the wheel hub (center slot). Weights cross-fade with the rest
+  // of the keyframe as you scroll between sections.
   const KEYFRAMES = [
     {
       id: "about",
-      bg: "#e6a431",
-      head: "#fbe7a0",
-      text: "#14141a",
-      pupil: "#5c3a21",
-      eye: [36, 40],
-      radii: [150, 120, 110, 100, 90, 100, 110, 120], // teardrop
+      bg: "#4fa3e8", // livelier, more saturated blue behind the whale
+      head: "#2496ed",
+      text: "#0b2a4a",
+      pupil: "#000000",
+      eye: [26, 29], // only feeds the expanded overlay now — shrunk per request
+      eyeMix: { left: 1, right: 0, center: 0 },
+      browMix: { left: 0, right: 0 }, // real Docker mascot has no eyebrow, just a round eye
+      radii: [110, 160, 175, 145, 115, 145, 175, 160], // docker whale: wide, low body
       expandedRadii: [340, 400, 340, 400, 340, 400, 340, 400],
     },
     {
       id: "projects",
-      bg: "#e4e1f0",
-      head: "#6c7a99",
-      text: "#14141a",
-      pupil: "#2b3a67",
-      eye: [33, 37],
-      radii: [120, 130, 125, 115, 120, 125, 130, 118], // round
+      bg: "#f4a750", // livelier, more saturated warm tone behind the fox
+      head: "#fc6d26",
+      text: "#3a1505",
+      pupil: "#8b4a1f",
+      eye: [22, 25],
+      eyeMix: { left: 1, right: 1, center: 0 },
+      browMix: { left: 1, right: 1 },
+      radii: [75, 175, 135, 110, 165, 110, 135, 175], // gitlab fox: two peaks, pointed chin
       expandedRadii: [340, 400, 340, 400, 340, 400, 340, 400],
     },
     {
       id: "certificates",
-      bg: "#0f2a1c",
-      head: "#f2e8ce",
-      text: "#f5eede",
-      pupil: "#6b1f1f",
-      eye: [39, 33],
-      radii: [100, 130, 150, 120, 110, 120, 150, 130], // wide dome
+      bg: "#1c4fa0", // richer, more saturated royal blue instead of muted navy
+      head: "#eef3fc",
+      text: "#eef3fc",
+      pupil: "#0b2a4a",
+      eye: [27, 27],
+      eyeMix: { left: 0, right: 0, center: 1 },
+      browMix: { left: 0, right: 0 },
+      radii: [138, 132, 138, 132, 138, 132, 138, 132], // kubernetes wheel: near-circular
       expandedRadii: [340, 400, 340, 400, 340, 400, 340, 400],
     },
   ];
 
+  // `category` groups the projects list into three subsections (see
+  // contentFor's "projects" branch): projects (just the blog), websites
+  // (client-style landing pages), experiments (everything else — games,
+  // tools, generators).
   const PROJECTS = [
-    {
-      title: "Old Website",
-      description: "The previous version of this portfolio - a holographic-card, dark-neon design.",
-      link: "old-website/index.html",
-      thumb: "assets/projects/old-website.jpg",
-    },
     {
       title: "Blog",
       description: "DevOps write-ups on CI/CD, Docker, Kubernetes, OIDC and more, explained in plain language.",
       link: "blog/index.html",
       thumb: "assets/projects/blog.jpg",
+      category: "projects",
     },
     {
-      title: "English Flashcards",
-      description: "A bilingual EN/PL vocabulary trainer with spaced flashcards and progress tracking.",
-      link: "english/index.html",
-      thumb: "assets/projects/english.jpg",
+      title: "Old Website",
+      description: "The previous version of this portfolio - a holographic-card, dark-neon design.",
+      link: "old-website/index.html",
+      thumb: "assets/projects/old-website.jpg",
+      category: "websites",
     },
     {
       title: "Fade Room",
       description: "Client site for a barber studio - an elegant one-page booking landing page.",
       link: "faderoom/index.html",
       thumb: "assets/projects/faderoom.jpg",
+      category: "websites",
+    },
+    {
+      title: "English Flashcards",
+      description: "A bilingual EN/PL vocabulary trainer with spaced flashcards and progress tracking.",
+      link: "english/index.html",
+      thumb: "assets/projects/english.jpg",
+      category: "experiments",
     },
     {
       title: "MineJS",
       description: "A Minecraft-style voxel survival game built from scratch in the browser with Three.js.",
       link: "minecraftai/3/index.html",
       thumb: "assets/projects/minecraftai.jpg",
+      category: "experiments",
     },
     {
       title: "Christmas Card Generator",
       description: "Design and preview a personalized Christmas card with custom messages and themes.",
       link: "kartka/index.html",
       thumb: "assets/projects/kartka.jpg",
+      category: "experiments",
     },
     {
       title: "PromptJutra",
       description: "An AI-powered tool that generates a full website from a text prompt.",
       link: "promptjutra/index.html",
       thumb: "assets/projects/promptjutra.jpg",
+      category: "experiments",
     },
     {
       title: "TwojaWizytówka",
       description: "A guided intake form that turns a business's answers into a ready website brief.",
       link: "wizytowka/index.html",
       thumb: "assets/projects/wizytowka.jpg",
+      category: "experiments",
     },
     {
       title: "Stunt Racing",
       description: "A low-poly 3D browser racing game with nitro boosts, stunts, and multiple maps.",
       link: "ai_car_game/index.html",
       thumb: "assets/projects/ai_car_game.jpg",
+      category: "experiments",
     },
+  ];
+
+  const PROJECT_CATEGORIES = [
+    { key: "projects", label: "Projects" },
+    { key: "websites", label: "Websites" },
+    { key: "experiments", label: "Experiments" },
   ];
 
   const ABOUT = {
     role: "DevOps Engineer",
-    bio: "I connect the worlds of technology and business - from implementations to client relationships. My career path blends business, technology, and automation.",
-    stack: "Docker, Kubernetes, Terraform, Bicep, Git, CI/CD, AWS / Azure / GCP, Linux, Ansible, Python, PostgreSQL, Windows, Windows Server",
+    bio: "DevOps engineer with over 5 years of IT experience, understanding both business and technical needs. Experienced in cloud infrastructure, Kubernetes, and IaC (primarily Terraform). Background in AWS, Go/Python deployment, and AI automation deployment. Experienced in CCaaS, SaaS, WaaS, and DaaS.",
+    stack: "Ansible · Docker · NGINX · HAProxy · Patroni · Keepalived · etcd · PostgreSQL · JasperReports (Tomcat, Jetty) · Linux · Windows Server (AD/GPO administration, FSLogix, NICE DCV) · GitLab CI/CD · Terraform (incl. Terragrunt) · AWS (EKS, EC2, S3, EFS, RDS, IAM, Secrets Manager) · ITIL 4 Foundation · Flask · ZeroTier · Kubernetes · Kubescape · JasperServer · Helm · GitOps (Argo CD / Flux) · Azure (VMs, AKS, Blob Storage, Functions) · Python · Go (learning) · Microservices Architecture · MongoDB / DocumentDB · Grafana Stack / Prometheus / Mimir / Alloy (push-based observability) · PowerShell (VM provisioning via custom_data/UserData) · AutoHotkey (AHK) / UI Automation · Claude Code (agent orchestration, custom Skill authoring) · Knowledge Graph / AI-assisted codebase analysis and automations",
     cv: "assets/Tobiasz_Lubowski_CV.pdf",
   };
 
@@ -156,7 +187,12 @@
   const CARD_EYE = { cx: [160, 240], cy: 190 };
   const EXPANDED_EYE = { cx: [115, 285], cy: 62 };
   const MAX_PUPIL_OFFSET = 13; // svg user units
-  const VIEWBOX_SIZE = 400;
+  // #head-svg's viewBox height stays fixed at 400 (matching its CSS height,
+  // which doesn't change with window width); its viewBox WIDTH is recomputed
+  // on load/resize to match the element's actual (now full-window) aspect
+  // ratio — see updateHeadViewBox(). expand-svg is unaffected: it's a
+  // separate, still-fixed 400x400 canvas.
+  const VIEWBOX_HEIGHT = 400;
   const IDLE_LOOK_DELAY = 2000; // ms without pointer movement before eyes wander on their own
   const SPREAD_LERP = 0.09;
   const EXPAND_MS = 700;
@@ -166,6 +202,25 @@
   const track = document.querySelector(".scroll-track");
   const headWrap = document.querySelector(".head-wrap");
   const headSvg = document.getElementById("head-svg");
+
+  // #head-svg now spans the full browser width (see style.css) so the
+  // mascot filmstrip can travel edge to edge instead of just sliding within
+  // a small centered box. Its viewBox height stays fixed at VIEWBOX_HEIGHT
+  // (matching the element's own fixed CSS height), but the viewBox WIDTH is
+  // recomputed here to match the element's actual current aspect ratio —
+  // keeping 1 viewBox unit worth the same number of real pixels in both
+  // directions (no distortion) while giving the filmstrip exactly as much
+  // horizontal room as the window currently has.
+  let headViewBoxWidth = VIEWBOX_HEIGHT;
+  function updateHeadViewBox() {
+    const rect = headSvg.getBoundingClientRect();
+    if (!rect.height) return;
+    headViewBoxWidth = VIEWBOX_HEIGHT * (rect.width / rect.height);
+    headSvg.setAttribute("viewBox", `0 0 ${headViewBoxWidth.toFixed(1)} ${VIEWBOX_HEIGHT}`);
+  }
+  updateHeadViewBox();
+  window.addEventListener("resize", updateHeadViewBox);
+
   const copy = [
     document.querySelector(".copy-0"),
     document.querySelector(".copy-1"),
@@ -247,14 +302,10 @@
         <p class="eyebrow">01 - About</p>
         <h1>About Me</h1>
         <div class="about-top">
-          <div class="about-left">
-            <p class="about-role">${ABOUT.role}</p>
-            <p>${ABOUT.bio}</p>
-            <p class="about-stack"><strong>Stack:</strong> ${ABOUT.stack}</p>
-          </div>
-          <div class="about-right">
-            <a class="cv-btn cv-btn-compact" href="${ABOUT.cv}" download>Download CV</a>
-          </div>
+          <a class="cv-btn cv-btn-compact" href="${ABOUT.cv}" download>Download CV</a>
+          <p class="about-role">${ABOUT.role}</p>
+          <p>${ABOUT.bio}</p>
+          <p class="about-stack"><strong>Stack:</strong> ${ABOUT.stack}</p>
         </div>
         <div class="timeline">
           ${TIMELINE.map(
@@ -272,20 +323,27 @@
       return `
         <p class="eyebrow">02 - Projects</p>
         <h1>Projects</h1>
-        <div class="project-list">
-          ${PROJECTS.map(
-            (p) => `
-            <a class="project-item" href="${p.link}" target="_blank" rel="noopener">
-              <img class="project-thumb" src="${p.thumb}" alt="${p.title}" loading="lazy">
-              <div class="project-text">
-                <h3>${p.title}</h3>
-                <p>${p.description}</p>
-                <span class="project-link">View project →</span>
-              </div>
-            </a>
-          `
-          ).join("")}
-        </div>
+        ${PROJECT_CATEGORIES.map((cat) => {
+          const items = PROJECTS.filter((p) => p.category === cat.key);
+          if (!items.length) return "";
+          return `
+            <h2 class="project-category">${cat.label}</h2>
+            <div class="project-list">
+              ${items.map(
+                (p) => `
+                <a class="project-item" href="${p.link}" target="_blank" rel="noopener">
+                  <img class="project-thumb" src="${p.thumb}" alt="${p.title}" loading="lazy">
+                  <div class="project-text">
+                    <h3>${p.title}</h3>
+                    <p>${p.description}</p>
+                    <span class="project-link">View project →</span>
+                  </div>
+                </a>
+              `
+              ).join("")}
+            </div>
+          `;
+        }).join("")}
       `;
     }
     return `
@@ -357,9 +415,13 @@
   });
 
   // --- two eye "instances" share the same tracking/blink/idle-look logic:
-  // the small scrolling head, and the overlay it grows into when clicked ---
+  // the small scrolling head, and the overlay it grows into when clicked.
+  // A third "center" slot (the Kubernetes wheel-hub eye) follows the same
+  // shape — each instance now carries three eye slots, only some of which
+  // are opaque at any given scroll position (see eyeMix in KEYFRAMES).
   function makeEye(svgEl, side) {
     return {
+      group: svgEl.querySelector(`.eye-${side}`),
       white: svgEl.querySelector(`.eye-${side} .eye-white`),
       pupil: svgEl.querySelector(`.eye-${side} .pupil`),
       cur: { x: 0, y: 0 },
@@ -367,20 +429,33 @@
     };
   }
 
+  // per-mascot layout: native width of its own local coordinate space (used
+  // to center it horizontally within its filmstrip slot), fixed vertical
+  // offset (unaffected by window width, so it stays a plain constant), and
+  // render scale — same values previously baked into each mascot's static
+  // HTML transform, now applied dynamically every frame in frame() since
+  // centering depends on the current (window-width-driven) viewBox width.
+  const MASCOT_NATIVE_W = [300, 200, 200]; // docker, gitlab, k8s
+  const MASCOT_CENTER_Y = [55, 1, -15];
+  const MASCOT_SCALE = [1.45, 2.15, 2.15];
+
+  // the small scrolling head no longer has its own generic eye system — each
+  // mascot's eyes are baked directly into its logo-accurate markup (see
+  // index.html) with a fixed brand-appropriate color, so headInst only needs
+  // to track each mascot's slide layer for the scroll-driven filmstrip pan
   const headInst = {
     svg: headSvg,
-    blobPath: document.getElementById("blob-path"),
-    eyes: { left: makeEye(headSvg, "left"), right: makeEye(headSvg, "right") },
-    brows: { left: headSvg.querySelector(".brow-left"), right: headSvg.querySelector(".brow-right") },
-    circleMode: false,
-    lastRadii: KEYFRAMES[0].radii.slice(),
-    lastEyeSize: KEYFRAMES[0].eye.slice(),
+    mascotSlides: [
+      headSvg.querySelector(".mascot-docker .mascot-slide"),
+      headSvg.querySelector(".mascot-gitlab .mascot-slide"),
+      headSvg.querySelector(".mascot-k8s .mascot-slide"),
+    ],
   };
 
   const overlayInst = {
     svg: expandSvg,
     blobPath: document.getElementById("expand-blob"),
-    eyes: { left: makeEye(expandSvg, "left"), right: makeEye(expandSvg, "right") },
+    eyes: { left: makeEye(expandSvg, "left"), right: makeEye(expandSvg, "right"), center: makeEye(expandSvg, "center") },
     brows: { left: expandSvg.querySelector(".brow-left"), right: expandSvg.querySelector(".brow-right") },
     spread: 0,
     spreadTarget: 0,
@@ -388,6 +463,59 @@
     seedEyeSize: KEYFRAMES[0].eye.slice(),
     section: null,
   };
+
+  // the small head's mascot eyes track the cursor too, same as the overlay's
+  // — each pupil sits inside its mascot's own scaled wrapper group (see
+  // index.html, scale 1.2 for the whale / 1.8 for the fox and wheel), so the
+  // on-screen pixel delta has to be divided by that group's own scale before
+  // being applied as the pupil's local translate, or it would overshoot
+  // proportionally to how zoomed-in that particular mascot is drawn.
+  function makeLogoEye(whiteId, pupilId, groupScale, maxOffset) {
+    return {
+      white: document.getElementById(whiteId),
+      pupil: document.getElementById(pupilId),
+      groupScale,
+      maxOffset,
+      cur: { x: 0, y: 0 },
+      target: { x: 0, y: 0 },
+    };
+  }
+
+  const logoEyes = [
+    makeLogoEye("docker-eye-white", "docker-pupil", 1.45, 6),
+    makeLogoEye("gitlab-eye-white-l", "gitlab-pupil-l", 2.15, 5),
+    makeLogoEye("gitlab-eye-white-r", "gitlab-pupil-r", 2.15, 5),
+    makeLogoEye("k8s-eye-white", "k8s-pupil", 2.15, 9),
+  ];
+
+  function setLogoEyeTargets(clientX, clientY) {
+    const svgRect = headSvg.getBoundingClientRect();
+    if (!svgRect.height) return;
+    // height is the fixed reference dimension now (width is dynamic/full-page)
+    const viewboxScale = VIEWBOX_HEIGHT / svgRect.height;
+    for (const eye of logoEyes) {
+      const r = eye.white.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      let dx = ((clientX - cx) * viewboxScale) / eye.groupScale;
+      let dy = ((clientY - cy) * viewboxScale) / eye.groupScale;
+      const dist = Math.hypot(dx, dy);
+      if (dist > eye.maxOffset) {
+        dx = (dx / dist) * eye.maxOffset;
+        dy = (dy / dist) * eye.maxOffset;
+      }
+      eye.target.x = dx;
+      eye.target.y = dy;
+    }
+  }
+
+  function updateLogoEyePupils() {
+    for (const eye of logoEyes) {
+      eye.cur.x = lerp(eye.cur.x, eye.target.x, 0.14);
+      eye.cur.y = lerp(eye.cur.y, eye.target.y, 0.14);
+      eye.pupil.setAttribute("transform", `translate(${eye.cur.x.toFixed(2)},${eye.cur.y.toFixed(2)})`);
+    }
+  }
 
   // gentle upward arch above an eye, e.g. "M180,140 Q200,128 220,140"
   function browPath(cx, cy, rx, ry) {
@@ -411,10 +539,12 @@
   }
 
   function setEyeTargetFromPointer(inst, clientX, clientY) {
+    // only ever called with overlayInst (expand-svg), which stays a fixed
+    // square 400x400 canvas, so width and height are equivalent here
     const svgRect = inst.svg.getBoundingClientRect();
     if (!svgRect.width) return;
-    const scale = VIEWBOX_SIZE / svgRect.width;
-    for (const key of ["left", "right"]) {
+    const scale = VIEWBOX_HEIGHT / svgRect.width;
+    for (const key of ["left", "right", "center"]) {
       const eye = inst.eyes[key];
       const r = eye.white.getBoundingClientRect();
       const cx = r.left + r.width / 2;
@@ -433,7 +563,7 @@
 
   window.addEventListener("pointermove", (e) => {
     lastMoveTime = performance.now();
-    if (!headInst.circleMode) setEyeTargetFromPointer(headInst, e.clientX, e.clientY);
+    setLogoEyeTargets(e.clientX, e.clientY);
     if (openIdx !== null) setEyeTargetFromPointer(overlayInst, e.clientX, e.clientY);
   });
 
@@ -441,14 +571,23 @@
     if (!idleLookActive) return;
     const lookForward = Math.random() < 0.35;
     const angle = Math.random() * Math.PI * 2;
-    const mag = lookForward ? 0 : MAX_PUPIL_OFFSET * (0.5 + Math.random() * 0.5);
-    const x = Math.cos(angle) * mag;
-    const y = Math.sin(angle) * mag;
-    for (const inst of [headInst, overlayInst]) {
-      inst.eyes.left.target.x = x;
-      inst.eyes.left.target.y = y;
-      inst.eyes.right.target.x = x;
-      inst.eyes.right.target.y = y;
+    // a shared random direction + magnitude fraction, scaled per-eye by each
+    // eye's own comfortable offset radius (the logo eyes are much smaller
+    // than the overlay's, so they can't share one absolute magnitude)
+    const magFrac = lookForward ? 0 : 0.5 + Math.random() * 0.5;
+    const dirX = Math.cos(angle);
+    const dirY = Math.sin(angle);
+    const ox = dirX * MAX_PUPIL_OFFSET * magFrac;
+    const oy = dirY * MAX_PUPIL_OFFSET * magFrac;
+    overlayInst.eyes.left.target.x = ox;
+    overlayInst.eyes.left.target.y = oy;
+    overlayInst.eyes.right.target.x = ox;
+    overlayInst.eyes.right.target.y = oy;
+    overlayInst.eyes.center.target.x = ox;
+    overlayInst.eyes.center.target.y = oy;
+    for (const eye of logoEyes) {
+      eye.target.x = dirX * eye.maxOffset * magFrac;
+      eye.target.y = dirY * eye.maxOffset * magFrac;
     }
     idleLookTimeout = setTimeout(autoLookStep, 1800 + Math.random() * 1800);
   }
@@ -463,13 +602,6 @@
     idleLookActive = false;
     if (idleLookTimeout) clearTimeout(idleLookTimeout);
   }
-
-  headSvg.addEventListener("pointerenter", () => {
-    headInst.circleMode = true;
-  });
-  headSvg.addEventListener("pointerleave", () => {
-    headInst.circleMode = false;
-  });
 
   // --- scroll freeze while a section is expanded (classic body-fixed technique) ---
   function freezeScroll() {
@@ -518,7 +650,11 @@
     const section = KEYFRAMES[idx];
     clearTimeout(closeTimer);
 
-    seedRect = headSvg.getBoundingClientRect();
+    // seed from the currently-visible MASCOT's own box, not headSvg's — the
+    // SVG itself now spans the full window width (see style.css), so its own
+    // bounding rect would seed the FLIP animation from a giant sliver
+    // instead of growing out of the actual clicked icon
+    seedRect = headInst.mascotSlides[idx].getBoundingClientRect();
     freezeScroll();
     document.body.classList.add("section-open");
 
@@ -531,13 +667,22 @@
     overlay.style.height = `${seedRect.height}px`;
 
     overlayInst.section = section;
-    overlayInst.seedRadii = headInst.lastRadii.slice();
-    overlayInst.seedEyeSize = headInst.lastEyeSize.slice();
+    // the head no longer has one continuously-morphing shape to seed from
+    // (see the mascot cross-fade comment in frame()) — its own keyframe's
+    // radii make an equally good starting point for the FLIP-zoom seed,
+    // since that shape is only ever visible for an instant before the
+    // overlay overflows into a full-bleed color wash anyway
+    overlayInst.seedRadii = section.radii.slice();
+    // same idea as seedRadii above: the head has no tracked eye size/position
+    // to seed from anymore, so start the overlay's pupils centered and let
+    // them settle from there — a small, one-time detail compared to the
+    // overlay's own FLIP-zoom animation, which is the real focus of opening
+    overlayInst.seedEyeSize = section.eye.slice();
     overlayInst.spread = 0;
     overlayInst.spreadTarget = 0;
-    for (const key of ["left", "right"]) {
-      overlayInst.eyes[key].cur = { ...headInst.eyes[key].cur };
-      overlayInst.eyes[key].target = { ...headInst.eyes[key].cur };
+    for (const key of ["left", "right", "center"]) {
+      overlayInst.eyes[key].cur = { x: 0, y: 0 };
+      overlayInst.eyes[key].target = { x: 0, y: 0 };
     }
 
     overlay.classList.add("visible", "active");
@@ -578,7 +723,15 @@
     overlay.style.left = `${seedRect.left}px`;
     overlay.style.width = `${seedRect.width}px`;
     overlay.style.height = `${seedRect.height}px`;
-    overlayInst.spreadTarget = 0;
+    // deliberately NOT resetting spreadTarget back to 0 here — the overlay's
+    // internal shape stays fully expanded (still hugely overflowing the
+    // viewBox) the whole time the box shrinks via CSS, so it always renders
+    // as a clean full-bleed color fill with no visible silhouette. Letting
+    // it shrink back toward the small seed shape (the old, pre-accurate-logo
+    // abstract blob radii, still used only to seed the FLIP animation) made
+    // that old shape briefly flash back into view right as a section closed.
+    // openSection() already resets spread/spreadTarget to 0 fresh on the
+    // next open, so nothing needs resetting here.
 
     closeTimer = setTimeout(() => {
       overlay.classList.remove("closing", "visible");
@@ -656,34 +809,30 @@
     root.style.setProperty("--text", lerpColor(a.text, b.text, localT));
     root.style.setProperty("--pupil", lerpColor(a.pupil, b.pupil, localT));
 
-    const headRadii = a.radii.map((r0, i) => {
-      const r1 = b.radii[i];
-      const base = lerp(r0, r1, localT);
-      return base + Math.sin(t * 0.6 + i * 0.9) * wobbleAmp;
+    // the three mascot logos are static shapes (see index.html) laid out as
+    // one continuous horizontal filmstrip spanning the full window width:
+    // mascot i's "world" position is i * headViewBoxWidth (one full screen
+    // width per icon), the "camera" position is segF * headViewBoxWidth, and
+    // its on-screen offset is just the difference between the two — a
+    // direct, continuous 1:1 mapping of scroll position to horizontal
+    // position, same as physically dragging a filmstrip sideways. No
+    // opacity fading at all (an earlier cross-fade version read as a
+    // flicker, not real motion): each mascot stays fully opaque and simply
+    // slides out of the (now full-width) SVG viewBox once it's off to the
+    // side. Each mascot's own centering + scale is folded into this same
+    // transform (recomputed every frame, since it depends on the current
+    // viewBox width) rather than being a separate static attribute.
+    headInst.mascotSlides.forEach((el, i) => {
+      const scale = MASCOT_SCALE[i];
+      const slotX = (i - segF) * headViewBoxWidth;
+      const centerX = (headViewBoxWidth - MASCOT_NATIVE_W[i] * scale) / 2;
+      const x = (slotX + centerX).toFixed(1);
+      el.setAttribute("transform", `translate(${x},${MASCOT_CENTER_Y[i]}) scale(${scale})`);
     });
-    headInst.blobPath.setAttribute("d", smoothClosedPath(pointsFromRadii(headRadii, 200, 200)));
-    headInst.lastRadii = headRadii;
 
-    const headEyeRx = lerp(a.eye[0], b.eye[0], localT);
-    const headEyeRy = lerp(a.eye[1], b.eye[1], localT);
-    headInst.lastEyeSize = [headEyeRx, headEyeRy];
+    updateLogoEyePupils();
 
-    for (const [key, cx] of [["left", CARD_EYE.cx[0]], ["right", CARD_EYE.cx[1]]]) {
-      const eye = headInst.eyes[key];
-      eye.white.setAttribute("rx", headEyeRx.toFixed(2));
-      eye.white.setAttribute("ry", headEyeRy.toFixed(2));
-      if (headInst.circleMode) {
-        const spin = t * 4.2 + (key === "right" ? 0.4 : 0);
-        eye.target.x = Math.cos(spin) * MAX_PUPIL_OFFSET * 0.8;
-        eye.target.y = Math.sin(spin) * MAX_PUPIL_OFFSET * 0.8;
-      }
-      updatePupil(eye);
-      headInst.brows[key].setAttribute("d", browPath(cx, CARD_EYE.cy, headEyeRx, headEyeRy));
-    }
-
-    if (headInst.circleMode) {
-      stopIdleLook();
-    } else if (now - lastMoveTime > IDLE_LOOK_DELAY) {
+    if (now - lastMoveTime > IDLE_LOOK_DELAY) {
       startIdleLook();
     } else {
       stopIdleLook();
@@ -719,22 +868,30 @@
       overlayInst.blobPath.setAttribute("d", smoothClosedPath(pointsFromRadii(overlayRadii, 200, 200)));
 
       const cy = lerp(CARD_EYE.cy, EXPANDED_EYE.cy, overlayInst.spread);
+      // the center (wheel-hub) eye sits at the blob's true center while small,
+      // same as on the scrolling head, but slides up to the same row as the
+      // other two once expanded — otherwise it'd sit behind the panel text
+      const centerCy = lerp(200, EXPANDED_EYE.cy, overlayInst.spread);
       const leftCx = lerp(CARD_EYE.cx[0], EXPANDED_EYE.cx[0], overlayInst.spread);
       const rightCx = lerp(CARD_EYE.cx[1], EXPANDED_EYE.cx[1], overlayInst.spread);
       const eyeScale = lerp(1, 1.04, overlayInst.spread);
       const rx = overlayInst.seedEyeSize[0] * eyeScale;
       const ry = overlayInst.seedEyeSize[1] * eyeScale;
 
-      for (const [key, cx] of [["left", leftCx], ["right", rightCx]]) {
+      for (const [key, cx, cy2] of [["left", leftCx, cy], ["right", rightCx, cy], ["center", 200, centerCy]]) {
         const eye = overlayInst.eyes[key];
         eye.white.setAttribute("cx", cx.toFixed(2));
-        eye.white.setAttribute("cy", cy.toFixed(2));
+        eye.white.setAttribute("cy", cy2.toFixed(2));
         eye.white.setAttribute("rx", rx.toFixed(2));
         eye.white.setAttribute("ry", ry.toFixed(2));
         eye.pupil.setAttribute("cx", cx.toFixed(2));
-        eye.pupil.setAttribute("cy", cy.toFixed(2));
+        eye.pupil.setAttribute("cy", cy2.toFixed(2));
         updatePupil(eye);
-        overlayInst.brows[key].setAttribute("d", browPath(cx, cy, rx, ry));
+        eye.group.style.opacity = overlayInst.section.eyeMix[key];
+        if (key !== "center") {
+          overlayInst.brows[key].setAttribute("d", browPath(cx, cy2, rx, ry));
+          overlayInst.brows[key].style.opacity = overlayInst.section.browMix[key];
+        }
       }
     }
   }

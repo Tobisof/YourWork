@@ -1,10 +1,11 @@
 :root {
-  --bg: #e6a431;
-  --head: #fbe7a0;
-  --halo: #fbe7a0;
-  --ink: #14141a;
-  --text: #14141a;
-  --pupil: #5c3a21;
+  --bg: #cfe6fb;
+  --head: #2496ed;
+  --halo: #2496ed;
+  --ink: #0b2a4a;
+  --text: #0b2a4a;
+  --pupil: #0b2a4a;
+  --mono: ui-monospace, "SFMono-Regular", "Cascadia Code", "Roboto Mono", Consolas, "Liberation Mono", Menlo, monospace;
 }
 
 * { box-sizing: border-box; }
@@ -17,7 +18,14 @@ html, body {
 body {
   background: var(--bg);
   transition: background-color 0.4s ease;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  /* mono + uppercase everywhere by default (the "02 - PROJECTS" look) —
+     set here so it cascades to every piece of text on the site; specific
+     elements (.eyebrow, .section-label, etc.) still carry their own
+     stronger letter-spacing, which simply wins locally since those
+     selectors are more specific than this one */
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
   color: var(--ink);
   overflow-x: hidden;
 }
@@ -71,6 +79,8 @@ body.section-open .head-wrap {
 
 .head-wrap {
   position: relative;
+  width: min(60vw, 420px);
+  height: min(60vw, 420px);
   animation: head-float 3.6s ease-in-out infinite;
 }
 
@@ -147,18 +157,28 @@ body.section-open .head-wrap {
 .speech-bubble.bubble-right::before { top: 50%; right: 100%; transform: translateY(-50%); border-right-color: var(--ink); margin-right: 1px; }
 .speech-bubble.bubble-right::after { top: 50%; right: 100%; transform: translateY(-50%); border-right-color: #ffffff; }
 
+/* the SVG canvas itself spans the full browser width — centered on
+   .head-wrap's own center point, which is itself centered on the page by
+   .stage's flex layout, so this ends up centered on the page regardless of
+   .head-wrap's own (much smaller) box. .head-wrap stays a normal head-sized
+   box purely so the speech bubble still has a sensible small anchor to
+   position around (see .speech-bubble below) and so the existing bobbing
+   animation still reads as the head moving, not the whole window. */
 #head-svg {
-  position: relative;
-  width: min(60vw, 420px);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100vw;
   height: min(60vw, 420px);
+  transform: translate(-50%, -50%);
   cursor: pointer;
   touch-action: pan-y;
   transition: transform 0.25s ease;
 }
-#head-svg:hover { transform: scale(1.04); }
-#head-svg:active { transform: scale(0.97); }
+#head-svg:hover { transform: translate(-50%, -50%) scale(1.04); }
+#head-svg:active { transform: translate(-50%, -50%) scale(0.97); }
 #head-svg:focus { outline: none; }
-#head-svg:focus-visible { outline: 3px solid var(--ink); outline-offset: 8px; border-radius: 50%; }
+#head-svg:focus-visible { outline: 3px solid var(--ink); outline-offset: -8px; }
 
 .blob {
   fill: var(--head);
@@ -181,12 +201,11 @@ body.section-open .head-wrap {
   pointer-events: none;
 }
 
+/* only used by the expanded overlay now (the small head's mascots have no
+   brows) — the enlarged view is meant to be just the plain eye floating on
+   a full-bleed color wash, no linework/contours on top of it */
 .brow {
-  fill: none;
-  stroke: var(--ink);
-  stroke-width: 6;
-  stroke-linecap: round;
-  filter: url(#sketchy-edge-2);
+  display: none;
 }
 
 /* the sketchy feTurbulence/feDisplacementMap filters are expensive to keep
@@ -202,27 +221,62 @@ body.section-open .head-wrap {
   display: none;
 }
 
-/* --- eyes (shared by the scrolling head and the expanded overlay) --- */
+/* --- the three mascot logos: accurate, brand-authentic static markup (see
+   index.html), laid out as one continuous horizontal filmstrip that scroll
+   position pans across (see frame() in script.js). Always fully opaque —
+   visibility comes purely from being panned into/out of the SVG viewBox, no
+   fading. Only the scrolling head has these; the expanded overlay's blob is
+   deliberately just a full-bleed color wash (see the expandedRadii comment
+   in script.js), so a specific logo shape would never be visible there
+   anyway. */
+.mascot {
+  opacity: 1;
+}
+/* slide layer: JS sets a translate() attribute here directly every frame
+   (see frame() in script.js) — kept off .mascot-breathe so it doesn't fight
+   the CSS breathing animation, since an element can only have one effective
+   `transform` source at a time. */
+.mascot-breathe {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mascot-breathe 4.2s ease-in-out infinite;
+}
+@keyframes mascot-breathe {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50%      { transform: scale(1.015) rotate(0.5deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mascot-breathe { animation: none; }
+}
+
+/* --- eyes (shared by the scrolling head's mascots and the expanded overlay) --- */
 .eye {
   transform-box: fill-box;
   transform-origin: center;
   animation: blink 4.5s ease-in-out infinite;
 }
-.eye-white { fill: #ffffff; stroke: var(--ink); stroke-width: 4; }
-.pupil { fill: var(--pupil); }
+/* no stroke: the small head's logo eyes are meant to stay flat/authentic
+   (no contour), and the expanded overlay's eyes drop their contour too */
+.eye-white { fill: #ffffff; }
+/* the small head's pupils keep their own fixed brand colors (set inline in
+   index.html); only the expanded overlay's pupils still color-interpolate
+   via --pupil across the scroll */
+#expand-svg .pupil { fill: var(--pupil); }
 
 @keyframes blink {
   0%, 92%, 100% { transform: scaleY(1); }
   95%           { transform: scaleY(0.06); }
 }
 
-/* shared typographic treatment: uppercase + tracked-out, used for the
-   eyebrow labels, the big bottom section label, and the top-right nav */
+/* shared typographic treatment: uppercase + tracked-out mono, used for the
+   eyebrow labels, the big bottom section label, and the top-right nav —
+   a terminal/devops accent against the sans-serif body copy */
 .eyebrow,
 .section-label,
 .nav-item {
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
+  font-family: var(--mono);
 }
 
 /* --- copy blocks, cross-faded by JS as you scroll --- */
@@ -259,7 +313,8 @@ body.section-open .head-wrap {
   flex-direction: column;
   gap: 0.15rem;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
+  font-family: var(--mono);
   font-size: 0.75rem;
   line-height: 1.3;
   color: var(--text);
@@ -284,6 +339,7 @@ body.section-open .head-wrap {
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  font-family: var(--mono);
   white-space: nowrap;
   transition: opacity 0.25s ease, transform 0.2s ease;
 }
@@ -328,6 +384,7 @@ body.section-open .head-wrap {
   color: var(--text);
   transition: opacity 0.25s ease, color 0.4s ease;
   text-transform: uppercase;
+  font-family: var(--mono);
   opacity: 0.5;
   animation: hint-bob 1.8s ease-in-out infinite;
   pointer-events: none;
@@ -375,10 +432,13 @@ body.section-open .head-wrap {
 }
 
 .close-btn {
+  /* fixed top-right corner, independent of eye layout — it used to sit
+     centered in the gap between two eyes, which broke once a mascot (the
+     Kubernetes wheel) has only one eye dead-center in that same spot */
   position: absolute;
-  top: 15.5%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0.6);
+  top: 1.5rem;
+  right: 1.5rem;
+  transform: scale(0.6);
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -397,7 +457,7 @@ body.section-open .head-wrap {
 .expand-overlay.active .close-btn {
   opacity: 1;
   pointer-events: auto;
-  transform: translate(-50%, -50%) scale(1);
+  transform: scale(1);
   /* opening: wait for the box to (almost) finish growing, then fade in */
   transition: opacity 0.3s ease 0.35s, transform 0.3s ease 0.35s, background 0.2s ease;
 }
@@ -434,7 +494,13 @@ body.section-open .head-wrap {
   opacity: 0.6;
   margin: 0 0 0.5rem;
 }
-.panel-content h1 { font-size: clamp(1.3rem, 3vw, 2rem); margin: 0 0 0.6rem; }
+.panel-content h1 {
+  font-size: clamp(1.3rem, 3vw, 2rem);
+  margin: 0 0 0.6rem;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
 .panel-content p { margin: 0 0 0.6rem; opacity: 0.75; line-height: 1.5; }
 
 .cv-btn {
@@ -445,37 +511,38 @@ body.section-open .head-wrap {
   background: var(--ink);
   color: #fff;
   text-decoration: none;
-  font-size: 0.9rem;
-  letter-spacing: 0.02em;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: var(--mono);
   white-space: nowrap;
 }
 .cv-btn:hover { opacity: 0.85; }
 .cv-btn-compact {
   margin-top: 0;
+  margin-bottom: 1rem;
   padding: 0.5rem 1.1rem;
   font-size: 0.78rem;
+  align-self: flex-start;
 }
 
-/* --- two-column top: bio/stack on the left (3/4), CV button on the right (1/4) --- */
+/* --- single column: CV button sits above the full-width bio/stack text
+   (same max-width as .timeline below it, so the two line up) --- */
 .about-top {
   display: flex;
-  align-items: center;
-  gap: 1.5rem;
+  flex-direction: column;
   max-width: 34rem;
   margin: 0 auto;
   text-align: left;
-}
-.about-left { flex: 3; min-width: 0; }
-.about-right {
-  flex: 1;
-  display: flex;
-  justify-content: center;
 }
 
 .about-role {
   font-weight: 700;
   opacity: 1 !important;
   margin: 0 0 0.4rem !important;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 .about-stack { font-size: 0.85rem; }
 
@@ -500,16 +567,32 @@ body.section-open .head-wrap {
   border-left-color: var(--ink);
   padding-bottom: 0.2rem;
 }
-.timeline-item h3 { margin: 0 0 0.15rem; font-size: 0.7rem; }
+.timeline-item h3 { margin: 0 0 0.15rem; font-size: 0.7rem; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.02em; }
 .timeline-item p { margin: 0; font-size: 0.68rem; opacity: 0.75; }
 .timeline-item.timeline-current h3 { font-size: 1.05rem; }
 .timeline-item.timeline-current p { font-size: 0.88rem; opacity: 0.85; }
+
+.project-category {
+  text-align: left;
+  font-size: 0.95rem;
+  font-weight: 700;
+  opacity: 1;
+  margin: 2.2rem 0 0.9rem;
+  letter-spacing: 0.1em;
+  /* block-level (not inline) so it sits at the left edge of .panel-content
+     like the list below it, instead of following the panel's own
+     text-align: center as an inline element would */
+  display: block;
+  width: 100%;
+  padding-bottom: 0.6rem;
+  border-bottom: 2px solid var(--ink);
+}
+.project-category:first-of-type { margin-top: 1rem; }
 
 .project-list {
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
-  margin-top: 1rem;
   text-align: left;
 }
 .project-item {
@@ -534,9 +617,9 @@ body.section-open .head-wrap {
   border: 1.5px solid rgba(0, 0, 0, 0.15);
   transition: transform 0.2s ease;
 }
-.project-text h3 { margin: 0 0 0.3rem; font-size: 1rem; }
+.project-text h3 { margin: 0 0 0.3rem; font-size: 0.95rem; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.02em; }
 .project-text p { margin: 0 0 0.3rem; font-size: 0.9rem; opacity: 0.75; }
-.project-link { font-size: 0.85rem; font-weight: 600; }
+.project-link { font-size: 0.8rem; font-weight: 600; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.04em; }
 
 .cert-grid {
   display: grid;
@@ -652,9 +735,6 @@ body.section-open .head-wrap {
   .nav-item { font-size: 0.65rem; }
   .brand-header { top: 1.2rem; left: 1.2rem; font-size: 0.65rem; }
   .order-btn { top: 4rem; padding: 0.5rem 1rem; font-size: 0.65rem; }
-  .about-top { flex-direction: column; align-items: stretch; gap: 0.8rem; }
-  .about-right { justify-content: flex-start; }
-  .cv-btn-compact { align-self: flex-start; }
 }
 
 @media (prefers-reduced-motion: reduce) {

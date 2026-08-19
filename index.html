@@ -29,17 +29,97 @@
     <div class="head-wrap">
       <div class="speech-bubble" id="speech-bubble" aria-hidden="true"><span id="speech-text"></span></div>
       <svg id="head-svg" viewBox="0 0 400 400" role="button" tabindex="0" aria-label="Open this section">
-        <path id="blob-path" class="blob"></path>
-        <use href="#blob-path" class="blob-sketch"></use>
-        <path class="brow brow-left"></path>
-        <path class="brow brow-right"></path>
-        <g class="eye eye-left">
-          <ellipse class="eye-white" cx="160" cy="190" rx="36" ry="40"></ellipse>
-          <circle class="pupil" cx="160" cy="190" r="14"></circle>
+        <!-- three accurate, brand-authentic mascot logos (validated separately
+             in the logos prototype), laid out as one continuous horizontal
+             filmstrip spanning the FULL browser window width (see frame() in
+             script.js — the SVG itself stretches edge to edge and its viewBox
+             is recomputed on load/resize so 1 unit stays 1 real pixel-ish
+             regardless of window size) rather than geometrically morphed or
+             cross-faded into each other — GitLab's and Kubernetes' real logos
+             are sharp/geometric, so warping one continuous blob between them
+             never actually looked like either logo, and a plain opacity
+             cross-fade read as a "flicker" rather than real motion. Each
+             mascot stays fully opaque always; scrolling just pans the strip
+             left/right and each one is simply clipped by the SVG viewBox once
+             it's off to the side. Each logo keeps its own authentic fixed
+             colors (including its eye) — only the surrounding background/halo
+             continue to color-interpolate continuously across the scroll. -->
+        <!-- each mascot is 2 nested layers: outer = continuous filmstrip
+             position + centering + scale (JS, .mascot-slide, fully
+             recomputed every frame since it depends on the current viewBox
+             width), inner = idle breathing (CSS animation only, no
+             transform attribute needed here — the animation itself supplies
+             it). Keeping these on separate elements means the CSS breathing
+             animation's `transform` never fights the JS-driven one — an
+             element can only have one effective source for the same
+             property. -->
+        <g class="mascot mascot-docker">
+          <g class="mascot-slide">
+            <g class="mascot-breathe">
+              <rect x="138" y="10" width="32" height="28" rx="4" fill="#046b99"/>
+              <rect x="62" y="44" width="32" height="28" rx="4" fill="#046b99"/>
+              <rect x="100" y="44" width="32" height="28" rx="4" fill="#046b99"/>
+              <rect x="138" y="44" width="32" height="28" rx="4" fill="#046b99"/>
+              <rect x="24" y="78" width="32" height="28" rx="4" fill="#046b99"/>
+              <rect x="62" y="78" width="32" height="28" rx="4" fill="#046b99"/>
+              <rect x="100" y="78" width="32" height="28" rx="4" fill="#046b99"/>
+              <rect x="138" y="78" width="32" height="28" rx="4" fill="#046b99"/>
+              <rect x="176" y="78" width="32" height="28" rx="4" fill="#046b99"/>
+              <path d="M 0 112 H 222 C 232 112 240 120 240 130 C 225 174 140 180 80 180 C 20 180 0 145 0 112 Z" fill="#046b99"/>
+              <path d="M 220 120 C 222 90 234 75 248 75 C 254 85 250 108 234 125 Z" fill="#046b99"/>
+              <path d="M 227 122 C 252 110 284 110 297 122 C 287 140 257 142 232 131 Z" fill="#046b99"/>
+              <g class="eye">
+                <circle id="docker-eye-white" class="eye-white" cx="42" cy="146" r="15" fill="#ffffff"/>
+                <circle id="docker-pupil" class="pupil" cx="42" cy="146" r="6.5" fill="#000000"/>
+              </g>
+            </g>
+          </g>
         </g>
-        <g class="eye eye-right">
-          <ellipse class="eye-white" cx="240" cy="190" rx="36" ry="40"></ellipse>
-          <circle class="pupil" cx="240" cy="190" r="14"></circle>
+        <g class="mascot mascot-gitlab">
+          <g class="mascot-slide">
+            <g class="mascot-breathe">
+              <polygon points="100,182 100,70 38,70" fill="#e24329"/>
+              <polygon points="100,182 100,70 162,70" fill="#e24329"/>
+              <polygon points="38,70 100,70 24,2" fill="#e24329"/>
+              <polygon points="162,70 100,70 176,2" fill="#e24329"/>
+              <polygon points="100,182 38,70 64,70" fill="#fc6d26"/>
+              <polygon points="100,182 162,70 136,70" fill="#fc6d26"/>
+              <polygon points="100,182 38,70 0,110" fill="#fca326"/>
+              <polygon points="100,182 162,70 200,110" fill="#fca326"/>
+              <polygon points="24,2 38,70 0,110" fill="#e24329"/>
+              <polygon points="176,2 162,70 200,110" fill="#e24329"/>
+              <g class="eye">
+                <circle id="gitlab-eye-white-l" class="eye-white" cx="76" cy="103" r="12" fill="#ffffff"/>
+                <circle id="gitlab-pupil-l" class="pupil" cx="76" cy="103" r="5.2" fill="#8b4a1f"/>
+              </g>
+              <g class="eye">
+                <circle id="gitlab-eye-white-r" class="eye-white" cx="124" cy="103" r="12" fill="#ffffff"/>
+                <circle id="gitlab-pupil-r" class="pupil" cx="124" cy="103" r="5.2" fill="#8b4a1f"/>
+              </g>
+            </g>
+          </g>
+        </g>
+        <g class="mascot mascot-k8s">
+          <g class="mascot-slide">
+            <g class="mascot-breathe">
+              <path d="M 100 8 L 178 45 L 197 130 L 143 192 L 57 192 L 3 130 L 22 45 Z" fill="#326ce5"/>
+              <circle cx="100" cy="100" r="52" stroke="#ffffff" stroke-width="14" fill="none"/>
+              <g fill="#ffffff">
+                <g transform="rotate(0, 100, 100)"><rect x="94" y="24" width="12" height="76" rx="4"/><circle cx="100" cy="22" r="8"/></g>
+                <g transform="rotate(51.4, 100, 100)"><rect x="94" y="24" width="12" height="76" rx="4"/><circle cx="100" cy="22" r="8"/></g>
+                <g transform="rotate(102.8, 100, 100)"><rect x="94" y="24" width="12" height="76" rx="4"/><circle cx="100" cy="22" r="8"/></g>
+                <g transform="rotate(154.2, 100, 100)"><rect x="94" y="24" width="12" height="76" rx="4"/><circle cx="100" cy="22" r="8"/></g>
+                <g transform="rotate(205.6, 100, 100)"><rect x="94" y="24" width="12" height="76" rx="4"/><circle cx="100" cy="22" r="8"/></g>
+                <g transform="rotate(257, 100, 100)"><rect x="94" y="24" width="12" height="76" rx="4"/><circle cx="100" cy="22" r="8"/></g>
+                <g transform="rotate(308.4, 100, 100)"><rect x="94" y="24" width="12" height="76" rx="4"/><circle cx="100" cy="22" r="8"/></g>
+              </g>
+              <path d="M 100 86 L 112 92 L 115 105 L 107 114 L 93 114 L 85 105 L 88 92 Z" fill="#326ce5"/>
+              <g class="eye">
+                <circle id="k8s-eye-white" class="eye-white" cx="100" cy="100" r="21" fill="#ffffff"/>
+                <circle id="k8s-pupil" class="pupil" cx="100" cy="100" r="9" fill="#0b2a4a"/>
+              </g>
+            </g>
+          </g>
         </g>
       </svg>
     </div>
@@ -90,6 +170,10 @@
     <g class="eye eye-right">
       <ellipse class="eye-white" cx="240" cy="190" rx="36" ry="40"></ellipse>
       <circle class="pupil" cx="240" cy="190" r="14"></circle>
+    </g>
+    <g class="eye eye-center">
+      <ellipse class="eye-white" cx="200" cy="200" rx="36" ry="40"></ellipse>
+      <circle class="pupil" cx="200" cy="200" r="14"></circle>
     </g>
   </svg>
   <button class="close-btn" id="close-btn" type="button" aria-label="Close section">&times;</button>
