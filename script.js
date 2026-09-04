@@ -108,13 +108,6 @@
       category: "experiments",
     },
     {
-      title: "TwojaWizytówka",
-      description: "A guided intake form that turns a business's answers into a ready website brief.",
-      link: "wizytowka/index.html",
-      thumb: "assets/projects/wizytowka.jpg",
-      category: "experiments",
-    },
-    {
       title: "Stunt Racing",
       description: "A low-poly 3D browser racing game with nitro boosts, stunts, and multiple maps.",
       link: "ai_car_game/index.html",
