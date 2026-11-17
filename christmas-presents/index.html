@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1d33">
+<title>Christmas Presents</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="snow" aria-hidden="true"></canvas>
+
+<div class="lights" aria-hidden="true"></div>
+
+<main class="wrap">
+  <header class="hero">
+    <a href="#" class="home-link" id="home-link">Christmas Presents</a>
+    <p class="sub" id="subtitle">Wybierz siebie z listy i dopisz, co chciałbyś znaleźć pod choinką.</p>
+  </header>
+
+  <!-- People list -->
+  <section id="view-list" class="view">
+    <ul class="people" id="people"></ul>
+  </section>
+
+  <!-- Single person -->
+  <section id="view-person" class="view" hidden>
+    <a href="#" class="back">← Wszystkie osoby</a>
+    <div class="card person-card">
+      <div class="person-head">
+        <span class="avatar big" id="p-emoji"></span>
+        <h1 id="p-name"></h1>
+      </div>
+
+      <ul class="gifts" id="gifts"></ul>
+      <p class="empty" id="empty">Jeszcze nic tu nie ma. Dodaj pierwszy pomysł! ✨</p>
+
+      <form class="gift-form" id="gift-form" autocomplete="off">
+        <h2 id="form-title">Dodaj pomysł na prezent</h2>
+        <input type="hidden" id="f-id">
+        <label>Co chcesz dostać? <input id="f-title" required maxlength="120" placeholder="np. Książka „Diuna”"></label>
+        <label>Link (opcjonalnie) <input id="f-link" type="url" placeholder="https://…"></label>
+        <label>Notatka (opcjonalnie) <textarea id="f-note" rows="2" maxlength="300" placeholder="rozmiar, kolor, wersja…"></textarea></label>
+        <div class="form-actions">
+          <button type="submit" class="btn primary" id="f-submit">🎁 Dodaj</button>
+          <button type="button" class="btn ghost" id="f-cancel" hidden>Anuluj</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
