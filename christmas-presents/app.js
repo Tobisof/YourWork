@@ -1,8 +1,11 @@
 /* Christmas Presents
- * Data: data/people.csv + data/gifts.csv (seed, committed in repo).
- * Changes made in the browser are stored in localStorage.
+ * People: data/people.csv (in repo).
+ * Gifts: shared Google Sheet via Apps Script web app (API_URL).
+ * If API_URL is empty, gifts are kept only in this browser (localStorage).
  */
 (() => {
+  // Wklej tutaj URL wdrożenia Apps Script (kończy się na /exec):
+  const API_URL = 'https://script.google.com/macros/s/AKfycbxlMmXTCjfGKX4iF0mzdx2wRdR-UHlSv5YkO30h_Q1Vgx4y3PDb7WmWbT-TM3cHQ0U/exec';
   const STORE_KEY = 'xmas-gifts-v1';
   const $ = (id) => document.getElementById(id);
 
@@ -36,20 +39,46 @@
   }
 
   /* ---------- storage ---------- */
-  function save() {
+  function saveLocal() {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(gifts)); } catch (e) { /* private mode */ }
   }
   function loadLocal() {
-    try { const v = localStorage.getItem(STORE_KEY); return v ? JSON.parse(v) : null; } catch (e) { return null; }
+    try { const v = localStorage.getItem(STORE_KEY); return v ? JSON.parse(v) : []; } catch (e) { return []; }
+  }
+
+  async function fetchGifts() {
+    if (!API_URL) return loadLocal();
+    const r = await fetch(API_URL, { cache: 'no-store' });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'błąd serwera');
+    return d.gifts;
+  }
+
+  // action: 'add' | 'update' | 'delete'
+  async function mutate(req) {
+    if (!API_URL) {
+      if (req.action === 'add') gifts.push({ ...req.gift, id: 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) });
+      else if (req.action === 'update') Object.assign(gifts.find((g) => g.id === req.gift.id) || {}, req.gift);
+      else if (req.action === 'delete') gifts = gifts.filter((g) => g.id !== req.id);
+      saveLocal();
+      return;
+    }
+    // text/plain avoids a CORS preflight, which Apps Script does not answer
+    const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(req) });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'błąd serwera');
+    gifts = d.gifts;
   }
 
   async function load() {
-    const [p, g] = await Promise.all([
-      fetch('data/people.csv', { cache: 'no-store' }).then((r) => r.text()),
-      fetch('data/gifts.csv', { cache: 'no-store' }).then((r) => r.ok ? r.text() : 'id,personId,title,link,note\n'),
-    ]);
+    const p = await fetch('data/people.csv', { cache: 'no-store' }).then((r) => r.text());
     people = parseCSV(p);
-    gifts = loadLocal() ?? parseCSV(g);
+    gifts = await fetchGifts();
+  }
+
+  // refresh gifts in the background (others may have added something)
+  async function refresh() {
+    try { gifts = await fetchGifts(); route(false); } catch (e) { /* keep what we have */ }
   }
 
   /* ---------- rendering ---------- */
@@ -71,7 +100,7 @@
     }).join('');
   }
 
-  function renderPerson(person) {
+  function renderPerson(person, keepForm = false) {
     $('view-list').hidden = true;
     $('view-person').hidden = false;
     $('subtitle').hidden = true;
@@ -96,7 +125,7 @@
         </div>
       </li>`;
     }).join('');
-    resetForm();
+    if (!keepForm) resetForm();
   }
 
   function currentPerson() {
@@ -104,11 +133,17 @@
     return people.find((p) => p.id === id);
   }
 
-  function route() {
+  function route(scroll = true) {
     const p = currentPerson();
-    if (p) renderPerson(p);
+    if (p) renderPerson(p, !scroll);
     else { document.title = 'Christmas Presents'; renderList(); }
-    window.scrollTo(0, 0);
+    if (scroll) window.scrollTo(0, 0);
+  }
+
+  function setBusy(on, msg = '') {
+    $('f-submit').disabled = on;
+    $('gift-form').classList.toggle('busy', on);
+    $('f-status').textContent = msg;
   }
 
   /* ---------- form ---------- */
@@ -118,9 +153,10 @@
     $('form-title').textContent = 'Dodaj pomysł na prezent';
     $('f-submit').textContent = '🎁 Dodaj';
     $('f-cancel').hidden = true;
+    $('f-status').textContent = '';
   }
 
-  $('gift-form').addEventListener('submit', (e) => {
+  $('gift-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const person = currentPerson();
     if (!person) return;
@@ -131,13 +167,14 @@
     };
     if (!data.title) return;
     const id = $('f-id').value;
-    if (id) {
-      Object.assign(gifts.find((g) => g.id === id), data);
-    } else {
-      gifts.push({ id: 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), personId: person.id, ...data });
+    setBusy(true, 'Zapisywanie…');
+    try {
+      await mutate(id ? { action: 'update', gift: { id, ...data } } : { action: 'add', gift: { personId: person.id, ...data } });
+      setBusy(false);
+      renderPerson(person);
+    } catch (err) {
+      setBusy(false, '⚠️ Nie udało się zapisać. Sprawdź internet i spróbuj ponownie.');
     }
-    save();
-    renderPerson(person);
   });
 
   $('f-cancel').addEventListener('click', resetForm);
@@ -161,9 +198,10 @@
     } else if (btn.dataset.act === 'del') {
       const li = btn.closest('.gift');
       if (li.dataset.confirm) {
-        gifts = gifts.filter((x) => x.id !== id);
-        save();
-        renderPerson(currentPerson());
+        li.classList.add('removing');
+        mutate({ action: 'delete', id })
+          .then(() => renderPerson(currentPerson()))
+          .catch(() => { li.classList.remove('removing'); $('f-status').textContent = '⚠️ Nie udało się usunąć. Spróbuj ponownie.'; });
       } else {
         li.dataset.confirm = '1';
         btn.textContent = '✔️';
@@ -174,7 +212,8 @@
   });
 
   $('home-link').addEventListener('click', (e) => { e.preventDefault(); location.hash = ''; });
-  window.addEventListener('hashchange', route);
+  window.addEventListener('hashchange', () => { route(); refresh(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
 
   /* ---------- snow ---------- */
   function snow() {

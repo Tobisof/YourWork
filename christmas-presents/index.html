@@ -22,7 +22,7 @@
 
   <!-- People list -->
   <section id="view-list" class="view">
-    <ul class="people" id="people"></ul>
+    <ul class="people" id="people"><li class="loading">Ładowanie… 🎁</li></ul>
   </section>
 
   <!-- Single person -->
@@ -43,6 +43,7 @@
         <label>Co chcesz dostać? <input id="f-title" required maxlength="120" placeholder="np. Książka „Diuna”"></label>
         <label>Link (opcjonalnie) <input id="f-link" type="url" placeholder="https://…"></label>
         <label>Notatka (opcjonalnie) <textarea id="f-note" rows="2" maxlength="300" placeholder="rozmiar, kolor, wersja…"></textarea></label>
+        <p class="status" id="f-status" role="status"></p>
         <div class="form-actions">
           <button type="submit" class="btn primary" id="f-submit">🎁 Dodaj</button>
           <button type="button" class="btn ghost" id="f-cancel" hidden>Anuluj</button>
